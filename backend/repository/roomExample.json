@@ -1,0 +1,20 @@
+{
+  "id": "the-lost-mines",
+  "name": "The Lost Mines",
+  "description": "Friday night D&D campaign",
+  "password": "hashed_password",
+  "createdAt": "2025-02-01T12:00:00Z",
+  "duration": {
+    "min": 2,
+    "max": 5
+  },
+  "defaultAvailability": {
+    "monday": [{ "start": "09:00", "end": "23:00" }],
+    "tuesday": [{ "start": "09:00", "end": "23:00" }],
+    "wednesday": [{ "start": "09:00", "end": "23:00" }],
+    "thursday": [{ "start": "09:00", "end": "23:00" }],
+    "friday": [{ "start": "09:00", "end": "23:00" }],
+    "saturday": [{ "start": "09:00", "end": "23:00" }],
+    "sunday": [{ "start": "09:00", "end": "23:00" }]
+  }
+}

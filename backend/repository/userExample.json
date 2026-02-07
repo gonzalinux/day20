@@ -1,0 +1,30 @@
+{
+  "id": "grog-01",
+  "roomId": "the-lost-mines",
+  "name": "Grog",
+  "role": "admin",
+  "weeklyAvailability": {
+    "monday": [{ "start": "18:00", "end": "22:00" }],
+    "tuesday": [],
+    "wednesday": [{ "start": "18:00", "end": "23:00" }],
+    "thursday": [],
+    "friday": [{ "start": "17:00", "end": "23:00" }],
+    "saturday": [
+      { "start": "10:00", "end": "14:00" },
+      { "start": "18:00", "end": "23:00" }
+    ],
+    "sunday": [{ "start": "10:00", "end": "22:00" }]
+  },
+  "overrides": [
+    {
+      "date": "2025-07-15",
+      "availability": [{ "start": "00:00", "end": "23:00" }],
+      "reason": "Day off work"
+    },
+    {
+      "date": "2025-07-20",
+      "availability": [],
+      "reason": "Family trip"
+    }
+  ]
+}
