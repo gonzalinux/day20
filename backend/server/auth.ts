@@ -13,7 +13,7 @@ const PUBLIC_ROUTES: Array<{ method: string; pattern: RegExp }> = [
 function isPublicRoute(method: string, path: string): boolean {
   return PUBLIC_ROUTES.some((r) => r.method === method && r.pattern.test(path));
 }
-export const cookieSession = t.Object({
+export const cookieSession = t.Cookie({
   session: t.Optional(t.String()),
 });
 
@@ -24,6 +24,7 @@ export const jwtAuth = new Elysia({ name: "jwtAuth" })
       secret: JWT_SECRET,
     }),
   )
+  .guard({ cookie: cookieSession })
   .resolve(async ({ jwt, cookie: { session }, request }) => {
     if (isPublicRoute(request.method, new URL(request.url).pathname)) {
       return { auth: null as { roomId: string; userId?: string } | null };
@@ -36,10 +37,10 @@ export const jwtAuth = new Elysia({ name: "jwtAuth" })
     if (!payload) throw new UnauthorizedError("Invalid session");
 
     return {
-      cookie: cookieSession,
       auth: {
         roomId: payload.roomId as string,
         userId: payload.userId as string | undefined,
       },
     };
-  });
+  })
+  .as("scoped");

@@ -1,7 +1,6 @@
 import { Elysia } from "elysia";
 import { ObjectId } from "mongodb";
 import * as Service from "../domain/service";
-import type { Room } from "../repository/room";
 import type { User } from "../repository/user";
 import { NotFoundError } from "./errors.types";
 import {
@@ -15,7 +14,7 @@ import {
 } from "./requests.types";
 import { jwtAuth } from "./auth.ts";
 
-export const routes: Elysia = new Elysia()
+export const routes = new Elysia()
   .use(jwtAuth)
   .post(
     "/rooms",
