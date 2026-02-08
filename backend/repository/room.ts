@@ -4,8 +4,8 @@ export interface Room {
   name: string;
   description: string;
   password: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
   duration: SessionDuration;
   defaultAvailability: WeeklyAvailability;
 }

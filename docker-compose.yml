@@ -1,0 +1,34 @@
+services:
+  day20-db:
+    image: mongo:latest
+    container_name: day20-mongo
+    volumes:
+      - day20_data:/data/db
+    networks:
+      - day20-network
+
+  day20-api:
+    build: ./backend
+    container_name: day20-elysia
+    environment:
+      - MONGO_URI=mongodb://day20-db:27017/day20
+      - BUN_ENV=production
+    depends_on:
+      - day20-db
+    networks:
+      - day20-network
+
+  day20-ui:
+    build: ./frontend
+    container_name: day20-vue
+    ports:
+      - "80:80"
+    networks:
+      - day20-network
+
+networks:
+  day20-network:
+    driver: bridge
+
+volumes:
+  day20_data:

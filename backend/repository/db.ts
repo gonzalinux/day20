@@ -10,6 +10,8 @@ let db: Db | undefined;
 export async function connectToDatabase(): Promise<Db> {
   if (db) return db;
   try {
+    console.log("Connecting to database...");
+    console.log(MONGO_URI);
     await client.connect();
     console.log("Connected to database");
     return client.db(DB_NAME);
