@@ -2,18 +2,22 @@ import { ObjectId } from "mongodb";
 import Repository from "../repository/repository";
 import type { Room } from "../repository/room";
 import type { User } from "../repository/user";
-import type { PartialWithId } from "../utils/utils.types";
+import type { PartialWithId, WithoutId } from "../utils/utils.types";
 import {
   AlreadyExistsError,
   NotFoundError,
   UnauthorizedError,
 } from "../server/errors.types";
+import type { CreateRoomRequest } from "../server/requests.types";
 
-export async function createRoom(room: Room) {
-  room._id = new ObjectId();
-  room.password = await Bun.password.hash(room.password);
-  room.createdAt = new Date();
-  room.updatedAt = new Date();
+export async function createRoom(request: CreateRoomRequest) {
+  const room: Room = {
+    ...request,
+    password: await Bun.password.hash(request.password),
+    _id: new ObjectId(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
   const createdRoom = await Repository.insertRoom(room);
   return createdRoom;
@@ -38,6 +42,13 @@ export async function getRoom(roomId: ObjectId) {
   const { password: _, ...roomWithoutPassword } = room;
   const users = await Repository.getUsersFromRoom(roomId);
   return { room: roomWithoutPassword, users };
+}
+
+export async function getUsersFromRoom(roomId: ObjectId) {
+  const room = await Repository.findRoom(roomId);
+  if (!room) throw new NotFoundError("Room not found");
+
+  return await Repository.getUsersFromRoom(roomId);
 }
 
 export async function updateRoom(updates: PartialWithId<Room>) {

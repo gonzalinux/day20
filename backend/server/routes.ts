@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 import * as Service from "../domain/service";
 import type { Room } from "../repository/room";
 import type { User } from "../repository/user";
+import { NotFoundError } from "./errors.types";
 import {
   CreateRoomRequest,
   UpdateRoomRequest,
@@ -10,25 +11,62 @@ import {
   CreateUsersRequest,
   DeleteUsersRequest,
   LoginRoomRequest,
+  SelectUserRequest,
 } from "./requests.types";
+import { jwtAuth } from "./auth.ts";
 
-export const routes = new Elysia()
+export const routes: Elysia = new Elysia()
+  .use(jwtAuth)
   .post(
     "/rooms",
-    async ({ body, set }) => {
-      const roomId = await Service.createRoom(body as unknown as Room);
-      set.status = 201;
-      return { _id: roomId };
+    async ({ body, status }) => {
+      const roomId = await Service.createRoom(body);
+      return status(201, { _id: roomId });
     },
     { body: CreateRoomRequest },
   )
   .post(
-    "/room/login",
-    async ({ body }) => {
-      const roomId = new ObjectId(body.roomId);
-      return await Service.loginRoom(roomId, body.password);
+    "/rooms/:id/login",
+    async ({ params, body, jwt, cookie: { session } }) => {
+      const roomId = new ObjectId(params.id);
+      const result = await Service.loginRoom(roomId, body.password);
+
+      const token = await jwt.sign({ roomId: params.id });
+      session.set({
+        value: token,
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+      });
+
+      return result;
     },
-    { body: LoginRoomRequest },
+    { params: RoomIdParam, body: LoginRoomRequest },
+  )
+  .post(
+    "/rooms/:id/select-user",
+    async ({ params, body, jwt, cookie: { session }, auth }) => {
+      const roomId = new ObjectId(params.id);
+      const userId = new ObjectId(body.userId);
+
+      const users = await Service.getUsersFromRoom(roomId);
+      const user = users.find((u) => u._id.equals(userId));
+      if (!user) throw new NotFoundError("User not found in this room");
+
+      const token = await jwt.sign({
+        roomId: auth!.roomId,
+        userId: body.userId,
+      });
+      session.set({
+        value: token,
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+      });
+
+      return { userId: body.userId, name: user.name };
+    },
+    { params: RoomIdParam, body: SelectUserRequest },
   )
   .get(
     "/rooms/:id",
@@ -53,14 +91,13 @@ export const routes = new Elysia()
   )
   .post(
     "/rooms/:id/users",
-    async ({ params, body, set }) => {
+    async ({ params, body, status }) => {
       const roomId = new ObjectId(params.id);
       const insertedIds = await Service.addUsersToRoom(
         roomId,
         body.users as unknown as User[],
       );
-      set.status = 201;
-      return { insertedIds };
+      return status(201, { insertedIds });
     },
     { params: RoomIdParam, body: CreateUsersRequest },
   )

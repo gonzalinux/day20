@@ -3,13 +3,13 @@ import { t } from "elysia";
 // ===== Nested Schemas =====
 
 export const TimeSelectionSchema = t.Object({
-  start: t.String({ format: "date-time" }),
-  end: t.String({ format: "date-time" }),
+  start: t.Date({ format: "date-time" }),
+  end: t.Date({ format: "date-time" }),
 });
 
 export const SessionDurationSchema = t.Object({
-  min: t.Number({ minimum: 0 }),
-  max: t.Number({ minimum: 0 }),
+  min: t.Number({ minimum: 0, maximum: 23 }),
+  max: t.Number({ minimum: 0, maximum: 23 }),
 });
 
 export const WeeklyAvailabilitySchema = t.Object({
@@ -38,9 +38,14 @@ export const CreateRoomRequest = t.Object({
   defaultAvailability: WeeklyAvailabilitySchema,
 });
 
+export type CreateRoomRequest = typeof CreateRoomRequest.static;
+
 export const LoginRoomRequest = t.Object({
-  roomId: t.String(),
   password: t.String({ minLength: 1 }),
+});
+
+export const SelectUserRequest = t.Object({
+  userId: t.String(),
 });
 
 export const UpdateRoomRequest = t.Object({

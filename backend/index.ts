@@ -1,13 +1,17 @@
-import { Elysia } from "elysia";
-import { routes } from "./server/routes";
+import { Elysia, t } from "elysia";
+import { jwt } from "@elysiajs/jwt";
 import { openapi } from "@elysiajs/openapi";
-
+import { routes } from "./server/routes";
 import { connectToDatabase } from "./repository/db";
+import { UnauthorizedError } from "./server/errors.types";
+
+const server = new Elysia().use(openapi()).use(routes);
 
 async function startServer() {
   await connectToDatabase();
 
-  new Elysia().use(openapi()).use(routes).listen(3000);
+  server.listen(3000);
+
   console.log("Server started");
 }
 
