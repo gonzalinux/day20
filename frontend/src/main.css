@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Ruwudu:wght@400;500;600;700&family=Texturina:ital,opsz,wght@0,12..72,100..900;1,12..72,100..900&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=Texturina:ital,opsz,wght@0,12..72,100..900;1,12..72,100..900&display=swap');
+
+@import 'tailwindcss';
+
+@theme {
+  --font-heading: 'Texturina', serif;
+  --font-body: 'Ruwudu', serif;
+  --color-bg: #f7fbfd;
+  --color-accent: #e88d67;
+  --color-primary: #5e239d;
+  --color-secondary: #7b8cde;
+}
+
+*,
+*::before,
+*::after {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.dark {
+  --color-bg: #23172c;
+  --color-accent: #f2a885;
+  --color-primary: #8929ee;
+  --color-secondary: #9ba8e8;
+}
