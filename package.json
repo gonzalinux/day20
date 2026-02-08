@@ -1,0 +1,5 @@
+{
+  "name": "day20",
+  "private": true,
+  "workspaces": ["backend", "frontend"]
+}

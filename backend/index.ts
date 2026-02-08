@@ -7,6 +7,8 @@ import { UnauthorizedError } from "./server/errors.types";
 
 const server = new Elysia().use(openapi()).use(routes);
 
+export type App = typeof server;
+
 async function startServer() {
   await connectToDatabase();
 

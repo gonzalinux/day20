@@ -1,0 +1,24 @@
+import { api } from "./client";
+
+export async function createRoom(
+  ...args: Parameters<typeof api.rooms.post>
+) {
+  const { data, error } = await api.rooms.post(...args);
+  if (error) throw error;
+  return data;
+}
+
+export async function getRoom(id: string) {
+  const { data, error } = await api.rooms({ id }).get();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateRoom(
+  id: string,
+  ...args: Parameters<ReturnType<typeof api.rooms>["put"]>
+) {
+  const { data, error } = await api.rooms({ id }).put(...args);
+  if (error) throw error;
+  return data;
+}
