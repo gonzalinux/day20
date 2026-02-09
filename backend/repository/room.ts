@@ -1,9 +1,9 @@
-import { ObjectId } from "mongodb";
 export interface Room {
-  _id: ObjectId;
+  _id: string;
   name: string;
   description: string;
   password: string;
+  magicToken: string;
   createdAt?: Date;
   updatedAt?: Date;
   duration: SessionDuration;

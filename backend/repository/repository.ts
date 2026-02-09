@@ -18,7 +18,7 @@ async function insertRoom(room: Room) {
   return result.insertedId;
 }
 
-async function findRoom(id: ObjectId) {
+async function findRoom(id: string) {
   const rooms = getRoomsCollection();
   const result = await rooms.findOne({ _id: id });
   return result;
@@ -36,7 +36,7 @@ export async function createUsers(users: User[]) {
   return result.insertedIds;
 }
 
-async function getUsersFromRoom(roomId: ObjectId) {
+async function getUsersFromRoom(roomId: string) {
   const users = getUsersCollection();
   const result = await users.find({ roomId }).toArray();
   return result;
@@ -54,7 +54,7 @@ async function deleteUsers(deleteUsers: User[]) {
   return result.deletedCount;
 }
 
-async function deleteRoom(roomId: ObjectId) {
+async function deleteRoom(roomId: string) {
   const rooms = getRoomsCollection();
   const usersOfRoom = await getUsersFromRoom(roomId);
   let result = await deleteUsers(usersOfRoom);

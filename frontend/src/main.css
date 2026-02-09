@@ -1,12 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Ruwudu:wght@400;500;600;700&family=Texturina:ital,opsz,wght@0,12..72,100..900;1,12..72,100..900&display=swap');
-
-@import url('https://fonts.googleapis.com/css2?family=Texturina:ital,opsz,wght@0,12..72,100..900;1,12..72,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amarante&family=Ruwudu:wght@400;500;600;700&family=Texturina:ital,opsz,wght@0,12..72,100..900;1,12..72,100..900&display=swap');
 
 @import 'tailwindcss';
 
 @theme {
   --font-heading: 'Texturina', serif;
   --font-body: 'Ruwudu', serif;
+  --font-secondary: 'Amarante', serif;
   --color-bg: #f7fbfd;
   --color-accent: #fa8758;
   --color-primary: #5e239d;

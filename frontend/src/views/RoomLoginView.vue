@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import LangToggle from '@/components/LangToggle.vue'
 import AppInput from '@/components/AppInput.vue'
+import { createRoom } from '@/services/rooms'
+import { loginRoom } from '@/services/auth'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -15,9 +17,77 @@ const activePanel = ref<'create' | 'join' | null>(
   initialMode === 'create' || initialMode === 'join' ? initialMode : null,
 )
 
+const createStep = ref(1)
+const roomName = ref('')
+const roomPassword = ref('')
+const roomDescription = ref('')
+const sessionMinHours = ref(1)
+const sessionMaxHours = ref(4)
+
+watch(sessionMinHours, (min) => {
+  if (sessionMaxHours.value < min) sessionMaxHours.value = min
+})
+
 function setPanel(mode: 'create' | 'join' | null) {
   activePanel.value = mode
+  if (mode !== 'create') createStep.value = 1
   router.replace({ query: mode ? { mode } : {} })
+}
+
+function nextCreateStep() {
+  createStep.value = 2
+}
+
+function prevCreateStep() {
+  createStep.value = 1
+}
+
+const loading = ref(false)
+const createError = ref('')
+const joinError = ref('')
+
+const emptyWeek = {
+  monday: [],
+  tuesday: [],
+  wednesday: [],
+  thursday: [],
+  friday: [],
+  saturday: [],
+  sunday: [],
+}
+
+async function submitCreateRoom() {
+  loading.value = true
+  createError.value = ''
+  try {
+    const { _id, magicToken } = await createRoom({
+      name: roomName.value,
+      description: roomDescription.value,
+      password: roomPassword.value,
+      duration: { min: sessionMinHours.value, max: sessionMaxHours.value },
+      defaultAvailability: emptyWeek,
+    })
+    router.push({ path: `/rooms/${_id}`, query: { token: magicToken } })
+  } catch (e: unknown) {
+    createError.value = (e as Error)?.message ?? String(e)
+  } finally {
+    loading.value = false
+  }
+}
+
+async function submitJoinRoom() {
+  loading.value = true
+  joinError.value = ''
+  try {
+    const { room } = await loginRoom(roomName.value, {
+      password: roomPassword.value,
+    })
+    router.push({ path: `/rooms/${room._id}`, query: { token: room.magicToken } })
+  } catch (e: unknown) {
+    joinError.value = (e as Error)?.message ?? String(e)
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -84,7 +154,7 @@ function setPanel(mode: 'create' | 'join' | null) {
         <!-- Create Room Panel -->
         <div v-else-if="activePanel === 'create'" key="create" class="w-full max-w-md">
           <button
-            @click="setPanel(null)"
+            @click="createStep === 1 ? setPanel(null) : prevCreateStep()"
             class="flex items-center gap-2 text-secondary hover:text-primary transition-colors cursor-pointer mb-6 font-heading"
           >
             <VIcon name="gi-return-arrow" scale="1.2" />
@@ -95,33 +165,94 @@ function setPanel(mode: 'create' | 'join' | null) {
             <h2 class="text-2xl font-heading font-bold text-accent mb-6">
               {{ t('roomLogin.createRoom') }}
             </h2>
-            <form class="flex flex-col gap-4" @submit.prevent>
-              <div>
-                <label class="block text-sm font-semibold text-secondary mb-1">{{
-                  t('roomLogin.roomName')
-                }}</label>
+
+            <!-- Step indicator -->
+            <div class="flex items-center gap-2 mb-6">
+              <span
+                class="size-7 rounded-full flex items-center justify-center text-sm font-bold font-heading"
+                :class="createStep === 1 ? 'bg-accent text-bg' : 'bg-secondary/30 text-secondary'"
+                >1</span
+              >
+              <span class="h-0.5 flex-1 bg-secondary/30" />
+              <span
+                class="size-7 rounded-full flex items-center justify-center text-sm font-bold font-heading"
+                :class="createStep === 2 ? 'bg-accent text-bg' : 'bg-secondary/30 text-secondary'"
+                >2</span
+              >
+            </div>
+
+            <Transition name="fade" mode="out-in">
+              <!-- Step 1: Name & Password -->
+              <form
+                v-if="createStep === 1"
+                key="step1"
+                class="flex flex-col gap-4"
+                @submit.prevent="nextCreateStep"
+              >
                 <AppInput
+                  v-model="roomName"
+                  :label="t('roomLogin.roomName')"
                   :placeholder="t('roomLogin.roomName')"
                   class="focus:border-accent"
                 />
-              </div>
-              <div>
-                <label class="block text-sm font-semibold text-secondary mb-1">{{
-                  t('roomLogin.password')
-                }}</label>
                 <AppInput
+                  v-model="roomPassword"
                   type="password"
+                  :label="t('roomLogin.password')"
                   :placeholder="t('roomLogin.password')"
                   class="focus:border-accent"
                 />
-              </div>
-              <button
-                type="submit"
-                class="mt-2 bg-accent text-bg font-heading font-bold px-6 py-3 rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                <button
+                  type="submit"
+                  class="mt-2 bg-accent text-bg font-heading font-bold px-6 py-3 rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                >
+                  {{ t('roomLogin.next') }}
+                </button>
+              </form>
+
+              <!-- Step 2: Description & Duration -->
+              <form
+                v-else
+                key="step2"
+                class="flex flex-col gap-4"
+                @submit.prevent="submitCreateRoom"
               >
-                {{ t('roomLogin.create') }}
-              </button>
-            </form>
+                <AppInput
+                  v-model="roomDescription"
+                  :label="t('roomLogin.description')"
+                  :placeholder="t('roomLogin.descriptionPlaceholder')"
+                  class="focus:border-accent"
+                />
+                <div class="flex gap-4">
+                  <AppInput
+                    v-model="sessionMinHours"
+                    type="number"
+                    :min="1"
+                    :max="23"
+                    :label="t('roomLogin.minDuration')"
+                    placeholder="1"
+                    class="focus:border-accent"
+                  />
+                  <AppInput
+                    v-model="sessionMaxHours"
+                    type="number"
+                    :min="sessionMinHours"
+                    :max="24"
+                    :label="t('roomLogin.maxDuration')"
+                    placeholder="4"
+                    class="focus:border-accent"
+                  />
+                </div>
+                <p v-if="createError" class="text-red-500 text-sm">{{ createError }}</p>
+                <button
+                  type="submit"
+                  :disabled="loading"
+                  class="mt-2 bg-accent text-bg font-heading font-bold px-6 py-3 rounded-lg hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {{ loading ? t('roomLogin.creating') : t('roomLogin.create') }}
+                </button>
+              </form>
+            </Transition>
           </div>
         </div>
 
@@ -141,26 +272,21 @@ function setPanel(mode: 'create' | 'join' | null) {
             </h2>
             <p class="text-sm text-secondary/70 italic mb-4">{{ t('roomLogin.joinHint') }}</p>
             <form class="flex flex-col gap-4" @submit.prevent>
-              <div>
-                <label class="block text-sm font-semibold text-secondary mb-1">{{
-                  t('roomLogin.roomCode')
-                }}</label>
-                <AppInput
-                  :placeholder="t('roomLogin.roomCode')"
-                  class="focus:border-primary"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-semibold text-secondary mb-1">{{
-                  t('roomLogin.password')
-                }}</label>
-                <AppInput
-                  type="password"
-                  :placeholder="t('roomLogin.password')"
-                  class="focus:border-primary"
-                />
-              </div>
+              <AppInput
+                v-model="roomName"
+                :label="t('roomLogin.roomName')"
+                :placeholder="t('roomLogin.roomName')"
+                class="focus:border-primary"
+              />
+              <AppInput
+                v-model="roomPassword"
+                type="password"
+                :label="t('roomLogin.password')"
+                :placeholder="t('roomLogin.password')"
+                class="focus:border-primary"
+              />
               <button
+                @click="submitJoinRoom"
                 type="submit"
                 class="mt-2 bg-primary text-bg font-heading font-bold px-6 py-3 rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
               >

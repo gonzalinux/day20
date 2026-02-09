@@ -41,7 +41,9 @@ export const CreateRoomRequest = t.Object({
 export type CreateRoomRequest = typeof CreateRoomRequest.static;
 
 export const LoginRoomRequest = t.Object({
-  password: t.String({ minLength: 1 }),
+  id: t.String(),
+  password: t.Optional(t.String({ minLength: 1 })),
+  token: t.Optional(t.String({ minLength: 1 })),
 });
 
 export const SelectUserRequest = t.Object({

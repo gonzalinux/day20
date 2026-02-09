@@ -14,6 +14,7 @@ export async function connectToDatabase(): Promise<Db> {
     console.log(MONGO_URI);
     await client.connect();
     console.log("Connected to database");
+    db = client.db(DB_NAME)
     return client.db(DB_NAME);
   } catch (error) {
     console.error("Failed to connect to database:", error);

@@ -2,8 +2,9 @@ import type { ObjectId } from "mongodb";
 import type { TimeSelection, WeeklyAvailability } from "./room";
 
 export interface User {
-  _id: ObjectId;
-  roomId: ObjectId;
+
+  _id: string;
+  roomId: string;
   name: string;
   role: UserRole;
   weeklyAvailability: WeeklyAvailability;
