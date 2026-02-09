@@ -6,10 +6,10 @@ dev-db:
 	MONGO_PORT=27017 docker compose up day20-db -d
 
 dev-api:
-	cd backend && bun run index.ts &
+	cd backend && bun run index.ts
 
 dev-ui:
-	cd frontend && bun run dev --port 3500 &
+	cd frontend && bun run dev --port 3500
 
 prod:
 	docker compose up -d

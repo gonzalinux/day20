@@ -10,6 +10,8 @@ import {
   GiSandsOfTime,
   GiSunrise,
   GiMoonBats,
+  GiDungeonGate,
+  GiReturnArrow,
 } from 'oh-vue-icons/icons'
 
 import App from './App.vue'
@@ -24,6 +26,8 @@ addIcons(
   GiSandsOfTime,
   GiSunrise,
   GiMoonBats,
+  GiDungeonGate,
+  GiReturnArrow,
 )
 
 const app = createApp(App)

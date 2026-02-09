@@ -39,17 +39,19 @@ onUnmounted(() => {
       </div>
 
       <!-- Right: action buttons -->
-      <div class="flex flex-col items-end gap-1 w-40">
-        <button
-          class="bg-accent text-bg w-40 text-sm font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity cursor-pointer font-heading"
-        >
-          {{ t('nav.createRoom') }}
-        </button>
-        <button
-          class="bg-primary text-bg w-40 text-sm font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity cursor-pointer font-heading"
+      <div class="flex flex-col items-end gap-1 w-32">
+        <RouterLink
+          to="/room-login?mode=join"
+          class="bg-primary text-bg w-32 text-sm font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity cursor-pointer font-heading text-center"
         >
           {{ t('nav.joinRoom') }}
-        </button>
+        </RouterLink>
+        <RouterLink
+          to="/room-login?mode=create"
+          class="bg-accent text-bg w-32 text-sm font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity cursor-pointer font-heading text-center"
+        >
+          {{ t('nav.createRoom') }}
+        </RouterLink>
       </div>
     </nav>
 
@@ -68,48 +70,106 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <button class="d20-button group relative w-48 h-48 cursor-pointer shrink-0">
+      <button class="d20-button group relative w-72 h-72 cursor-pointer shrink-0">
         <img
-          src="/d20Image.png"
+          src="/d20ImageAccentLight.png"
           alt="D20"
-          class="d20-image w-full h-full object-contain transition-[filter] duration-300"
+          class="hover-image w-full h-full object-contain transition-[filter] duration-300"
+        />
+        <img
+          src="/d20ImageLight.png"
+          alt="D20"
+          class="d20-image w-full absolute h-full object-contain inset-0 opacity-100"
         />
         <span
-          class="absolute inset-0 flex items-center justify-center font-heading font-bold text-accent transition-colors duration-300 group-hover:text-primary"
+          class="absolute inset-0 flex items-center justify-center font-heading font-bold text-accent transition-colors duration-300 group-hover:text-primary d20-text"
         >
-          <span class="text-4xl">D</span><span class="text-2xl">ay</span
-          ><span class="text-4xl">20</span>
+          <span class="text-6xl">D</span><span class="text-4xl">ay</span
+          ><span class="text-6xl">20</span>
         </span>
       </button>
     </main>
 
     <section class="bg-secondary w-full py-16 px-6">
-      <div class="max-w-2xl mx-auto space-y-8 text-center">
-        <h2 class="text-2xl font-bold text-primary uppercase tracking-wide font-heading">
-          {{ t('home.howItWorks') }}
-        </h2>
-        <ol class="space-y-6 text-lg text-bg max-w-md mx-auto">
-          <li class="flex items-center gap-3">
-            <VIcon name="gi-doorway" class="text-primary shrink-0" scale="1.5" />{{ t('home.step1') }}
-          </li>
-          <li class="flex items-center gap-3">
-            <VIcon name="gi-paint-brush" class="text-primary shrink-0" scale="1.5" />{{ t('home.step2') }}
-          </li>
-          <li class="flex items-center gap-3">
-            <VIcon name="gi-sands-of-time" class="text-primary shrink-0" scale="1.5" />{{ t('home.step3') }}
-          </li>
-        </ol>
+      <div class="max-w-4xl mx-auto flex flex-col md:flex-row md:items-center md:gap-16">
+        <div class="space-y-8 text-center md:text-left">
+          <h2
+            class="text-2xl md:text-4xl font-bold text-primary uppercase tracking-wide font-heading"
+          >
+            {{ t('home.howItWorks') }}
+          </h2>
+          <ol class="space-y-6 text-lg md:text-xl text-bg max-w-md mx-auto md:mx-0">
+            <li class="flex items-center gap-3">
+              <span
+                ><VIcon name="gi-doorway" class="text-primary shrink-0" scale="1.5" />{{
+                  t('home.step1')
+                }}</span
+              >
+            </li>
+            <li class="flex items-center gap-3">
+              <span
+                ><VIcon name="gi-paint-brush" class="text-primary shrink-0" scale="1.5" />{{
+                  t('home.step2')
+                }}</span
+              >
+            </li>
+            <li class="flex items-center gap-3">
+              <span
+                ><VIcon name="gi-sands-of-time" class="text-primary shrink-0" scale="1.5" />
+                {{ t('home.step3') }}
+              </span>
+            </li>
+          </ol>
+        </div>
+        <!-- Image placeholder (right side on desktop, below on mobile) -->
+        <div class="mt-8 md:mt-0 shrink-0"></div>
       </div>
     </section>
+
+    <!-- Footer -->
+    <footer class="bg-primary py-6 px-6 text-center text-sm text-bg">
+      Created by
+      <a
+        href="https://github.com/gonzalinux"
+        target="_blank"
+        rel="noopener"
+        class="text-bg hover:underline font-bold"
+        >@gonzalinux</a
+      >
+      with love and care for his friends
+    </footer>
   </div>
 </template>
 
 <style scoped>
 .d20-image {
   filter: drop-shadow(0 0 12px var(--color-accent));
+  transition:
+    filter 500ms,
+    opacity 300ms !important;
+}
+.d20-button:hover .hover-image {
+  filter: drop-shadow(0 0 16px var(--color-primary));
 }
 
 .d20-button:hover .d20-image {
-  filter: drop-shadow(0 0 16px var(--color-primary));
+  opacity: 0%;
+}
+
+.d20-text {
+  text-shadow:
+    0 0 6px var(--color-bg),
+    0 0 12px var(--color-bg),
+    0 0 20px var(--color-bg),
+    0 0 30px var(--color-bg);
+  transition: text-shadow 300ms;
+}
+
+.d20-button:hover .d20-text {
+  text-shadow:
+    0 0 6px var(--color-bg),
+    0 0 12px var(--color-bg),
+    0 0 20px var(--color-bg),
+    0 0 30px var(--color-bg);
 }
 </style>
