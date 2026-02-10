@@ -45,6 +45,13 @@ export const routes = new Elysia()
     },
     {body: LoginRoomRequest },
 )
+  .get(
+    "/rooms/:id/me",
+    async ({ params, auth }) => {
+      return { roomId: auth!.roomId, userId: auth!.userId ?? null };
+    },
+    { params: RoomIdParam },
+  )
   .get("/rooms/:id/users", async ({ params }) => {
     const roomId = params.id;
     const users = await Service.getUsersFromRoom(roomId);

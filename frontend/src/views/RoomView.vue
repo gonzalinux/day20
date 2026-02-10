@@ -2,16 +2,16 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
-import ThemeToggle from '@/components/ThemeToggle.vue'
-import LangToggle from '@/components/LangToggle.vue'
 import AppInput from '@/components/AppInput.vue'
-import { loginRoom, selectUser } from '@/services/auth'
+import RoomCalendarLayout from '@/components/room/RoomCalendarLayout.vue'
+import { getMe, loginRoom, selectUser } from '@/services/auth'
 import { addUsers, getUsersFromRoom } from '@/services/users'
+import { getRoom } from '@/services/rooms'
 
 const { t } = useI18n()
 const route = useRoute()
 
-type State = 'loading' | 'nameYourself' | 'addPlayers' | 'calendar'
+type State = 'loading' | 'nameYourself' | 'addPlayers' | 'pickUser' | 'calendar'
 const state = ref<State>('loading')
 const error = ref('')
 
@@ -21,6 +21,10 @@ const roomName = ref('')
 // nameYourself
 const adminName = ref('')
 const saving = ref(false)
+
+// current user
+const currentUserId = ref('')
+const selectingUser = ref(false)
 
 // addPlayers
 const users = ref<{ id: string; name: string; role: string }[]>([])
@@ -37,7 +41,31 @@ const emptyWeek = {
   sunday: [],
 }
 
+async function loadRoom() {
+  const fetchedUsers = await getUsersFromRoom(roomId)
+  users.value = fetchedUsers.map((user) => ({
+    id: user.id,
+    name: user.name,
+    role: user.role,
+  }))
+}
+
 onMounted(async () => {
+  try {
+    // Check if we already have a valid session with a userId
+    const me = await getMe(roomId).catch(() => null)
+    if (me?.userId) {
+      currentUserId.value = me.userId
+      const { room } = await getRoom(roomId)
+      roomName.value = room.name
+      await loadRoom()
+      state.value = 'calendar'
+      return
+    }
+  } catch {
+    // No valid session — fall through to login
+  }
+
   const token = route.query.token as string | undefined
   if (!token) {
     error.value = 'No token provided'
@@ -47,17 +75,11 @@ onMounted(async () => {
   try {
     const result = await loginRoom(roomId, { token })
     roomName.value = result.room.name
-    const fetchedUsers = await getUsersFromRoom(result.room._id)
-
-    users.value = fetchedUsers.map((user) => ({
-      id: user.id,
-      name: user.name,
-      role: user.role,
-    }))
-    if (fetchedUsers.length === 0) {
+    await loadRoom()
+    if (users.value.length === 0) {
       state.value = 'nameYourself'
     } else {
-      state.value = 'calendar'
+      state.value = 'pickUser'
     }
   } catch (e: any) {
     error.value = e?.message ?? String(e)
@@ -80,6 +102,7 @@ async function submitName() {
       ],
     })
     await selectUser(roomId, insertedIds[0])
+    currentUserId.value = insertedIds[0]
     users.value.push({ id: insertedIds[0], name: adminName.value, role: 'admin' })
     state.value = 'addPlayers'
   } catch (e: any) {
@@ -113,8 +136,30 @@ async function submitAddPlayer() {
   }
 }
 
+async function pickUserAndContinue(userId: string) {
+  selectingUser.value = true
+  error.value = ''
+  try {
+    await selectUser(roomId, userId)
+    currentUserId.value = userId
+    state.value = 'calendar'
+  } catch (e: any) {
+    error.value = e?.message ?? String(e)
+  } finally {
+    selectingUser.value = false
+  }
+}
+
 function finishAddPlayers() {
   state.value = 'calendar'
+}
+
+// Delay layout class switch until the leave transition finishes,
+// so the outgoing content doesn't jump while fading out.
+const fullLayout = ref(false)
+
+function onAfterLeave() {
+  fullLayout.value = state.value === 'calendar'
 }
 </script>
 
@@ -122,20 +167,25 @@ function finishAddPlayers() {
   <div class="min-h-screen bg-bg font-body">
     <!-- Navbar -->
     <nav class="fixed top-0 left-0 right-0 z-50 flex items-center px-6 py-3 bg-transparent">
-      <div class="flex gap-4 align-bottom">
-        <span class="hidden md:block font-heading font-bold text-3xl text-primary">Day20</span>
-        <ThemeToggle />
-        <LangToggle />
-      </div>
+      <span class="font-heading font-bold text-primary">
+        <span class="text-4xl">D</span><span class="text-2xl">ay</span
+        ><span class="text-4xl">20</span>
+      </span>
     </nav>
 
     <!-- Content -->
-    <main class="flex flex-col items-center justify-center px-6 min-h-screen pt-16">
-      <h1 v-if="roomName" class="text-3xl font-heading font-bold text-primary mb-8">
+    <main
+      class="flex flex-col pt-16"
+      :class="fullLayout ? 'h-screen' : 'items-center justify-center px-6 min-h-screen'"
+    >
+      <h1
+        v-if="roomName && !fullLayout"
+        class="text-3xl font-heading font-bold text-primary mb-8"
+      >
         {{ roomName }}
       </h1>
 
-      <Transition name="fade" mode="out-in">
+      <Transition name="fade" mode="out-in" @after-leave="onAfterLeave">
         <!-- Loading -->
         <div v-if="state === 'loading'" key="loading" class="text-center">
           <p v-if="!error" class="text-xl text-secondary animate-pulse">
@@ -224,16 +274,45 @@ function finishAddPlayers() {
           </div>
         </div>
 
-        <!-- Calendar placeholder -->
-        <div v-else-if="state === 'calendar'" key="calendar" class="w-full max-w-2xl">
-          <div class="rounded-2xl bg-secondary/20 shadow-lg p-8 text-center">
-            <VIcon name="gi-calendar-half-year" class="text-accent mb-4" scale="3" />
+        <!-- Pick User -->
+        <div v-else-if="state === 'pickUser'" key="pickUser" class="w-full max-w-md">
+          <div class="rounded-2xl bg-secondary/20 shadow-lg p-8">
             <h2 class="text-2xl font-heading font-bold text-accent mb-2">
-              {{ t('room.calendarTitle') }}
+              {{ t('room.whoAreYou') }}
             </h2>
-            <p class="text-secondary">{{ t('room.calendarPlaceholder') }}</p>
+            <p class="text-sm text-secondary/70 mb-6">{{ t('room.whoAreYouHint') }}</p>
+
+            <ul class="flex flex-col gap-2">
+              <li v-for="user in users" :key="user.id">
+                <button
+                  :disabled="selectingUser"
+                  class="w-full flex items-center justify-between px-4 rounded-lg bg-bg/50 hover:bg-accent/10 hover:ring-1 hover:ring-accent/30 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  @click="pickUserAndContinue(user.id)"
+                >
+                  <span class="text-primary font-body pt-3 pb-1">{{ user.name }}</span>
+                  <span
+                    v-if="user.role === 'admin'"
+                    class="text-xs font-heading font-bold text-accent bg-accent/15 px-2 py-0.5 rounded"
+                  >
+                    {{ t('room.admin') }}
+                  </span>
+                </button>
+              </li>
+            </ul>
+            <p v-if="error" class="text-red-500 text-sm mt-4">{{ error }}</p>
           </div>
         </div>
+
+        <!-- Calendar layout -->
+        <RoomCalendarLayout
+          v-else-if="state === 'calendar'"
+          key="calendar"
+          :users="users"
+          :room-name="roomName"
+          :current-user-id="currentUserId"
+          :room-id="roomId"
+          @user-added="(u) => users.push(u)"
+        />
       </Transition>
     </main>
   </div>

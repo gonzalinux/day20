@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { localePath } from '@/i18n'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import LangToggle from '@/components/LangToggle.vue'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const scrolled = ref(false)
 const titleEl = ref<HTMLElement | null>(null)
@@ -41,13 +42,13 @@ onUnmounted(() => {
       <!-- Right: action buttons -->
       <div class="flex flex-col items-end gap-1 w-32">
         <RouterLink
-          to="/room-login?mode=join"
+          :to="localePath('/room-login?mode=join', locale)"
           class="bg-primary text-bg w-32 text-sm font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity cursor-pointer font-heading text-center"
         >
           {{ t('nav.joinRoom') }}
         </RouterLink>
         <RouterLink
-          to="/room-login?mode=create"
+          :to="localePath('/room-login?mode=create', locale)"
           class="bg-accent text-bg w-32 text-sm font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity cursor-pointer font-heading text-center"
         >
           {{ t('nav.createRoom') }}

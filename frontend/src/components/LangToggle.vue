@@ -1,10 +1,20 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { useRouter, useRoute } from 'vue-router'
 
 const { locale } = useI18n()
+const router = useRouter()
+const route = useRoute()
 
 function toggle() {
-  locale.value = locale.value === 'en' ? 'es' : 'en'
+  if (locale.value === 'en') {
+    // English → Spanish: prepend /es
+    router.push(`/es${route.fullPath}`)
+  } else {
+    // Spanish → English: strip /es prefix
+    const path = route.fullPath.replace(/^\/es/, '') || '/'
+    router.push(path)
+  }
 }
 </script>
 

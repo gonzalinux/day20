@@ -2,13 +2,14 @@
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { localePath } from '@/i18n'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import LangToggle from '@/components/LangToggle.vue'
 import AppInput from '@/components/AppInput.vue'
 import { createRoom } from '@/services/rooms'
 import { loginRoom } from '@/services/auth'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
@@ -67,7 +68,7 @@ async function submitCreateRoom() {
       duration: { min: sessionMinHours.value, max: sessionMaxHours.value },
       defaultAvailability: emptyWeek,
     })
-    router.push({ path: `/rooms/${_id}`, query: { token: magicToken } })
+    router.push({ path: localePath(`/rooms/${_id}`, locale.value), query: { token: magicToken } })
   } catch (e: unknown) {
     createError.value = (e as Error)?.message ?? String(e)
   } finally {
@@ -82,7 +83,7 @@ async function submitJoinRoom() {
     const { room } = await loginRoom(roomName.value, {
       password: roomPassword.value,
     })
-    router.push({ path: `/rooms/${room._id}`, query: { token: room.magicToken } })
+    router.push({ path: localePath(`/rooms/${room._id}`, locale.value), query: { token: room.magicToken } })
   } catch (e: unknown) {
     joinError.value = (e as Error)?.message ?? String(e)
   } finally {
