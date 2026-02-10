@@ -2,7 +2,7 @@ import crypto from "crypto";
 import Repository from "../repository/repository";
 import type { Room } from "../repository/room";
 import type { User } from "../repository/user";
-import type { PartialWithId } from "../utils/utils.types";
+import type { PartialWithId, WithoutId } from "../utils/utils.types";
 import {
   AlreadyExistsError,
   NotFoundError,
@@ -72,25 +72,16 @@ export async function updateRoom(updates: PartialWithId<Room>) {
   return result;
 }
 
-export async function addUsersToRoom(roomId: string, users: User[]) {
+export async function addUserToRoom(roomId: string, user: WithoutId<User>) {
   const room = await Repository.findRoom(roomId);
   if (!room) throw new NotFoundError("Room not found");
 
   const existingUsers = await Repository.getUsersFromRoom(roomId);
-  if (
-    users.some((user) =>
-      existingUsers.some((existingUser) => existingUser.name == user.name),
-    )
-  )
+  if (existingUsers.some((existing) => existing.name === user.name))
     throw new AlreadyExistsError("This user already exists in this room");
 
-  users = users.map((user) => ({
-    ...user,
-    roomId,
-    _id: user.name,
-  }));
-  const createdUsers = await Repository.createUsers(users);
-  return createdUsers;
+  const fullUser: User = { ...user, roomId, _id: user.name };
+  return await Repository.createUser(fullUser);
 }
 
 export async function removeUsersFromRoom(

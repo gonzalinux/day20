@@ -5,7 +5,7 @@ import { useRoute } from 'vue-router'
 import AppInput from '@/components/AppInput.vue'
 import RoomCalendarLayout from '@/components/room/RoomCalendarLayout.vue'
 import { getMe, loginRoom, selectUser } from '@/services/auth'
-import { addUsers, getUsersFromRoom } from '@/services/users'
+import { addUser, getUsersFromRoom } from '@/services/users'
 import { getRoom } from '@/services/rooms'
 
 const { t } = useI18n()
@@ -81,8 +81,8 @@ onMounted(async () => {
     } else {
       state.value = 'pickUser'
     }
-  } catch (e: any) {
-    error.value = e?.message ?? String(e)
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : String(e)
   }
 })
 
@@ -90,23 +90,18 @@ async function submitName() {
   saving.value = true
   error.value = ''
   try {
-    const { insertedIds } = await addUsers(roomId, {
-      users: [
-        {
-          roomId,
-          name: adminName.value,
-          role: 'admin' as const,
-          weeklyAvailability: emptyWeek,
-          overrides: [],
-        },
-      ],
+    const user = await addUser(roomId, {
+      name: adminName.value,
+      role: 'admin' as const,
+      weeklyAvailability: emptyWeek,
+      overrides: [],
     })
-    await selectUser(roomId, insertedIds[0])
-    currentUserId.value = insertedIds[0]
-    users.value.push({ id: insertedIds[0], name: adminName.value, role: 'admin' })
+    await selectUser(roomId, user._id)
+    currentUserId.value = user._id
+    users.value.push({ id: user._id, name: user.name, role: user.role })
     state.value = 'addPlayers'
-  } catch (e: any) {
-    error.value = e?.message ?? String(e)
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : String(e)
   } finally {
     saving.value = false
   }
@@ -116,21 +111,16 @@ async function submitAddPlayer() {
   addingPlayer.value = true
   error.value = ''
   try {
-    const { insertedIds } = await addUsers(roomId, {
-      users: [
-        {
-          roomId,
-          name: newPlayerName.value,
-          role: 'user' as const,
-          weeklyAvailability: emptyWeek,
-          overrides: [],
-        },
-      ],
+    const user = await addUser(roomId, {
+      name: newPlayerName.value,
+      role: 'user' as const,
+      weeklyAvailability: emptyWeek,
+      overrides: [],
     })
-    users.value.push({ id: insertedIds[0], name: newPlayerName.value, role: 'user' })
+    users.value.push({ id: user._id, name: user.name, role: user.role })
     newPlayerName.value = ''
-  } catch (e: any) {
-    error.value = e?.message ?? String(e)
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : String(e)
   } finally {
     addingPlayer.value = false
   }
@@ -143,8 +133,8 @@ async function pickUserAndContinue(userId: string) {
     await selectUser(roomId, userId)
     currentUserId.value = userId
     state.value = 'calendar'
-  } catch (e: any) {
-    error.value = e?.message ?? String(e)
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : String(e)
   } finally {
     selectingUser.value = false
   }

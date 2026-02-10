@@ -30,10 +30,10 @@ async function updateRoom(updates: PartialWithId<Room>) {
   return result.matchedCount;
 }
 
-export async function createUsers(users: User[]) {
+async function createUser(user: User) {
   const usersCollection = getUsersCollection();
-  const result = await usersCollection.insertMany(users);
-  return result.insertedIds;
+  await usersCollection.insertOne(user);
+  return user;
 }
 
 async function getUsersFromRoom(roomId: string) {
@@ -67,7 +67,7 @@ export default {
   findRoom,
   updateRoom,
   deleteRoom,
-  createUsers,
+  createUser,
   getUsersFromRoom,
   updateUser,
   deleteUsers,

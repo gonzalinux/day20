@@ -9,7 +9,7 @@ export async function createRoom(
 }
 
 export async function getRoom(id: string) {
-  const { data, error } = await api.rooms({ id }).get();
+  const { data, error } = await api.rooms({ room_id: id }).get();
   if (error) throw error;
   return data;
 }
@@ -18,7 +18,7 @@ export async function updateRoom(
   id: string,
   ...args: Parameters<ReturnType<typeof api.rooms>["put"]>
 ) {
-  const { data, error } = await api.rooms({ id }).put(...args);
+  const { data, error } = await api.rooms({ room_id: id }).put(...args);
   if (error) throw error;
   return data;
 }

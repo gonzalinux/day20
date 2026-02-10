@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppInput from '@/components/AppInput.vue'
-import { addUsers } from '@/services/users'
+import { addUser } from '@/services/users'
 import { selectUser } from '@/services/auth'
 
 const props = defineProps<{
@@ -32,21 +32,16 @@ async function submit() {
   saving.value = true
   error.value = ''
   try {
-    const { insertedIds } = await addUsers(props.roomId, {
-      users: [
-        {
-          roomId: props.roomId,
-          name: adminName.value,
-          role: 'admin' as const,
-          weeklyAvailability: emptyWeek,
-          overrides: [],
-        },
-      ],
+    const user = await addUser(props.roomId, {
+      name: adminName.value,
+      role: 'admin' as const,
+      weeklyAvailability: emptyWeek,
+      overrides: [],
     })
-    await selectUser(props.roomId, insertedIds[0])
-    emit('done', { id: insertedIds[0], name: adminName.value, role: 'admin' })
-  } catch (e: any) {
-    error.value = e?.message ?? String(e)
+    await selectUser(props.roomId, user._id)
+    emit('done', { id: user._id, name: user.name, role: user.role })
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : String(e)
   } finally {
     saving.value = false
   }

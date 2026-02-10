@@ -1,18 +1,11 @@
 import jwt from "@elysiajs/jwt";
 import Elysia, { t } from "elysia";
 import { UnauthorizedError } from "./errors.types";
+import { RoomIdParam } from "./requests.types";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) throw new Error("JWT_SECRET env var is required");
 
-const PUBLIC_ROUTES: Array<{ method: string; pattern: RegExp }> = [
-  { method: "POST", pattern: /^\/rooms\/?$/ },
-  { method: "POST", pattern: /^\/rooms\/[^/]+\/login\/?$/ },
-];
-
-function isPublicRoute(method: string, path: string): boolean {
-  return PUBLIC_ROUTES.some((r) => r.method === method && r.pattern.test(path));
-}
 export const cookieSession = t.Cookie({
   session: t.Optional(t.String()),
 });
@@ -22,25 +15,30 @@ export const jwtAuth = new Elysia({ name: "jwtAuth" })
     jwt({
       name: "jwt",
       secret: JWT_SECRET,
+      schema: t.Object({
+        rooms: t.Record(t.String(), t.String()),
+      })
     }),
   )
   .guard({ cookie: cookieSession })
-  .resolve(async ({ jwt, cookie: { session }, request }) => {
-    if (isPublicRoute(request.method, new URL(request.url).pathname)) {
-      return { auth: null as { roomId: string; userId?: string } | null };
-    }
+  .as("global");
 
-    const token = session?.value as string | undefined;
+export const protectedRoutes = new Elysia({ name: "protectedRoutes" })
+  .use(jwtAuth)
+  .guard({ params: RoomIdParam })
+  .resolve( async ({ jwt, cookie: { session }, params }) => {
+    const token = session?.value
     if (!token) throw new UnauthorizedError("Missing session cookie");
 
     const payload = await jwt.verify(token);
     if (!payload) throw new UnauthorizedError("Invalid session");
 
+    if (!(params.room_id in payload.rooms))
+      throw new UnauthorizedError("Not authorized for this room");
+
     return {
       auth: {
-        roomId: payload.roomId as string,
-        userId: payload.userId as string | undefined,
+        rooms: payload.rooms
       },
     };
-  })
-  .as("scoped");
+  }).as("scoped");

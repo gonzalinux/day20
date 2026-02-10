@@ -23,7 +23,7 @@ export const WeeklyAvailabilitySchema = t.Object({
 });
 
 export const OverrideSchema = t.Object({
-  date: t.String({ format: "date-time" }),
+  date: t.Date({ format: "date-time" }),
   availability: t.Array(TimeSelectionSchema),
   type: t.Union([t.Literal("unblock"), t.Literal("block")]),
 });
@@ -59,21 +59,16 @@ export const UpdateRoomRequest = t.Object({
 });
 
 export const RoomIdParam = t.Object({
-  id: t.String(),
+  room_id: t.String(),
 });
 
 // ===== User Request Schemas =====
 
 export const CreateUserRequest = t.Object({
-  roomId: t.String(),
   name: t.String({ minLength: 1 }),
   role: t.Union([t.Literal("admin"), t.Literal("user")]),
   weeklyAvailability: WeeklyAvailabilitySchema,
   overrides: t.Array(OverrideSchema),
-});
-
-export const CreateUsersRequest = t.Object({
-  users: t.Array(CreateUserRequest),
 });
 
 export const UpdateUserRequest = t.Object({

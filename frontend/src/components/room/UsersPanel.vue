@@ -2,16 +2,18 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppInput from '@/components/AppInput.vue'
-import { addUsers } from '@/services/users'
+import { addUser } from '@/services/users'
+
+type RoomUser = { id: string; name: string; role: string }
 
 const props = defineProps<{
-  users: { id: string; name: string; role: string }[]
+  users: RoomUser[]
   currentUserId: string
   roomId: string
 }>()
 
 const emit = defineEmits<{
-  'user-added': [user: { id: string; name: string; role: string }]
+  'user-added': [user: RoomUser]
 }>()
 
 const { t } = useI18n()
@@ -37,21 +39,17 @@ async function submitAddPlayer() {
   addingPlayer.value = true
   error.value = ''
   try {
-    const { insertedIds } = await addUsers(props.roomId, {
-      users: [
-        {
-          roomId: props.roomId,
-          name: newPlayerName.value,
-          role: 'user' as const,
-          weeklyAvailability: emptyWeek,
-          overrides: [],
-        },
-      ],
+    const user = await addUser(props.roomId, {
+      name: newPlayerName.value,
+      role: 'user' as const,
+      weeklyAvailability: emptyWeek,
+      overrides: [],
     })
-    emit('user-added', { id: insertedIds[0], name: newPlayerName.value, role: 'user' })
+
+    emit('user-added', { id: user._id, name: user.name, role: user.role })
     newPlayerName.value = ''
-  } catch (e: any) {
-    error.value = e?.message ?? String(e)
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : String(e)
   } finally {
     addingPlayer.value = false
   }

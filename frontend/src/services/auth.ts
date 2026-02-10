@@ -7,13 +7,13 @@ export async function loginRoom(id: string, credentials: { password?: string; to
 }
 
 export async function getMe(roomId: string) {
-  const { data, error } = await api.rooms({ id: roomId }).me.get()
+  const { data, error } = await api.rooms({ room_id: roomId }).me.get()
   if (error) throw error
   return data
 }
 
 export async function selectUser(roomId: string, userId: string) {
-  const { data, error } = await api.rooms({ id: roomId })['select-user'].post({ userId })
+  const { data, error } = await api.rooms({ room_id: roomId })['select-user'].post({ userId })
   if (error) throw error
   return data
 }

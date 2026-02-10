@@ -1,18 +1,17 @@
 import { Elysia } from "elysia";
 import { ObjectId } from "mongodb";
 import * as Service from "../domain/service";
-import type { User } from "../repository/user";
 import { NotFoundError } from "./errors.types";
 import {
   CreateRoomRequest,
   UpdateRoomRequest,
   RoomIdParam,
-  CreateUsersRequest,
+  CreateUserRequest,
   DeleteUsersRequest,
   LoginRoomRequest,
   SelectUserRequest,
 } from "./requests.types";
-import { jwtAuth } from "./auth.ts";
+import { jwtAuth, protectedRoutes } from "./auth.ts";
 
 export const routes = new Elysia()
   .use(jwtAuth)
@@ -33,9 +32,18 @@ export const routes = new Elysia()
         token: body.token,
       });
 
-      const token = await jwt.sign({ roomId: roomId });
+      let roomMap : Record<string, string> = {}
+      if (session !== undefined) {
+        const payload = await jwt.verify(session.value)
+        if (payload)
+        roomMap = {...payload.rooms}
+      }
+      roomMap[roomId] = ""
+
+      const token = await jwt.sign({rooms: roomMap});
+
       session.set({
-        value: token,
+        value: JSON.stringify(token),
         httpOnly: true,
         sameSite: "lax",
         path: "/",
@@ -45,32 +53,39 @@ export const routes = new Elysia()
     },
     {body: LoginRoomRequest },
 )
+  .use(protectedRoutes)
   .get(
-    "/rooms/:id/me",
+    "/rooms/:room_id/me",
     async ({ params, auth }) => {
-      return { roomId: auth!.roomId, userId: auth!.userId ?? null };
+
+
+      return { roomId: params.room_id, userId: auth.rooms[params.room_id] };
     },
     { params: RoomIdParam },
   )
-  .get("/rooms/:id/users", async ({ params }) => {
-    const roomId = params.id;
-    const users = await Service.getUsersFromRoom(roomId);
-    return users;
-  })
+  .get(
+    "/rooms/:room_id/users",
+    async ({ params }) => {
+      const roomId = params.room_id;
+      const users = await Service.getUsersFromRoom(roomId);
+      return users;
+    },
+    { params: RoomIdParam },
+  )
   .post(
-    "/rooms/:id/select-user",
+    "/rooms/:room_id/select-user",
     async ({ params, body, jwt, cookie: { session }, auth }) => {
-      const roomId =params.id;
+      const roomId = params.room_id;
       const userId = body.userId;
 
       const users = await Service.getUsersFromRoom(roomId);
       const user = users.find((u) => u._id === userId);
       if (!user) throw new NotFoundError("User not found in this room");
 
-      const token = await jwt.sign({
-        roomId: auth!.roomId,
-        userId: body.userId,
-      });
+      const rooms = { ...auth.rooms };
+      rooms[roomId] = userId;
+
+      const token = await jwt.sign({ rooms });
       session.set({
         value: token,
         httpOnly: true,
@@ -83,20 +98,20 @@ export const routes = new Elysia()
     { params: RoomIdParam, body: SelectUserRequest },
   )
   .get(
-    "/rooms/:id",
+    "/rooms/:room_id",
     async ({ params }) => {
-      const roomId =params.id;
+      const roomId = params.room_id;
       return await Service.getRoom(roomId);
     },
     { params: RoomIdParam },
   )
   .put(
-    "/rooms/:id",
+    "/rooms/:room_id",
     async ({ params, body }) => {
       const { _id, ...updateFields } = body;
       const updates = {
         ...updateFields,
-        _id: new ObjectId(params.id),
+        _id: new ObjectId(params.room_id),
       };
       const modified = await Service.updateRoom(updates as any);
       return { modified };
@@ -104,21 +119,18 @@ export const routes = new Elysia()
     { params: RoomIdParam, body: UpdateRoomRequest },
   )
   .post(
-    "/rooms/:id/users",
+    "/rooms/:room_id/users",
     async ({ params, body, status }) => {
-      const roomId = params.id;
-      const insertedIds = await Service.addUsersToRoom(
-        roomId,
-        body.users as unknown as User[],
-      );
-      return status(201, { insertedIds });
+      const roomId = params.room_id;
+      const user = await Service.addUserToRoom(roomId, { ...body, roomId });
+      return status(201, user);
     },
-    { params: RoomIdParam, body: CreateUsersRequest },
+    { params: RoomIdParam, body: CreateUserRequest },
   )
   .delete(
-    "/rooms/:id/users",
+    "/rooms/:room_id/users",
     async ({ params, body }) => {
-      const roomId = params.id;
+      const roomId = params.room_id;
       const userIds = body.userIds;
       const deletedCount = await Service.removeUsersFromRoom(roomId, userIds);
       return { deletedCount };
