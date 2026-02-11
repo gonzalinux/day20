@@ -21,7 +21,8 @@ export default {
     descriptionPlaceholder: 'ej. Partida de los viernes',
     minDuration: 'Horas mín.',
     maxDuration: 'Horas máx.',
-    joinHint: 'Consejo: es más fácil si simplemente haces clic en el enlace que tu amigo compartió.',
+    joinHint:
+      'Consejo: es más fácil si simplemente haces clic en el enlace que tu amigo compartió.',
   },
   room: {
     loggingIn: 'Entrando a la sala...',
@@ -46,8 +47,17 @@ export default {
     whoAreYou: '¿Quién eres?',
     whoAreYouHint: 'Elige tu personaje del grupo',
     you: 'Tú',
+    settingsCopyLink: 'Copiar enlace',
+    settingsCopyLinkHint: 'Cualquier persona con este enlace podrá unirse a la sala',
+    settingsLinkCopied: 'Enlace copiado!',
     settingsTheme: 'Tema',
     settingsLang: 'Idioma',
+    settingsDuration: 'Duración de sesión',
+    settingsDurationMin: 'Mín',
+    settingsDurationMax: 'Máx',
+    settingsDurationUnit: 'h',
+    durationCancel: 'Cancelar',
+    durationSave: 'Guardar',
   },
   home: {
     q1: '¿Organizar horarios es difícil?',

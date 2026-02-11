@@ -1,0 +1,16 @@
+<script setup lang="ts">
+defineEmits<{ click: [] }>()
+</script>
+
+<template>
+  <button
+    class="w-full flex items-center justify-between px-5 py-4 rounded-xl bg-bg/50 ring-1 ring-secondary/15 hover:ring-accent/40 hover:bg-bg/80 transition-all cursor-pointer"
+    @click="$emit('click')"
+  >
+    <div class="flex flex-col items-start">
+      <span class="text-lg text-primary font-body"><slot name="label" /></span>
+      <span v-if="$slots.subtitle" class="text-sm text-secondary/70"><slot name="subtitle" /></span>
+    </div>
+    <slot />
+  </button>
+</template>

@@ -14,12 +14,13 @@ const route = useRoute()
 const router = useRouter()
 
 const initialMode = route.query.mode
+const initialName = route.query.name as string | undefined
 const activePanel = ref<'create' | 'join' | null>(
   initialMode === 'create' || initialMode === 'join' ? initialMode : null,
 )
 
 const createStep = ref(1)
-const roomName = ref('')
+const roomName = ref(initialName ?? '')
 const roomPassword = ref('')
 const roomDescription = ref('')
 const sessionMinHours = ref(1)
@@ -83,7 +84,10 @@ async function submitJoinRoom() {
     const { room } = await loginRoom(roomName.value, {
       password: roomPassword.value,
     })
-    router.push({ path: localePath(`/rooms/${room._id}`, locale.value), query: { token: room.magicToken } })
+    router.push({
+      path: localePath(`/rooms/${room._id}`, locale.value),
+      query: { token: room.magicToken },
+    })
   } catch (e: unknown) {
     joinError.value = (e as Error)?.message ?? String(e)
   } finally {
@@ -286,6 +290,7 @@ async function submitJoinRoom() {
                 :placeholder="t('roomLogin.password')"
                 class="focus:border-primary"
               />
+              <p v-if="joinError" class="text-red-500 text-sm">{{ joinError }}</p>
               <button
                 @click="submitJoinRoom"
                 type="submit"

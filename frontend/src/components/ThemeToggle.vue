@@ -11,6 +11,8 @@ function toggle() {
   dark.value = !dark.value
   document.documentElement.classList.toggle('dark', dark.value)
 }
+
+defineExpose({ toggle })
 </script>
 
 <template>

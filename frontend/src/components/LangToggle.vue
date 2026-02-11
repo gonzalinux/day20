@@ -16,6 +16,8 @@ function toggle() {
     router.push(path)
   }
 }
+
+defineExpose({ toggle })
 </script>
 
 <template>

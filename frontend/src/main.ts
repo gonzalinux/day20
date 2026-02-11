@@ -15,6 +15,8 @@ import {
   GiTabletopPlayers,
   GiCalendarHalfYear,
   GiCog,
+  GiLinkedRings,
+  GiCheckMark,
 } from 'oh-vue-icons/icons'
 
 import App from './App.vue'
@@ -34,6 +36,8 @@ addIcons(
   GiTabletopPlayers,
   GiCalendarHalfYear,
   GiCog,
+  GiLinkedRings,
+  GiCheckMark,
 )
 
 const app = createApp(App)

@@ -1,64 +1,42 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import AppInput from '@/components/AppInput.vue'
 import RoomCalendarLayout from '@/components/room/RoomCalendarLayout.vue'
-import { getMe, loginRoom, selectUser } from '@/services/auth'
-import { addUser, getUsersFromRoom } from '@/services/users'
-import { getRoom } from '@/services/rooms'
+import { getMe, loginRoom } from '@/services/auth'
+import { useRoomStore } from '@/stores/room'
 
 const { t } = useI18n()
 const route = useRoute()
+const router = useRouter()
+const room = useRoomStore()
 
 type State = 'loading' | 'nameYourself' | 'addPlayers' | 'pickUser' | 'calendar'
 const state = ref<State>('loading')
 const error = ref('')
 
-const roomId = route.params.id as string
-const roomName = ref('')
+room.room.id = route.params.id as string
 
 // nameYourself
 const adminName = ref('')
 const saving = ref(false)
 
-// current user
-const currentUserId = ref('')
+// pickUser
 const selectingUser = ref(false)
 
 // addPlayers
-const users = ref<{ id: string; name: string; role: string }[]>([])
 const newPlayerName = ref('')
 const addingPlayer = ref(false)
-
-const emptyWeek = {
-  monday: [],
-  tuesday: [],
-  wednesday: [],
-  thursday: [],
-  friday: [],
-  saturday: [],
-  sunday: [],
-}
-
-async function loadRoom() {
-  const fetchedUsers = await getUsersFromRoom(roomId)
-  users.value = fetchedUsers.map((user) => ({
-    id: user.id,
-    name: user.name,
-    role: user.role,
-  }))
-}
 
 onMounted(async () => {
   try {
     // Check if we already have a valid session with a userId
-    const me = await getMe(roomId).catch(() => null)
+    const me = await getMe(room.room.id).catch(() => null)
     if (me?.userId) {
-      currentUserId.value = me.userId
-      const { room } = await getRoom(roomId)
-      roomName.value = room.name
-      await loadRoom()
+      room.currentUserId = me.userId
+      await Promise.all([room.fetchRoom(), room.fetchUsers()])
+      if (route.query.token) router.replace({ query: {} })
       state.value = 'calendar'
       return
     }
@@ -68,15 +46,17 @@ onMounted(async () => {
 
   const token = route.query.token as string | undefined
   if (!token) {
+    router.replace('/room-login?mode=join&name=' + room.room.id)
     error.value = 'No token provided'
     return
   }
 
   try {
-    const result = await loginRoom(roomId, { token })
-    roomName.value = result.room.name
-    await loadRoom()
-    if (users.value.length === 0) {
+    const result = await loginRoom(room.room.id, { token })
+    router.replace({ query: {} })
+    room.room.name = result.room.name
+    await room.fetchUsers()
+    if (room.users.length === 0) {
       state.value = 'nameYourself'
     } else {
       state.value = 'pickUser'
@@ -90,15 +70,8 @@ async function submitName() {
   saving.value = true
   error.value = ''
   try {
-    const user = await addUser(roomId, {
-      name: adminName.value,
-      role: 'admin' as const,
-      weeklyAvailability: emptyWeek,
-      overrides: [],
-    })
-    await selectUser(roomId, user._id)
-    currentUserId.value = user._id
-    users.value.push({ id: user._id, name: user.name, role: user.role })
+    const user = await room.addUser(adminName.value, 'admin')
+    await room.selectUser(user._id)
     state.value = 'addPlayers'
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : String(e)
@@ -111,13 +84,7 @@ async function submitAddPlayer() {
   addingPlayer.value = true
   error.value = ''
   try {
-    const user = await addUser(roomId, {
-      name: newPlayerName.value,
-      role: 'user' as const,
-      weeklyAvailability: emptyWeek,
-      overrides: [],
-    })
-    users.value.push({ id: user._id, name: user.name, role: user.role })
+    await room.addUser(newPlayerName.value, 'user')
     newPlayerName.value = ''
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : String(e)
@@ -130,8 +97,7 @@ async function pickUserAndContinue(userId: string) {
   selectingUser.value = true
   error.value = ''
   try {
-    await selectUser(roomId, userId)
-    currentUserId.value = userId
+    await room.selectUser(userId)
     state.value = 'calendar'
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : String(e)
@@ -168,11 +134,8 @@ function onAfterLeave() {
       class="flex flex-col pt-16"
       :class="fullLayout ? 'h-screen' : 'items-center justify-center px-6 min-h-screen'"
     >
-      <h1
-        v-if="roomName && !fullLayout"
-        class="text-3xl font-heading font-bold text-primary mb-8"
-      >
-        {{ roomName }}
+      <h1 v-if="room.room.name && !fullLayout" class="text-3xl font-heading font-bold text-primary mb-8">
+        {{ room.room.name }}
       </h1>
 
       <Transition name="fade" mode="out-in" @after-leave="onAfterLeave">
@@ -222,7 +185,7 @@ function onAfterLeave() {
             <!-- User list -->
             <ul class="flex flex-col gap-2 mb-6">
               <li
-                v-for="user in users"
+                v-for="user in room.users"
                 :key="user.id"
                 class="flex items-center justify-between px-4 py-2 rounded-lg bg-bg/50"
               >
@@ -273,7 +236,7 @@ function onAfterLeave() {
             <p class="text-sm text-secondary/70 mb-6">{{ t('room.whoAreYouHint') }}</p>
 
             <ul class="flex flex-col gap-2">
-              <li v-for="user in users" :key="user.id">
+              <li v-for="user in room.users" :key="user.id">
                 <button
                   :disabled="selectingUser"
                   class="w-full flex items-center justify-between px-4 rounded-lg bg-bg/50 hover:bg-accent/10 hover:ring-1 hover:ring-accent/30 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
@@ -297,11 +260,6 @@ function onAfterLeave() {
         <RoomCalendarLayout
           v-else-if="state === 'calendar'"
           key="calendar"
-          :users="users"
-          :room-name="roomName"
-          :current-user-id="currentUserId"
-          :room-id="roomId"
-          @user-added="(u) => users.push(u)"
         />
       </Transition>
     </main>

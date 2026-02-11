@@ -41,9 +41,9 @@ export const routes = new Elysia()
       roomMap[roomId] = ""
 
       const token = await jwt.sign({rooms: roomMap});
-
+      console.log(token)
       session.set({
-        value: JSON.stringify(token),
+        value: token,
         httpOnly: true,
         sameSite: "lax",
         path: "/",
@@ -57,8 +57,6 @@ export const routes = new Elysia()
   .get(
     "/rooms/:room_id/me",
     async ({ params, auth }) => {
-
-
       return { roomId: params.room_id, userId: auth.rooms[params.room_id] };
     },
     { params: RoomIdParam },
@@ -105,15 +103,15 @@ export const routes = new Elysia()
     },
     { params: RoomIdParam },
   )
-  .put(
+  .patch(
     "/rooms/:room_id",
     async ({ params, body }) => {
       const { _id, ...updateFields } = body;
       const updates = {
         ...updateFields,
-        _id: new ObjectId(params.room_id),
+        _id: params.room_id,
       };
-      const modified = await Service.updateRoom(updates as any);
+      const modified = await Service.updateRoom(updates);
       return { modified };
     },
     { params: RoomIdParam, body: UpdateRoomRequest },

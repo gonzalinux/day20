@@ -1,52 +1,21 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppInput from '@/components/AppInput.vue'
-import { addUser } from '@/services/users'
+import { useRoomStore } from '@/stores/room'
 
-type RoomUser = { id: string; name: string; role: string }
-
-const props = defineProps<{
-  users: RoomUser[]
-  currentUserId: string
-  roomId: string
-}>()
-
-const emit = defineEmits<{
-  'user-added': [user: RoomUser]
-}>()
-
+const room = useRoomStore()
 const { t } = useI18n()
-
-const currentUser = computed(() => props.users.find((u) => u.id === props.currentUserId))
-const isAdmin = computed(() => currentUser.value?.role === 'admin')
 
 const newPlayerName = ref('')
 const addingPlayer = ref(false)
 const error = ref('')
 
-const emptyWeek = {
-  monday: [],
-  tuesday: [],
-  wednesday: [],
-  thursday: [],
-  friday: [],
-  saturday: [],
-  sunday: [],
-}
-
 async function submitAddPlayer() {
   addingPlayer.value = true
   error.value = ''
   try {
-    const user = await addUser(props.roomId, {
-      name: newPlayerName.value,
-      role: 'user' as const,
-      weeklyAvailability: emptyWeek,
-      overrides: [],
-    })
-
-    emit('user-added', { id: user._id, name: user.name, role: user.role })
+    await room.addUser(newPlayerName.value, 'user')
     newPlayerName.value = ''
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : String(e)
@@ -64,15 +33,15 @@ async function submitAddPlayer() {
 
     <ul class="flex flex-col gap-2">
       <li
-        v-for="user in users"
+        v-for="user in room.users"
         :key="user.id"
         class="flex items-center justify-between px-4 rounded-lg"
-        :class="user.id === currentUserId ? 'bg-accent/10 ring-1 ring-accent/30' : 'bg-bg/50'"
+        :class="user.id === room.currentUserId ? 'bg-accent/10 ring-1 ring-accent/30' : 'bg-bg/50'"
       >
         <span class="text-primary font-body pt-3 pb-1">{{ user.name }}</span>
         <div class="flex items-center gap-1.5">
           <span
-            v-if="user.id === currentUserId"
+            v-if="user.id === room.currentUserId"
             class="text-xs font-heading font-bold text-primary bg-primary/15 px-2 py-0.5 rounded"
           >
             {{ t('room.you') }}
@@ -88,7 +57,7 @@ async function submitAddPlayer() {
     </ul>
 
     <!-- Add player form (admin only) -->
-    <div v-if="isAdmin" class="mt-auto pt-4">
+    <div v-if="room.isAdmin" class="mt-auto pt-4">
       <form class="flex gap-2" @submit.prevent="submitAddPlayer">
         <div class="flex-1">
           <AppInput v-model="newPlayerName" :placeholder="t('room.playerNamePlaceholder')" />

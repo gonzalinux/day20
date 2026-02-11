@@ -68,7 +68,7 @@ export async function updateRoom(updates: PartialWithId<Room>) {
   if (!existing) throw new NotFoundError("Room not found");
 
   updates.updatedAt = new Date();
-  const result = await Repository.updateRoom(updates);
+  const result = await Repository.updateRoom({...existing,...updates});
   return result;
 }
 
