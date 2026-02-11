@@ -1,13 +1,14 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { getRoom, updateRoom } from '@/services/rooms'
-import { getUsersFromRoom, addUser as apiAddUser } from '@/services/users'
+import { getUsersFromRoom, addUser as apiAddUser, setPin as apiSetPin, removePin as apiRemovePin } from '@/services/users'
 import { selectUser as apiSelectUser } from '@/services/auth'
 
 export interface RoomUser {
   id: string
   name: string
   role: string
+  hasPin: boolean
 }
 
 export interface Room {
@@ -59,13 +60,25 @@ export const useRoomStore = defineStore('room', () => {
       weeklyAvailability: emptyWeek,
       overrides: [],
     })
-    users.value.push({ id: user._id, name: user.name, role: user.role })
+    users.value.push({ id: user._id, name: user.name, role: user.role, hasPin: user.hasPin })
     return user
   }
 
-  async function selectUser(userId: string) {
-    await apiSelectUser(room.value.id, userId)
+  async function selectUser(userId: string, pin?: string) {
+    await apiSelectUser(room.value.id, userId, pin)
     currentUserId.value = userId
+  }
+
+  async function setPin(userId: string, pin: string) {
+    await apiSetPin(room.value.id, userId, pin)
+    const user = users.value.find((u) => u.id === userId)
+    if (user) user.hasPin = true
+  }
+
+  async function removePin(userId: string) {
+    await apiRemovePin(room.value.id, userId)
+    const user = users.value.find((u) => u.id === userId)
+    if (user) user.hasPin = false
   }
 
   async function saveDuration(min: number, max: number) {
@@ -92,6 +105,8 @@ export const useRoomStore = defineStore('room', () => {
     fetchUsers,
     addUser,
     selectUser,
+    setPin,
+    removePin,
     saveDuration,
     $reset,
   }

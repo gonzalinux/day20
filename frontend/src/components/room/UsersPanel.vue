@@ -10,6 +10,7 @@ const { t } = useI18n()
 const newPlayerName = ref('')
 const addingPlayer = ref(false)
 const error = ref('')
+const removingPinFor = ref('')
 
 async function submitAddPlayer() {
   addingPlayer.value = true
@@ -21,6 +22,18 @@ async function submitAddPlayer() {
     error.value = e instanceof Error ? e.message : String(e)
   } finally {
     addingPlayer.value = false
+  }
+}
+
+async function handleRemovePin(userId: string) {
+  removingPinFor.value = userId
+  error.value = ''
+  try {
+    await room.removePin(userId)
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : String(e)
+  } finally {
+    removingPinFor.value = ''
   }
 }
 </script>
@@ -40,6 +53,17 @@ async function submitAddPlayer() {
       >
         <span class="text-primary font-body pt-3 pb-1">{{ user.name }}</span>
         <div class="flex items-center gap-1.5">
+          <VIcon v-if="user.hasPin" name="gi-padlock" class="text-secondary/50" scale="0.7" />
+          <!-- Admin: remove another user's PIN -->
+          <button
+            v-if="room.isAdmin && user.hasPin && user.id !== room.currentUserId"
+            :disabled="removingPinFor === user.id"
+            class="text-xs text-red-400 hover:text-red-300 cursor-pointer disabled:opacity-50"
+            :title="t('room.removePin')"
+            @click="handleRemovePin(user.id)"
+          >
+            {{ t('room.removePin') }}
+          </button>
           <span
             v-if="user.id === room.currentUserId"
             class="text-xs font-heading font-bold text-primary bg-primary/15 px-2 py-0.5 rounded"

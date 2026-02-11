@@ -12,8 +12,8 @@ export async function getMe(roomId: string) {
   return data
 }
 
-export async function selectUser(roomId: string, userId: string) {
-  const { data, error } = await api.rooms({ room_id: roomId })['select-user'].post({ userId })
+export async function selectUser(roomId: string, userId: string, pin?: string) {
+  const { data, error } = await api.rooms({ room_id: roomId })['select-user'].post({ userId, pin })
   if (error) throw error
   return data
 }

@@ -6,7 +6,7 @@ import { localePath } from '@/i18n'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import LangToggle from '@/components/LangToggle.vue'
 import AppInput from '@/components/AppInput.vue'
-import { createRoom } from '@/services/rooms'
+import { createRoom, roomExists } from '@/services/rooms'
 import { loginRoom } from '@/services/auth'
 
 const { t, locale } = useI18n()
@@ -25,6 +25,18 @@ const roomPassword = ref('')
 const roomDescription = ref('')
 const sessionMinHours = ref(1)
 const sessionMaxHours = ref(4)
+const availableFrom = ref(10)
+const availableTo = ref(23)
+
+const enabledDays = {
+  monday: true,
+  tuesday: true,
+  wednesday: true,
+  thursday: true,
+  friday: true,
+  saturday: true,
+  sunday: true,
+}
 
 watch(sessionMinHours, (min) => {
   if (sessionMaxHours.value < min) sessionMaxHours.value = min
@@ -36,26 +48,52 @@ function setPanel(mode: 'create' | 'join' | null) {
   router.replace({ query: mode ? { mode } : {} })
 }
 
-function nextCreateStep() {
-  createStep.value = 2
+async function nextCreateStep() {
+  if (createStep.value === 1) {
+    createError.value = ''
+    loading.value = true
+    try {
+      const exists = await roomExists(roomName.value)
+      if (exists) {
+        createError.value = t('roomLogin.roomAlreadyExists')
+        return
+      }
+    } catch {
+      // If the check fails, let the user proceed — creation will catch the real error
+    } finally {
+      loading.value = false
+    }
+  }
+  createStep.value++
 }
 
 function prevCreateStep() {
-  createStep.value = 1
+  createStep.value--
 }
 
 const loading = ref(false)
 const createError = ref('')
 const joinError = ref('')
 
-const emptyWeek = {
-  monday: [],
-  tuesday: [],
-  wednesday: [],
-  thursday: [],
-  friday: [],
-  saturday: [],
-  sunday: [],
+type TimeOfDay = { hour: number; minute: number }
+type DayKey = keyof typeof enabledDays
+
+function buildDefaultAvailability() {
+  const days = Object.keys(enabledDays) as DayKey[]
+  return days.reduce(
+    (week, day) => {
+      week[day] = enabledDays[day]
+        ? [
+            {
+              start: { hour: availableFrom.value, minute: 0 },
+              end: { hour: availableTo.value, minute: 0 },
+            },
+          ]
+        : []
+      return week
+    },
+    {} as Record<DayKey, { start: TimeOfDay; end: TimeOfDay }[]>,
+  )
 }
 
 async function submitCreateRoom() {
@@ -67,7 +105,7 @@ async function submitCreateRoom() {
       description: roomDescription.value,
       password: roomPassword.value,
       duration: { min: sessionMinHours.value, max: sessionMaxHours.value },
-      defaultAvailability: emptyWeek,
+      defaultAvailability: buildDefaultAvailability(),
     })
     router.push({ path: localePath(`/rooms/${_id}`, locale.value), query: { token: magicToken } })
   } catch (e: unknown) {
@@ -101,7 +139,11 @@ async function submitJoinRoom() {
     <!-- Navbar -->
     <nav class="fixed top-0 left-0 right-0 z-50 flex items-center px-6 py-3 bg-transparent">
       <div class="flex gap-4 align-bottom">
-        <span class="hidden md:block font-heading font-bold text-3xl text-primary">Day20</span>
+        <RouterLink
+          :to="localePath('/', locale)"
+          class="hidden md:block font-heading font-bold text-3xl text-primary no-underline"
+          >Day20</RouterLink
+        >
         <ThemeToggle />
         <LangToggle />
       </div>
@@ -184,6 +226,12 @@ async function submitJoinRoom() {
                 :class="createStep === 2 ? 'bg-accent text-bg' : 'bg-secondary/30 text-secondary'"
                 >2</span
               >
+              <span class="h-0.5 flex-1 bg-secondary/30" />
+              <span
+                class="size-7 rounded-full flex items-center justify-center text-sm font-bold font-heading"
+                :class="createStep === 3 ? 'bg-accent text-bg' : 'bg-secondary/30 text-secondary'"
+                >3</span
+              >
             </div>
 
             <Transition name="fade" mode="out-in">
@@ -207,9 +255,11 @@ async function submitJoinRoom() {
                   :placeholder="t('roomLogin.password')"
                   class="focus:border-accent"
                 />
+                <p v-if="createError" class="text-red-500 text-sm">{{ createError }}</p>
                 <button
                   type="submit"
-                  class="mt-2 bg-accent text-bg font-heading font-bold px-6 py-3 rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                  :disabled="loading"
+                  class="mt-2 bg-accent text-bg font-heading font-bold px-6 py-3 rounded-lg hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {{ t('roomLogin.next') }}
                 </button>
@@ -217,10 +267,10 @@ async function submitJoinRoom() {
 
               <!-- Step 2: Description & Duration -->
               <form
-                v-else
+                v-else-if="createStep === 2"
                 key="step2"
                 class="flex flex-col gap-4"
-                @submit.prevent="submitCreateRoom"
+                @submit.prevent="nextCreateStep"
               >
                 <AppInput
                   v-model="roomDescription"
@@ -245,6 +295,56 @@ async function submitJoinRoom() {
                     :max="24"
                     :label="t('roomLogin.maxDuration')"
                     placeholder="4"
+                    class="focus:border-accent"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  class="mt-2 bg-accent text-bg font-heading font-bold px-6 py-3 rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                >
+                  {{ t('roomLogin.next') }}
+                </button>
+              </form>
+
+              <!-- Step 3: Available Session Times -->
+              <form
+                v-else
+                key="step3"
+                class="flex flex-col gap-4"
+                @submit.prevent="submitCreateRoom"
+              >
+                <p class="text-sm text-secondary/70 italic">
+                  {{ t('roomLogin.availableTimesHint') }}
+                </p>
+                <div class="flex gap-2.5 justify-center">
+                  <button
+                    v-for="[name, enabled] in Object.entries(enabledDays)"
+                    :key="name"
+                    type="button"
+                    class="w-10 h-11 rounded-lg text-xs font-heading font-bold transition-colors cursor-pointer"
+                    :class="enabled ? 'bg-accent text-bg' : 'bg-secondary/20 text-secondary'"
+                    @click="enabledDays[name as DayKey] = !enabled"
+                  >
+                    {{ t(`roomLogin.day_${name}`) }}
+                  </button>
+                </div>
+                <div class="flex gap-4">
+                  <AppInput
+                    v-model="availableFrom"
+                    type="number"
+                    :min="0"
+                    :max="23"
+                    :label="t('roomLogin.availableFrom')"
+                    placeholder="10"
+                    class="focus:border-accent"
+                  />
+                  <AppInput
+                    v-model="availableTo"
+                    type="number"
+                    :min="1"
+                    :max="24"
+                    :label="t('roomLogin.availableTo')"
+                    placeholder="23"
                     class="focus:border-accent"
                   />
                 </div>

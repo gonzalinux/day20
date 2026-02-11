@@ -1,15 +1,15 @@
 import { Elysia } from "elysia";
-import { ObjectId } from "mongodb";
 import * as Service from "../domain/service";
-import { NotFoundError } from "./errors.types";
 import {
   CreateRoomRequest,
   UpdateRoomRequest,
   RoomIdParam,
+  RoomUserIdParam,
   CreateUserRequest,
   DeleteUsersRequest,
   LoginRoomRequest,
   SelectUserRequest,
+  SetPinRequest,
 } from "./requests.types";
 import { jwtAuth, protectedRoutes } from "./auth.ts";
 
@@ -53,6 +53,14 @@ export const routes = new Elysia()
     },
     {body: LoginRoomRequest },
 )
+  .get(
+    "/rooms/:room_id/exists",
+    async ({ params }) => {
+      const exists = await Service.roomExists(params.room_id);
+      return { exists };
+    },
+    { params: RoomIdParam },
+  )
   .use(protectedRoutes)
   .get(
     "/rooms/:room_id/me",
@@ -76,9 +84,7 @@ export const routes = new Elysia()
       const roomId = params.room_id;
       const userId = body.userId;
 
-      const users = await Service.getUsersFromRoom(roomId);
-      const user = users.find((u) => u._id === userId);
-      if (!user) throw new NotFoundError("User not found in this room");
+      const user = await Service.selectUser(roomId, userId, body.pin);
 
       const rooms = { ...auth.rooms };
       rooms[roomId] = userId;
@@ -134,4 +140,30 @@ export const routes = new Elysia()
       return { deletedCount };
     },
     { params: RoomIdParam, body: DeleteUsersRequest },
+  )
+  .put(
+    "/rooms/:room_id/users/:user_id/pin",
+    async ({ params, body, auth }) => {
+      const roomId = params.room_id;
+      const authUserId = auth.rooms[roomId];
+      if (!authUserId) {
+        throw new Error("User not selected");
+      }
+      await Service.setUserPin(roomId, authUserId, params.user_id, body.pin);
+      return { ok: true };
+    },
+    { params: RoomUserIdParam, body: SetPinRequest },
+  )
+  .delete(
+    "/rooms/:room_id/users/:user_id/pin",
+    async ({ params, auth }) => {
+      const roomId = params.room_id;
+      const authUserId = auth.rooms[roomId];
+      if (!authUserId) {
+        throw new Error("User not selected");
+      }
+      await Service.removeUserPin(roomId, authUserId, params.user_id);
+      return { ok: true };
+    },
+    { params: RoomUserIdParam },
   );

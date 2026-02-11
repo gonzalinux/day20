@@ -25,5 +25,24 @@ export async function getUsersFromRoom(roomId: string) {
     id: user._id,
     name: user.name,
     role: user.role,
+    hasPin: user.hasPin,
   }))
+}
+
+export async function setPin(roomId: string, userId: string, pin: string) {
+  const { data, error } = await api
+    .rooms({ room_id: roomId })
+    .users({ user_id: userId })
+    .pin.put({ pin })
+  if (error) throw error
+  return data
+}
+
+export async function removePin(roomId: string, userId: string) {
+  const { data, error } = await api
+    .rooms({ room_id: roomId })
+    .users({ user_id: userId })
+    .pin.delete()
+  if (error) throw error
+  return data
 }

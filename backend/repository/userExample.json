@@ -4,21 +4,21 @@
   "name": "Grog",
   "role": "admin",
   "weeklyAvailability": {
-    "monday": [{ "start": "18:00", "end": "22:00" }],
+    "monday": [{ "start": { "hour": 18, "minute": 0 }, "end": { "hour": 22, "minute": 0 } }],
     "tuesday": [],
-    "wednesday": [{ "start": "18:00", "end": "23:00" }],
+    "wednesday": [{ "start": { "hour": 18, "minute": 0 }, "end": { "hour": 23, "minute": 0 } }],
     "thursday": [],
-    "friday": [{ "start": "17:00", "end": "23:00" }],
+    "friday": [{ "start": { "hour": 17, "minute": 0 }, "end": { "hour": 23, "minute": 0 } }],
     "saturday": [
-      { "start": "10:00", "end": "14:00" },
-      { "start": "18:00", "end": "23:00" }
+      { "start": { "hour": 10, "minute": 0 }, "end": { "hour": 14, "minute": 0 } },
+      { "start": { "hour": 18, "minute": 0 }, "end": { "hour": 23, "minute": 0 } }
     ],
-    "sunday": [{ "start": "10:00", "end": "22:00" }]
+    "sunday": [{ "start": { "hour": 10, "minute": 0 }, "end": { "hour": 22, "minute": 0 } }]
   },
   "overrides": [
     {
       "date": "2025-07-15",
-      "availability": [{ "start": "00:00", "end": "23:00" }],
+      "availability": [{ "start": { "hour": 0, "minute": 0 }, "end": { "hour": 23, "minute": 0 } }],
       "reason": "Day off work"
     },
     {

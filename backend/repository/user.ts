@@ -7,6 +7,7 @@ export interface User {
   roomId: string;
   name: string;
   role: UserRole;
+  pin?: string;
   weeklyAvailability: WeeklyAvailability;
   overrides: Override[];
 }

@@ -2,9 +2,14 @@ import { t } from "elysia";
 
 // ===== Nested Schemas =====
 
+const TimeOfDaySchema = t.Object({
+  hour: t.Number({ minimum: 0, maximum: 23 }),
+  minute: t.Number({ minimum: 0, maximum: 59 }),
+});
+
 export const TimeSelectionSchema = t.Object({
-  start: t.Date({ format: "date-time" }),
-  end: t.Date({ format: "date-time" }),
+  start: TimeOfDaySchema,
+  end: TimeOfDaySchema,
 });
 
 export const SessionDurationSchema = t.Object({
@@ -48,6 +53,7 @@ export const LoginRoomRequest = t.Object({
 
 export const SelectUserRequest = t.Object({
   userId: t.String(),
+  pin: t.Optional(t.String()),
 });
 
 export const UpdateRoomRequest = t.Object({
@@ -84,6 +90,15 @@ export const DeleteUsersRequest = t.Object({
   userIds: t.Array(t.String()),
 });
 
+export const SetPinRequest = t.Object({
+  pin: t.String({ pattern: '^\\d{4}$' }),
+});
+
 export const UserIdParam = t.Object({
   id: t.String(),
+});
+
+export const RoomUserIdParam = t.Object({
+  room_id: t.String(),
+  user_id: t.String(),
 });

@@ -1,29 +1,39 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { localePath } from '@/i18n'
 import { useRoute, useRouter } from 'vue-router'
 import AppInput from '@/components/AppInput.vue'
 import RoomCalendarLayout from '@/components/room/RoomCalendarLayout.vue'
+import ThemeToggle from '@/components/ThemeToggle.vue'
+import LangToggle from '@/components/LangToggle.vue'
 import { getMe, loginRoom } from '@/services/auth'
 import { useRoomStore } from '@/stores/room'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const room = useRoomStore()
 
-type State = 'loading' | 'nameYourself' | 'addPlayers' | 'pickUser' | 'calendar'
+type State = 'loading' | 'nameYourself' | 'setAdminPin' | 'addPlayers' | 'pickUser' | 'calendar'
 const state = ref<State>('loading')
 const error = ref('')
 
+room.$reset()
 room.room.id = route.params.id as string
 
 // nameYourself
 const adminName = ref('')
 const saving = ref(false)
 
+// setAdminPin
+const adminPin = ref('')
+const settingPin = ref(false)
+
 // pickUser
 const selectingUser = ref(false)
+const pickPinUserId = ref('')
+const pickPinValue = ref('')
 
 // addPlayers
 const newPlayerName = ref('')
@@ -72,11 +82,24 @@ async function submitName() {
   try {
     const user = await room.addUser(adminName.value, 'admin')
     await room.selectUser(user._id)
-    state.value = 'addPlayers'
+    state.value = 'setAdminPin'
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : String(e)
   } finally {
     saving.value = false
+  }
+}
+
+async function submitAdminPin() {
+  settingPin.value = true
+  error.value = ''
+  try {
+    await room.setPin(room.currentUserId, adminPin.value)
+    state.value = 'addPlayers'
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : String(e)
+  } finally {
+    settingPin.value = false
   }
 }
 
@@ -93,17 +116,32 @@ async function submitAddPlayer() {
   }
 }
 
-async function pickUserAndContinue(userId: string) {
+function handlePickUser(userId: string) {
+  const user = room.users.find((u) => u.id === userId)
+  if (user?.hasPin) {
+    pickPinUserId.value = userId
+    pickPinValue.value = ''
+    error.value = ''
+    return
+  }
+  pickUserAndContinue(userId)
+}
+
+async function pickUserAndContinue(userId: string, pin?: string) {
   selectingUser.value = true
   error.value = ''
   try {
-    await room.selectUser(userId)
+    await room.selectUser(userId, pin)
     state.value = 'calendar'
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : String(e)
   } finally {
     selectingUser.value = false
   }
+}
+
+function submitPickPin() {
+  pickUserAndContinue(pickPinUserId.value, pickPinValue.value)
 }
 
 function finishAddPlayers() {
@@ -122,11 +160,15 @@ function onAfterLeave() {
 <template>
   <div class="min-h-screen bg-bg font-body">
     <!-- Navbar -->
-    <nav class="fixed top-0 left-0 right-0 z-50 flex items-center px-6 py-3 bg-transparent">
-      <span class="font-heading font-bold text-primary">
+    <nav class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 bg-transparent">
+      <RouterLink :to="localePath('/', locale)" class="font-heading font-bold text-primary no-underline">
         <span class="text-4xl">D</span><span class="text-2xl">ay</span
         ><span class="text-4xl">20</span>
-      </span>
+      </RouterLink>
+      <div class="flex items-center gap-2">
+        <ThemeToggle />
+        <LangToggle />
+      </div>
     </nav>
 
     <!-- Content -->
@@ -169,6 +211,36 @@ function onAfterLeave() {
                 class="mt-2 bg-accent text-bg font-heading font-bold px-6 py-3 rounded-lg hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {{ saving ? t('room.saving') : t('room.continue') }}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Set Admin PIN -->
+        <div v-else-if="state === 'setAdminPin'" key="setAdminPin" class="w-full max-w-md">
+          <div class="rounded-2xl bg-secondary/20 shadow-lg p-8">
+            <h2 class="text-2xl font-heading font-bold text-accent mb-2">
+              {{ t('room.setPin') }}
+            </h2>
+            <p class="text-sm text-secondary/70 mb-6">{{ t('room.adminPinRequired') }}</p>
+
+            <form class="flex flex-col gap-4" @submit.prevent="submitAdminPin">
+              <AppInput
+                v-model="adminPin"
+                :label="t('room.pin')"
+                :placeholder="t('room.pinHint')"
+                type="password"
+                inputmode="numeric"
+                maxlength="4"
+                pattern="\d{4}"
+              />
+              <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
+              <button
+                type="submit"
+                :disabled="settingPin || adminPin.length !== 4"
+                class="mt-2 bg-accent text-bg font-heading font-bold px-6 py-3 rounded-lg hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {{ settingPin ? t('room.saving') : t('room.continue') }}
               </button>
             </form>
           </div>
@@ -240,16 +312,44 @@ function onAfterLeave() {
                 <button
                   :disabled="selectingUser"
                   class="w-full flex items-center justify-between px-4 rounded-lg bg-bg/50 hover:bg-accent/10 hover:ring-1 hover:ring-accent/30 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  @click="pickUserAndContinue(user.id)"
+                  @click="handlePickUser(user.id)"
                 >
                   <span class="text-primary font-body pt-3 pb-1">{{ user.name }}</span>
-                  <span
-                    v-if="user.role === 'admin'"
-                    class="text-xs font-heading font-bold text-accent bg-accent/15 px-2 py-0.5 rounded"
-                  >
-                    {{ t('room.admin') }}
-                  </span>
+                  <div class="flex items-center gap-1.5">
+                    <VIcon v-if="user.hasPin" name="gi-padlock" class="text-secondary/50" scale="0.8" />
+                    <span
+                      v-if="user.role === 'admin'"
+                      class="text-xs font-heading font-bold text-accent bg-accent/15 px-2 py-0.5 rounded"
+                    >
+                      {{ t('room.admin') }}
+                    </span>
+                  </div>
                 </button>
+
+                <!-- Inline PIN input -->
+                <form
+                  v-if="pickPinUserId === user.id"
+                  class="flex gap-2 mt-1 px-1"
+                  @submit.prevent="submitPickPin"
+                >
+                  <div class="flex-1">
+                    <AppInput
+                      v-model="pickPinValue"
+                      :placeholder="t('room.enterPin')"
+                      type="password"
+                      inputmode="numeric"
+                      maxlength="4"
+                      pattern="\d{4}"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    :disabled="selectingUser || pickPinValue.length !== 4"
+                    class="bg-accent text-bg font-heading font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed self-end"
+                  >
+                    OK
+                  </button>
+                </form>
               </li>
             </ul>
             <p v-if="error" class="text-red-500 text-sm mt-4">{{ error }}</p>

@@ -34,7 +34,11 @@ onUnmounted(() => {
     >
       <!-- Left: logo + toggles -->
       <div class="flex gap-4 align-bottom">
-        <span class="hidden md:block font-heading font-bold text-3xl text-primary">Day20</span>
+        <RouterLink
+          :to="localePath('/', locale)"
+          class="hidden md:block font-heading font-bold text-3xl text-primary no-underline"
+          >Day20</RouterLink
+        >
         <ThemeToggle />
         <LangToggle />
       </div>
@@ -71,7 +75,10 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <button class="d20-button group relative w-72 h-72 cursor-pointer shrink-0">
+      <RouterLink
+        :to="localePath('/room-login', locale)"
+        class="d20-button group relative w-72 h-72 cursor-pointer shrink-0"
+      >
         <img
           src="/d20ImageAccentLight.png"
           alt="D20"
@@ -88,7 +95,7 @@ onUnmounted(() => {
           <span class="text-6xl">D</span><span class="text-4xl">ay</span
           ><span class="text-6xl">20</span>
         </span>
-      </button>
+      </RouterLink>
     </main>
 
     <section class="bg-secondary w-full py-16 px-6">

@@ -48,6 +48,24 @@ async function updateUser(updates: PartialWithId<User>) {
   return result.matchedCount;
 }
 
+async function setUserPin(roomId: string, userId: string, hashedPin: string) {
+  const users = getUsersCollection();
+  const result = await users.updateOne(
+    { _id: userId, roomId },
+    { $set: { pin: hashedPin } },
+  );
+  return result.matchedCount;
+}
+
+async function removeUserPin(roomId: string, userId: string) {
+  const users = getUsersCollection();
+  const result = await users.updateOne(
+    { _id: userId, roomId },
+    { $unset: { pin: "" } },
+  );
+  return result.matchedCount;
+}
+
 async function deleteUsers(deleteUsers: User[]) {
   const users = getUsersCollection();
   const result = await users.deleteMany(deleteUsers);
@@ -70,5 +88,7 @@ export default {
   createUser,
   getUsersFromRoom,
   updateUser,
+  setUserPin,
+  removeUserPin,
   deleteUsers,
 };

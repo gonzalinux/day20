@@ -16,8 +16,8 @@ export interface SessionDuration {
 }
 
 export interface TimeSelection {
-  start: Date;
-  end: Date;
+  start: { hour: number; minute: number };
+  end: { hour: number; minute: number };
 }
 
 export interface WeeklyAvailability {
