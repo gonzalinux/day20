@@ -26,6 +26,8 @@ export async function getUsersFromRoom(roomId: string) {
     name: user.name,
     role: user.role,
     hasPin: user.hasPin,
+    weeklyAvailability: user.weeklyAvailability,
+    overrides: user.overrides,
   }))
 }
 
@@ -43,6 +45,19 @@ export async function removePin(roomId: string, userId: string) {
     .rooms({ room_id: roomId })
     .users({ user_id: userId })
     .pin.delete()
+  if (error) throw error
+  return data
+}
+
+export async function updateUser(
+  roomId: string,
+  userId: string,
+  body: Parameters<ReturnType<ReturnType<typeof api.rooms>['users']>['patch']>[0],
+) {
+  const { data, error } = await api
+    .rooms({ room_id: roomId })
+    .users({ user_id: userId })
+    .patch(body)
   if (error) throw error
   return data
 }

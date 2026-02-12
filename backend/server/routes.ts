@@ -3,6 +3,7 @@ import * as Service from "../domain/service";
 import {
   CreateRoomRequest,
   UpdateRoomRequest,
+  UpdateUserAvailabilityRequest,
   RoomIdParam,
   RoomUserIdParam,
   CreateUserRequest,
@@ -159,6 +160,20 @@ export const routes = new Elysia()
       return { deletedCount };
     },
     { params: RoomIdParam, body: DeleteUsersRequest },
+  )
+  .patch(
+    "/rooms/:room_id/users/:user_id",
+    async ({ params, body, auth }) => {
+      const roomId = params.room_id;
+      const authUserId = auth.rooms[roomId] ?? "";
+      return await Service.updateUserAvailability(
+        roomId,
+        authUserId,
+        params.user_id,
+        body,
+      );
+    },
+    { params: RoomUserIdParam, body: UpdateUserAvailabilityRequest },
   )
   .put(
     "/rooms/:room_id/users/:user_id/pin",

@@ -18,8 +18,8 @@ defineExpose({ toggle })
 <template>
   <button
     @click="toggle"
-    class="text-primary hover:opacity-70 transition-opacity cursor-pointer rounded-full border-2 size-10"
+    class="text-primary hover:opacity-70 transition-opacity cursor-pointer rounded-full border-2 size-8"
   >
-    <VIcon class="size-9 p-0 m-0" :name="dark ? 'gi-sunrise' : 'gi-moon-bats'" scale="2" />
+    <VIcon class="size-7 p-0 m-0" :name="dark ? 'gi-sunrise' : 'gi-moon-bats'" scale="1.5" />
   </button>
 </template>

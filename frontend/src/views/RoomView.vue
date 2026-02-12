@@ -29,25 +29,25 @@ onMounted(async () => {
     }
   } catch {}
 
-  await Promise.all([
-    room.fetchRoom().catch(() => {}),
-    room.fetchUsers().catch(() => {})
-  ])
+  await Promise.all([room.fetchRoom().catch(() => {}), room.fetchUsers().catch(() => {})])
 })
 </script>
 
 <template>
   <div class="h-screen flex flex-col bg-bg font-body overflow-hidden">
     <!-- Navbar -->
-    <nav class="flex-none flex items-center justify-between px-6 py-3 bg-transparent">
+    <nav class="flex-none flex items-center justify-between px-4 py-2 bg-transparent">
       <RouterLink
         :to="localePath('/', locale)"
-        class="font-heading font-bold text-primary no-underline"
+        class="font-heading font-bold text-primary no-underline shrink-0"
       >
-        <span class="text-4xl">D</span><span class="text-2xl">ay</span
-        ><span class="text-4xl">20</span>
+        <span class="text-3xl">D</span><span class="text-xl">ay</span
+        ><span class="text-3xl">20</span>
       </RouterLink>
-      <div class="flex items-center gap-2">
+      <h1 v-if="room.room.name" class="text-2xl font-heading font-bold text-primary truncate mx-3">
+        {{ room.room.name }}
+      </h1>
+      <div class="flex items-center gap-2 shrink-0">
         <ThemeToggle />
         <LangToggle />
       </div>
@@ -58,13 +58,6 @@ onMounted(async () => {
       class="flex flex-col flex-1 min-h-0 w-full"
       :class="fullLayout ? '' : 'items-center justify-center px-2 lg:px-6'"
     >
-      <h1
-        v-if="room.room.name && !fullLayout"
-        class="text-3xl font-heading font-bold text-primary mb-8"
-      >
-        {{ room.room.name }}
-      </h1>
-
       <RouterView v-slot="{ Component }">
         <Transition name="fade" mode="out-in" @after-leave="onAfterLeave">
           <component :is="Component" />

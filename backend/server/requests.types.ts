@@ -86,6 +86,11 @@ export const UpdateUserRequest = t.Object({
   overrides: t.Optional(t.Array(OverrideSchema)),
 });
 
+export const UpdateUserAvailabilityRequest = t.Object({
+  weeklyAvailability: t.Optional(WeeklyAvailabilitySchema),
+  overrides: t.Optional(t.Array(OverrideSchema)),
+});
+
 export const DeleteUsersRequest = t.Object({
   userIds: t.Array(t.String()),
 });

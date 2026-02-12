@@ -14,20 +14,20 @@ const activePanel = ref<Panel>('calendar')
   <div class="flex-1 overflow-hidden flex flex-col w-full">
     <!-- Sliding track (mobile) / Grid (desktop) -->
     <div
-      class="flex w-[300%] flex-1 transition-transform duration-300 ease-in-out lg:w-full lg:grid lg:grid-cols-[280px_1fr_280px] lg:transition-none lg:translate-x-0"
+      class="flex w-[300%] flex-1 min-h-0 transition-transform duration-300 ease-in-out lg:w-full lg:grid lg:grid-cols-[280px_1fr_280px] lg:transition-none lg:translate-x-0"
       :class="{
         'translate-x-0': activePanel === 'users',
         '-translate-x-1/3': activePanel === 'calendar',
         '-translate-x-2/3': activePanel === 'settings',
       }"
     >
-      <div class="w-1/3 lg:w-full lg:border-r lg:border-secondary/20">
+      <div class="w-1/3 h-full overflow-hidden lg:w-full lg:border-r lg:border-secondary/20">
         <UsersPanel />
       </div>
-      <div class="w-1/3 lg:w-full">
+      <div class="w-1/3 h-full overflow-hidden lg:w-full">
         <CalendarPanel />
       </div>
-      <div class="w-1/3 lg:w-full lg:border-l lg:border-secondary/20">
+      <div class="w-1/3 h-full overflow-hidden lg:w-full lg:border-l lg:border-secondary/20">
         <SettingsPanel />
       </div>
     </div>

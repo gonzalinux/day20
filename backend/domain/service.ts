@@ -145,6 +145,28 @@ export async function removeUserPin(
   await Repository.removeUserPin(roomId, targetUserId);
 }
 
+export async function updateUserAvailability(
+  roomId: string,
+  authUserId: string,
+  targetUserId: string,
+  updates: Partial<Pick<User, "weeklyAvailability" | "overrides">>,
+) {
+  if (authUserId !== targetUserId)
+    throw new ForbiddenError("You can only edit your own availability");
+
+  const users = await Repository.getUsersFromRoom(roomId);
+  const target = users.find((u) => u._id === targetUserId);
+  if (!target) throw new NotFoundError("User not found");
+
+  const updatePayload: PartialWithId<User> = { _id: targetUserId, roomId };
+  if (updates.weeklyAvailability)
+    updatePayload.weeklyAvailability = updates.weeklyAvailability;
+  if (updates.overrides) updatePayload.overrides = updates.overrides;
+
+  await Repository.updateUser(updatePayload);
+  return stripPin({ ...target, ...updatePayload });
+}
+
 export async function removeUsersFromRoom(
   roomId: string,
   userIds: string[],

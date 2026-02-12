@@ -23,9 +23,9 @@ defineExpose({ toggle })
 <template>
   <button
     @click="toggle"
-    class="text-m text-primary hover:opacity-70 transition-opacity cursor-pointer flex font-semibold rounded-full border-2 size-10"
+    class="text-xs text-primary hover:opacity-70 transition-opacity cursor-pointer flex font-semibold rounded-full border-2 size-8"
   >
-    <span class="align-middle p-0 m-auto uppercase h-10 leading-11">{{
+    <span class="align-middle p-0 m-auto uppercase h-8 leading-9">{{
       locale === 'en' ? 'ES' : 'EN'
     }}</span>
   </button>

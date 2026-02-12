@@ -3,9 +3,11 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { localePath } from '@/i18n'
 import { useRoomStore } from '@/stores/room'
+import type { WeeklyAvailability } from '@/utils/availability'
 import SettingsRow from './SettingsRow.vue'
 import DurationModal from './DurationModal.vue'
 import PinModal from './PinModal.vue'
+import DefaultAvailabilityModal from './DefaultAvailabilityModal.vue'
 
 const room = useRoomStore()
 const { t, locale } = useI18n()
@@ -13,7 +15,9 @@ const { t, locale } = useI18n()
 const linkCopied = ref(false)
 const showDurationModal = ref(false)
 const showPinModal = ref(false)
+const showTimeWindowModal = ref(false)
 const pinSuccess = ref('')
+const resetSuccess = ref('')
 
 async function saveDuration(min: number, max: number) {
   showDurationModal.value = false
@@ -25,6 +29,17 @@ async function savePin(pin: string) {
   showPinModal.value = false
   pinSuccess.value = t('room.pinSet')
   setTimeout(() => (pinSuccess.value = ''), 2000)
+}
+
+async function handleResetAvailability() {
+  await room.resetAvailability()
+  resetSuccess.value = t('room.resetAvailabilityDone')
+  setTimeout(() => (resetSuccess.value = ''), 2000)
+}
+
+async function handleSaveDefaultAvailability(availability: WeeklyAvailability) {
+  showTimeWindowModal.value = false
+  await room.saveDefaultAvailability(availability)
 }
 
 function copyShareLink() {
@@ -60,6 +75,16 @@ function copyShareLink() {
           }}</template>
           <template #subtitle>{{ pinSuccess || t('room.pinHint') }}</template>
           <VIcon name="gi-padlock" class="text-secondary/50" scale="1.2" />
+        </SettingsRow>
+
+        <SettingsRow @click="handleResetAvailability">
+          <template #label>{{ t('room.resetAvailability') }}</template>
+          <template #subtitle>{{ resetSuccess || t('room.resetAvailabilityHint') }}</template>
+        </SettingsRow>
+
+        <SettingsRow v-if="room.isAdmin" @click="showTimeWindowModal = true">
+          <template #label>{{ t('room.editTimeWindow') }}</template>
+          <template #subtitle>{{ t('room.editTimeWindowHint') }}</template>
         </SettingsRow>
       </div>
     </div>
@@ -97,5 +122,12 @@ function copyShareLink() {
     />
 
     <PinModal v-if="showPinModal" @save="savePin" @close="showPinModal = false" />
+
+    <DefaultAvailabilityModal
+      v-if="showTimeWindowModal"
+      :default-availability="room.room.defaultAvailability"
+      @save="handleSaveDefaultAvailability"
+      @close="showTimeWindowModal = false"
+    />
   </div>
 </template>
