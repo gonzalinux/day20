@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { localePath } from '@/i18n'
 import { useRoute, useRouter } from 'vue-router'
 import AppInput from '@/components/AppInput.vue'
+import BaseModal from '@/components/BaseModal.vue'
 import { useRoomStore } from '@/stores/room'
 
 const room = useRoomStore()
@@ -15,6 +16,7 @@ const newPlayerName = ref('')
 const addingPlayer = ref(false)
 const error = ref('')
 const removingPinFor = ref('')
+const confirmRemovePinFor = ref('')
 const loggingOut = ref(false)
 
 async function submitAddPlayer() {
@@ -30,7 +32,10 @@ async function submitAddPlayer() {
   }
 }
 
-async function handleRemovePin(userId: string) {
+async function handleRemovePin() {
+  const userId = confirmRemovePinFor.value
+  confirmRemovePinFor.value = ''
+  if (!userId) return
   removingPinFor.value = userId
   error.value = ''
   try {
@@ -79,7 +84,7 @@ async function handleLogout() {
             :disabled="removingPinFor === user.id"
             class="text-xs font-heading font-bold text-red-500 bg-red-500/15 px-2 py-1 rounded hover:bg-red-500/25 transition-colors cursor-pointer disabled:opacity-50"
             :title="t('room.removePin')"
-            @click="handleRemovePin(user.id)"
+            @click="confirmRemovePinFor = user.id"
           >
             {{ t('room.removePin') }}
           </button>
@@ -128,5 +133,17 @@ async function handleLogout() {
         {{ t('room.logout') }}
       </button>
     </div>
+
+    <BaseModal
+      v-if="confirmRemovePinFor"
+      :title="t('room.removePin')"
+      :actions="[
+        { label: t('room.durationCancel'), handler: () => (confirmRemovePinFor = ''), variant: 'secondary' },
+        { label: t('room.removePin'), handler: handleRemovePin, variant: 'danger' },
+      ]"
+      @close="confirmRemovePinFor = ''"
+    >
+      <p class="text-primary/80 font-body">{{ t('room.removePinConfirm', { name: room.users.find(u => u.id === confirmRemovePinFor)?.name }) }}</p>
+    </BaseModal>
   </div>
 </template>

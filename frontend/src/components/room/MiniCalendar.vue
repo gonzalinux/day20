@@ -1,6 +1,19 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { formatDateKey } from '@/utils/availability'
+import { useI18n } from 'vue-i18n'
+import { DAY_KEYS, formatDateKey } from '@/utils/availability'
+
+const { t } = useI18n()
+
+const dayI18nKeys = {
+  monday: 'roomLogin.day_monday',
+  tuesday: 'roomLogin.day_tuesday',
+  wednesday: 'roomLogin.day_wednesday',
+  thursday: 'roomLogin.day_thursday',
+  friday: 'roomLogin.day_friday',
+  saturday: 'roomLogin.day_saturday',
+  sunday: 'roomLogin.day_sunday',
+} as const
 
 const props = defineProps<{
   overrideDates: string[]
@@ -83,8 +96,8 @@ function nextMonth() {
     </div>
 
     <div class="grid grid-cols-7 gap-0.5 text-center text-xs font-heading">
-      <span v-for="d in ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']" :key="d" class="text-secondary/60 py-1">
-        {{ d }}
+      <span v-for="day in DAY_KEYS" :key="day" class="text-secondary/60 py-1">
+        {{ t(dayI18nKeys[day]) }}
       </span>
       <template v-for="(day, i) in days" :key="i">
         <div v-if="day === null" />

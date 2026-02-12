@@ -18,6 +18,7 @@ import {
   GiLinkedRings,
   GiCheckMark,
   GiPadlock,
+  GiArrowDunk,
 } from 'oh-vue-icons/icons'
 
 import App from './App.vue'
@@ -40,6 +41,7 @@ addIcons(
   GiLinkedRings,
   GiCheckMark,
   GiPadlock,
+  GiArrowDunk,
 )
 
 const app = createApp(App)

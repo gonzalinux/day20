@@ -17,7 +17,6 @@ const { t } = useI18n()
 
 const availability = ref<WeeklyAvailability>(JSON.parse(JSON.stringify(props.defaultAvailability)))
 
-const selectedDays = ref<DayKey[]>(['monday'])
 const dayI18nKeys: Record<DayKey, string> = {
   monday: 'roomLogin.day_monday',
   tuesday: 'roomLogin.day_tuesday',
@@ -28,129 +27,160 @@ const dayI18nKeys: Record<DayKey, string> = {
   sunday: 'roomLogin.day_sunday',
 }
 
-function toggleDay(day: DayKey) {
-  const idx = selectedDays.value.indexOf(day)
-  if (idx >= 0 && selectedDays.value.length > 1) {
-    selectedDays.value.splice(idx, 1)
-  } else if (idx < 0) {
-    selectedDays.value.push(day)
-  }
-}
-
 const START_HOUR = 0
 const END_HOUR = 24
 const SLOT_COUNT = (END_HOUR - START_HOUR) * 2
 
-const grid = computed((): boolean[] => {
-  const firstDay = selectedDays.value[0] ?? 'monday'
-  return availabilityToGrid(availability.value[firstDay] ?? [], START_HOUR, END_HOUR)
+const grids = computed(() => {
+  return Object.fromEntries(
+    DAY_KEYS.map((d) => [
+      d,
+      availabilityToGrid(availability.value[d] ?? [], START_HOUR, END_HOUR),
+    ]),
+  ) as Record<DayKey, boolean[]>
 })
 
 type PaintMode = 'paint' | 'erase' | null
 const painting = ref<PaintMode>(null)
-const dragStart = ref(-1)
-const dragCurrent = ref(-1)
-
-function getSlotIndex(e: PointerEvent) {
-  const target = (e.target as HTMLElement).closest('[data-slot]')
-  if (!target) return -1
-  return parseInt((target as HTMLElement).dataset.slot!, 10)
-}
+const dragStartSlot = ref(-1)
+const dragCurrentSlot = ref(-1)
+const dragStartDay = ref(-1)
+const dragCurrentDay = ref(-1)
 
 function onPointerDown(e: PointerEvent) {
-  const idx = getSlotIndex(e)
-  if (idx < 0) return
+  const el = (e.target as HTMLElement).closest('[data-slot]') as HTMLElement | null
+  if (!el) return
   ;(e.target as HTMLElement).setPointerCapture?.(e.pointerId)
-  dragStart.value = idx
-  dragCurrent.value = idx
-  painting.value = grid.value[idx] ? 'erase' : 'paint'
+
+  const slotIdx = parseInt(el.dataset.slot!, 10)
+  const dayIdx = parseInt(el.dataset.day!, 10)
+  if (isNaN(dayIdx)) return
+
+  dragStartSlot.value = slotIdx
+  dragCurrentSlot.value = slotIdx
+  dragStartDay.value = dayIdx
+  dragCurrentDay.value = dayIdx
+
+  const day = DAY_KEYS[dayIdx]!
+  painting.value = grids.value[day][slotIdx] ? 'erase' : 'paint'
 }
 
 function onPointerMove(e: PointerEvent) {
   if (painting.value === null) return
   const el = document.elementFromPoint(e.clientX, e.clientY)
   if (!el) return
-  const slot = (el as HTMLElement).closest('[data-slot]')
+  const slot = (el as HTMLElement).closest('[data-slot]') as HTMLElement | null
   if (!slot) return
-  dragCurrent.value = parseInt((slot as HTMLElement).dataset.slot!, 10)
+  dragCurrentSlot.value = parseInt(slot.dataset.slot!, 10)
+  if (slot.dataset.day != null) {
+    dragCurrentDay.value = parseInt(slot.dataset.day, 10)
+  }
 }
 
 function onPointerUp() {
   if (painting.value === null) return
-  const minI = Math.min(dragStart.value, dragCurrent.value)
-  const maxI = Math.max(dragStart.value, dragCurrent.value)
 
-  const newGrid = [...grid.value]
-  for (let i = minI; i <= maxI; i++) {
-    newGrid[i] = painting.value === 'paint'
-  }
-  const selections = gridToAvailability(newGrid, START_HOUR)
-  for (const day of selectedDays.value) {
-    availability.value[day] = selections
+  const minDay = Math.min(dragStartDay.value, dragCurrentDay.value)
+  const maxDay = Math.max(dragStartDay.value, dragCurrentDay.value)
+  const minSlot = Math.min(dragStartSlot.value, dragCurrentSlot.value)
+  const maxSlot = Math.max(dragStartSlot.value, dragCurrentSlot.value)
+
+  for (let d = minDay; d <= maxDay; d++) {
+    const day = DAY_KEYS[d]!
+    const grid = [...grids.value[day]]
+    for (let s = minSlot; s <= maxSlot; s++) {
+      grid[s] = painting.value === 'paint'
+    }
+    availability.value[day] = gridToAvailability(grid, START_HOUR)
   }
 
   painting.value = null
-  dragStart.value = -1
-  dragCurrent.value = -1
+  dragStartSlot.value = -1
+  dragCurrentSlot.value = -1
+  dragStartDay.value = -1
+  dragCurrentDay.value = -1
 }
 
-function isInDragRange(index: number) {
-  if (painting.value === null) return false
-  const minI = Math.min(dragStart.value, dragCurrent.value)
-  const maxI = Math.max(dragStart.value, dragCurrent.value)
-  return index >= minI && index <= maxI
+function isInDragRange(dayIdx: number, slotIdx: number) {
+  if (painting.value === null || dragStartDay.value < 0) return false
+  const minDay = Math.min(dragStartDay.value, dragCurrentDay.value)
+  const maxDay = Math.max(dragStartDay.value, dragCurrentDay.value)
+  const minSlot = Math.min(dragStartSlot.value, dragCurrentSlot.value)
+  const maxSlot = Math.max(dragStartSlot.value, dragCurrentSlot.value)
+  return dayIdx >= minDay && dayIdx <= maxDay && slotIdx >= minSlot && slotIdx <= maxSlot
 }
 
-function slotClass(index: number) {
-  const on = grid.value[index]
-  const inRange = isInDragRange(index)
-  if (inRange) {
+function slotClass(dayIdx: number, slotIdx: number) {
+  const day = DAY_KEYS[dayIdx]!
+  const on = grids.value[day][slotIdx]
+  if (isInDragRange(dayIdx, slotIdx)) {
     return painting.value === 'paint' ? 'bg-accent/50' : 'bg-secondary/20'
   }
   return on ? 'bg-accent' : 'bg-secondary/10'
 }
+
+const scrollContainer = ref<HTMLElement | null>(null)
+
+onMounted(async () => {
+  await nextTick()
+  const firstGrid = grids.value[DAY_KEYS[0]!]
+  const firstOn = firstGrid.indexOf(true)
+  if (firstOn > 0 && scrollContainer.value) {
+    const slotHeight = scrollContainer.value.scrollHeight / SLOT_COUNT
+    const offset = Math.max(0, firstOn - 2) * slotHeight
+    scrollContainer.value.scrollTop = offset
+  }
+})
 </script>
 
 <template>
   <Teleport to="body">
     <div class="fixed inset-0 z-50 flex items-center justify-center" @click.self="emit('close')">
       <div class="absolute inset-0 bg-black/50" />
-      <div class="relative rounded-2xl bg-bg shadow-xl p-4 w-full max-w-sm mx-4 max-h-[85vh] flex flex-col">
+      <div
+        class="relative rounded-2xl bg-bg shadow-xl p-4 w-full max-w-lg mx-4 max-h-[85vh] flex flex-col"
+      >
         <h3 class="text-xl font-heading font-bold text-accent mb-3">
           {{ t('room.editTimeWindow') }}
         </h3>
 
-        <!-- Day chips -->
-        <div class="flex gap-1.5 justify-center mb-3 flex-wrap">
-          <button
-            v-for="day in DAY_KEYS"
-            :key="day"
-            class="w-10 h-9 rounded-lg text-xs font-heading font-bold transition-colors cursor-pointer"
-            :class="selectedDays.includes(day) ? 'bg-accent text-bg' : 'bg-secondary/20 text-secondary'"
-            @click="toggleDay(day)"
-          >
-            {{ t(dayI18nKeys[day]) }}
-          </button>
-        </div>
-
         <!-- Time grid -->
-        <div class="flex-1 min-h-0 overflow-y-auto select-none">
-          <div class="flex flex-col gap-px">
-            <div v-for="i in SLOT_COUNT" :key="i - 1" class="flex items-stretch min-h-6">
-              <div class="w-11 shrink-0 text-right pr-2 text-xs text-secondary/60 font-heading flex items-center justify-end">
+        <div ref="scrollContainer" class="flex-1 min-h-0 overflow-y-auto select-none">
+          <div
+            class="grid gap-x-0.5 gap-y-px"
+            style="grid-template-columns: 2.5rem repeat(7, 1fr)"
+          >
+            <!-- Day headers -->
+            <div class="sticky top-0 z-10 bg-bg" />
+            <div
+              v-for="day in DAY_KEYS"
+              :key="'h-' + day"
+              class="sticky top-0 z-10 bg-bg text-center text-xs font-heading font-bold pb-1 text-secondary"
+            >
+              {{ t(dayI18nKeys[day]) }}
+            </div>
+
+            <!-- Time slot rows -->
+            <template v-for="i in SLOT_COUNT" :key="i - 1">
+              <div
+                class="text-right pr-1 text-[10px] text-secondary/60 font-heading flex items-center justify-end leading-none"
+              >
                 <span v-if="(i - 1) % 2 === 0">{{ formatSlotTime(i - 1, START_HOUR) }}</span>
               </div>
               <div
+                v-for="(day, dayIdx) in DAY_KEYS"
+                :key="day"
+                :data-day="dayIdx"
                 :data-slot="i - 1"
-                class="flex-1 mr-8 lg:mr-0 rounded-sm transition-colors duration-75"
+                class="rounded-sm transition-colors duration-75 min-h-5"
                 style="touch-action: none"
-                :class="slotClass(i - 1)"
+                :class="slotClass(dayIdx, i - 1)"
                 @pointerdown="onPointerDown"
                 @pointermove="onPointerMove"
                 @pointerup="onPointerUp"
                 @pointercancel="onPointerUp"
               />
-            </div>
+            </template>
           </div>
         </div>
 
