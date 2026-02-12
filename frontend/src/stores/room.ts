@@ -2,7 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { getRoom, updateRoom } from '@/services/rooms'
 import { getUsersFromRoom, addUser as apiAddUser, setPin as apiSetPin, removePin as apiRemovePin } from '@/services/users'
-import { selectUser as apiSelectUser } from '@/services/auth'
+import { selectUser as apiSelectUser, logoutUser as apiLogoutUser } from '@/services/auth'
 
 export interface RoomUser {
   id: string
@@ -81,6 +81,11 @@ export const useRoomStore = defineStore('room', () => {
     if (user) user.hasPin = false
   }
 
+  async function logoutUser() {
+    await apiLogoutUser(room.value.id)
+    currentUserId.value = ''
+  }
+
   async function saveDuration(min: number, max: number) {
     room.value.duration = { min, max }
     await updateRoom(room.value.id, {
@@ -107,6 +112,7 @@ export const useRoomStore = defineStore('room', () => {
     selectUser,
     setPin,
     removePin,
+    logoutUser,
     saveDuration,
     $reset,
   }

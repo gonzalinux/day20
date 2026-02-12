@@ -11,7 +11,7 @@ const activePanel = ref<Panel>('calendar')
 </script>
 
 <template>
-  <div class="flex-1 overflow-hidden flex flex-col">
+  <div class="flex-1 overflow-hidden flex flex-col w-full">
     <!-- Sliding track (mobile) / Grid (desktop) -->
     <div
       class="flex w-[300%] flex-1 transition-transform duration-300 ease-in-out lg:w-full lg:grid lg:grid-cols-[280px_1fr_280px] lg:transition-none lg:translate-x-0"
@@ -33,10 +33,6 @@ const activePanel = ref<Panel>('calendar')
     </div>
 
     <!-- Bottom nav (mobile only) -->
-    <BottomNav
-      class="lg:hidden"
-      :active-panel="activePanel"
-      @select="activePanel = $event"
-    />
+    <BottomNav class="lg:hidden" :active-panel="activePanel" @select="activePanel = $event" />
   </div>
 </template>

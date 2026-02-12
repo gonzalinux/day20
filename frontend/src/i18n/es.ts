@@ -81,6 +81,7 @@ export default {
     pinSet: 'PIN establecido!',
     pinRemoved: 'PIN eliminado',
     adminPinRequired: 'Como admin, debes establecer un PIN',
+    logout: 'Cambiar usuario',
   },
   home: {
     q1: '¿Organizar horarios es difícil?',

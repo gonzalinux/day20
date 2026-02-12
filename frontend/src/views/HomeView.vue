@@ -36,9 +36,11 @@ onUnmounted(() => {
       <div class="flex gap-4 align-bottom">
         <RouterLink
           :to="localePath('/', locale)"
-          class="hidden md:block font-heading font-bold text-3xl text-primary no-underline"
-          >Day20</RouterLink
+          class="font-heading font-bold text-primary no-underline"
         >
+          <span class="text-4xl">D</span><span class="text-2xl">ay</span
+          ><span class="text-4xl">20</span>
+        </RouterLink>
         <ThemeToggle />
         <LangToggle />
       </div>

@@ -40,8 +40,8 @@ function copyShareLink() {
 
 <template>
   <div class="h-full flex flex-col">
-    <div class="flex-1 p-4 overflow-y-auto">
-      <h2 class="text-2xl font-heading font-bold text-accent mb-6">
+    <div class="flex-1 p-2 overflow-y-auto">
+      <h2 class="text-3xl font-heading font-bold text-accent mb-6">
         {{ t('room.navSettings') }}
       </h2>
 
@@ -55,7 +55,9 @@ function copyShareLink() {
         </SettingsRow>
 
         <SettingsRow @click="showPinModal = true">
-          <template #label>{{ room.currentUser?.hasPin ? t('room.changePin') : t('room.setPin') }}</template>
+          <template #label>{{
+            room.currentUser?.hasPin ? t('room.changePin') : t('room.setPin')
+          }}</template>
           <template #subtitle>{{ pinSuccess || t('room.pinHint') }}</template>
           <VIcon name="gi-padlock" class="text-secondary/50" scale="1.2" />
         </SettingsRow>
@@ -72,9 +74,9 @@ function copyShareLink() {
           <span class="text-lg font-heading font-bold text-accent">
             {{ t('room.settingsCopyLink') }}
           </span>
-          <span class="text-sm text-secondary/70 text-left leading-tight">
+          <span class="text-md text-secondary/70 text-left leading-tight">
             {{ linkCopied ? t('room.settingsLinkCopied') + '\n' : t('room.settingsCopyLinkHint') }}
-            <div v-if="linkCopied" class="text-sm h-2 w-2"></div>
+            <div v-if="linkCopied" class="md h-2 w-2"></div>
           </span>
         </div>
         <VIcon
@@ -94,10 +96,6 @@ function copyShareLink() {
       @close="showDurationModal = false"
     />
 
-    <PinModal
-      v-if="showPinModal"
-      @save="savePin"
-      @close="showPinModal = false"
-    />
+    <PinModal v-if="showPinModal" @save="savePin" @close="showPinModal = false" />
   </div>
 </template>

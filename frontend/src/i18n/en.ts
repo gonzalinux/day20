@@ -80,6 +80,7 @@ export default {
     pinSet: 'PIN set!',
     pinRemoved: 'PIN removed',
     adminPinRequired: 'As the admin, you must set a PIN',
+    logout: 'Switch user',
   },
   home: {
     q1: 'Scheduling is hard?',

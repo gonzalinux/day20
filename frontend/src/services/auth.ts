@@ -17,3 +17,9 @@ export async function selectUser(roomId: string, userId: string, pin?: string) {
   if (error) throw error
   return data
 }
+
+export async function logoutUser(roomId: string) {
+  const { data, error } = await api.rooms({ room_id: roomId }).logout.post()
+  if (error) throw error
+  return data
+}

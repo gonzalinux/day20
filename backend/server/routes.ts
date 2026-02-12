@@ -101,6 +101,25 @@ export const routes = new Elysia()
     },
     { params: RoomIdParam, body: SelectUserRequest },
   )
+  .post(
+    "/rooms/:room_id/logout",
+    async ({ params, jwt, cookie: { session }, auth }) => {
+      const roomId = params.room_id;
+      const rooms = { ...auth.rooms };
+      rooms[roomId] = "";
+
+      const token = await jwt.sign({ rooms });
+      session.set({
+        value: token,
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+      });
+
+      return { ok: true };
+    },
+    { params: RoomIdParam },
+  )
   .get(
     "/rooms/:room_id",
     async ({ params }) => {

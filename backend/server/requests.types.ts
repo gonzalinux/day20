@@ -66,7 +66,7 @@ export const UpdateRoomRequest = t.Object({
 
 export const RoomIdParam = t.Object({
   room_id: t.String(),
-});
+},{additionalProperties:true});
 
 // ===== User Request Schemas =====
 
