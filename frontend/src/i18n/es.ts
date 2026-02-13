@@ -101,6 +101,10 @@ export default {
     resetConfirmTitle: 'Reiniciar disponibilidad',
     resetConfirmMessage: 'Esto borrará todos tus horarios pintados y excepciones. Esta acción no se puede deshacer.',
     resetConfirmButton: 'Reiniciar',
+    combinedCalendar: 'Calendario Combinado',
+    tabCombined: 'Combinado',
+    combinedSubtitle: 'Disponibilidad del grupo',
+    combinedInfo: 'Muestra cuándo todos están libres en la semana seleccionada. Los bloques resaltados son horarios viables donde todos los jugadores están disponibles por la duración mínima de sesión.',
   },
   home: {
     q1: '¿Organizar horarios es difícil?',

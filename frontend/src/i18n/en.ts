@@ -100,6 +100,10 @@ export default {
     resetConfirmTitle: 'Reset availability',
     resetConfirmMessage: 'This will clear all your painted times and overrides. This action cannot be undone.',
     resetConfirmButton: 'Reset',
+    combinedCalendar: 'Combined Calendar',
+    tabCombined: 'Combined',
+    combinedSubtitle: 'Party availability overview',
+    combinedInfo: 'Shows when everyone is free for the selected week. Highlighted blocks are viable session times where all players are available for the minimum session duration.',
   },
   home: {
     q1: 'Scheduling is hard?',

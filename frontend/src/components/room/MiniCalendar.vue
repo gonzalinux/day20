@@ -18,6 +18,7 @@ const dayI18nKeys = {
 const props = defineProps<{
   overrideDates: string[]
   modelValue: Date | null
+  highlightWeek?: Date | null
 }>()
 
 const emit = defineEmits<{
@@ -64,6 +65,24 @@ function isToday(day: number) {
   return dateKey(day) === todayKey
 }
 
+function isInHighlightWeek(day: number) {
+  if (!props.highlightWeek) return false
+  const d = new Date(year.value, month.value, day)
+  const mon = props.highlightWeek.getTime()
+  const sun = mon + 6 * 86400000
+  const t = d.getTime()
+  return t >= mon && t <= sun
+}
+
+function highlightWeekPosition(day: number): 'start' | 'end' | 'mid' | null {
+  if (!isInHighlightWeek(day)) return null
+  const d = new Date(year.value, month.value, day)
+  const dow = (d.getDay() + 6) % 7
+  if (dow === 0) return 'start'
+  if (dow === 6) return 'end'
+  return 'mid'
+}
+
 function selectDay(day: number) {
   emit('update:modelValue', new Date(year.value, month.value, day))
 }
@@ -103,13 +122,17 @@ function nextMonth() {
         <div v-if="day === null" />
         <button
           v-else
-          class="relative w-8 h-8 mx-auto rounded-lg flex items-center justify-center text-xs cursor-pointer transition-colors"
+          class="relative w-8 h-8 mx-auto flex items-center justify-center text-xs cursor-pointer transition-colors"
           :class="[
             isSelected(day)
-              ? 'bg-accent text-bg font-bold'
+              ? 'bg-accent text-bg font-bold rounded-lg'
               : isToday(day)
-                ? 'bg-primary/20 text-primary font-bold'
-                : 'text-secondary hover:bg-secondary/15',
+                ? 'bg-primary/20 text-primary font-bold rounded-lg'
+                : 'text-secondary hover:bg-secondary/15 rounded-lg',
+            isInHighlightWeek(day) && !isSelected(day) ? 'ring-1 ring-accent/40' : '',
+            highlightWeekPosition(day) === 'start' ? 'rounded-r-none' : '',
+            highlightWeekPosition(day) === 'end' ? 'rounded-l-none' : '',
+            highlightWeekPosition(day) === 'mid' ? 'rounded-none' : '',
           ]"
           @click="selectDay(day)"
         >

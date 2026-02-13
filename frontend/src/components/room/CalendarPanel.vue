@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoomStore } from '@/stores/room'
 import MiniCalendar from './MiniCalendar.vue'
+import CombinedCalendar from './CombinedCalendar.vue'
 import {
   type DayKey,
   type WeeklyAvailability,
@@ -12,14 +13,29 @@ import {
   formatSlotTime,
   dateToDayKey,
   formatDateKey,
+  getMondayOfWeek,
 } from '@/utils/availability'
+
+const props = defineProps<{
+  initialTab?: 'weekly' | 'overrides' | 'combined'
+}>()
+
+const emit = defineEmits<{ 'update:tab': [tab: Tab] }>()
 
 const { t } = useI18n()
 const room = useRoomStore()
 
-type Tab = 'weekly' | 'overrides'
-const activeTab = ref<Tab>('weekly')
+type Tab = 'weekly' | 'overrides' | 'combined'
+const activeTab = ref<Tab>(props.initialTab ?? 'weekly')
 const showInfo = ref(false)
+
+watch(() => props.initialTab, (val) => {
+  if (val) activeTab.value = val
+})
+
+watch(activeTab, (val) => {
+  emit('update:tab', val)
+})
 
 // === Weekly mode ===
 const dayI18nKeys: Record<DayKey, string> = {
@@ -52,6 +68,9 @@ const weeklyGrids = computed(() => {
 // === Override mode ===
 const selectedDate = ref<Date | null>(null)
 const calendarExpanded = ref(true)
+const overrideHighlightWeek = computed(() =>
+  selectedDate.value ? getMondayOfWeek(selectedDate.value) : null,
+)
 
 const overrideDates = computed(() => {
   const user = room.currentUser
@@ -61,27 +80,47 @@ const overrideDates = computed(() => {
   )
 })
 
-const overrideGrid = computed(() => {
-  if (!selectedDate.value || !room.currentUser) return null
-  const dayKey = dateToDayKey(selectedDate.value)
-  const baseGrid = availabilityToGrid(
-    room.currentUser.weeklyAvailability[dayKey] ?? [],
-    startHour.value,
-    endHour.value,
-  )
-  const dateStr = formatDateKey(selectedDate.value)
-  const override = room.currentUser.overrides.find(
-    (o) => (typeof o.date === 'string' ? o.date : formatDateKey(new Date(o.date))) === dateStr,
-  )
-  if (!override) return baseGrid.map((on) => ({ base: on, effective: on, overridden: false }))
+const overrideWeekDates = computed(() => {
+  if (!overrideHighlightWeek.value) return []
+  const dates: Date[] = []
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(overrideHighlightWeek.value)
+    d.setDate(d.getDate() + i)
+    dates.push(d)
+  }
+  return dates
+})
 
-  const overrideSlots = availabilityToGrid(override.availability, startHour.value, endHour.value)
-  return baseGrid.map((base, i) => {
-    if (override.type === 'block') {
-      return { base, effective: base && !overrideSlots[i], overridden: base && overrideSlots[i] }
+type OverrideCell = { base: boolean; effective: boolean; overridden: boolean }
+
+const overrideWeekGrids = computed(() => {
+  if (!selectedDate.value || !room.currentUser) return null
+  const grids: Record<number, OverrideCell[]> = {}
+  for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+    const date = overrideWeekDates.value[dayIdx]!
+    const dayKey = dateToDayKey(date)
+    const baseGrid = availabilityToGrid(
+      room.currentUser.weeklyAvailability[dayKey] ?? [],
+      startHour.value,
+      endHour.value,
+    )
+    const dateStr = formatDateKey(date)
+    const override = room.currentUser.overrides.find(
+      (o) => (typeof o.date === 'string' ? o.date : formatDateKey(new Date(o.date))) === dateStr,
+    )
+    if (!override) {
+      grids[dayIdx] = baseGrid.map((on) => ({ base: on, effective: on, overridden: false }))
+    } else {
+      const overrideSlots = availabilityToGrid(override.availability, startHour.value, endHour.value)
+      grids[dayIdx] = baseGrid.map((base, i) => {
+        if (override.type === 'block') {
+          return { base, effective: base && !overrideSlots[i], overridden: base && !!overrideSlots[i] }
+        }
+        return { base, effective: base || !!overrideSlots[i], overridden: !base && !!overrideSlots[i] }
+      })
     }
-    return { base, effective: base || overrideSlots[i], overridden: !base && overrideSlots[i] }
-  })
+  }
+  return grids
 })
 
 function onDateSelected(date: Date) {
@@ -118,16 +157,17 @@ function onPointerDown(e: PointerEvent) {
   dragStartSlot.value = slotIdx
   dragCurrentSlot.value = slotIdx
 
+  const dayIdx = parseInt(el.dataset.day!, 10)
+  if (isNaN(dayIdx)) return
+  dragStartDay.value = dayIdx
+  dragCurrentDay.value = dayIdx
+
   if (activeTab.value === 'weekly') {
-    const dayIdx = parseInt(el.dataset.day!, 10)
-    if (isNaN(dayIdx)) return
-    dragStartDay.value = dayIdx
-    dragCurrentDay.value = dayIdx
     const day = DAY_KEYS[dayIdx]!
     painting.value = weeklyGrids.value[day][slotIdx] ? 'erase' : 'paint'
   } else {
-    if (!overrideGrid.value) return
-    const cell = overrideGrid.value[slotIdx]!
+    if (!overrideWeekGrids.value) return
+    const cell = overrideWeekGrids.value[dayIdx]![slotIdx]!
     painting.value = cell.effective ? 'erase' : 'paint'
   }
 }
@@ -139,7 +179,7 @@ function onPointerMove(e: PointerEvent) {
   const slot = (el as HTMLElement).closest('[data-slot]') as HTMLElement | null
   if (!slot) return
   dragCurrentSlot.value = parseInt(slot.dataset.slot!, 10)
-  if (activeTab.value === 'weekly' && slot.dataset.day != null) {
+  if (slot.dataset.day != null) {
     dragCurrentDay.value = parseInt(slot.dataset.day, 10)
   }
 }
@@ -150,9 +190,7 @@ function onPointerUp() {
   if (activeTab.value === 'weekly') {
     commitWeeklyPaint()
   } else {
-    const minI = Math.min(dragStartSlot.value, dragCurrentSlot.value)
-    const maxI = Math.max(dragStartSlot.value, dragCurrentSlot.value)
-    commitOverridePaint(minI, maxI)
+    commitOverridePaint()
   }
 
   flashSaved()
@@ -183,49 +221,56 @@ function commitWeeklyPaint() {
   room.saveWeeklyAvailability(updated)
 }
 
-function commitOverridePaint(minI: number, maxI: number) {
+function commitOverridePaint() {
   const user = room.currentUser
-  if (!user || !selectedDate.value || !overrideGrid.value) return
+  if (!user || !overrideWeekGrids.value) return
 
-  const dayKey = dateToDayKey(selectedDate.value)
-  const baseGrid = availabilityToGrid(
-    user.weeklyAvailability[dayKey] ?? [],
-    startHour.value,
-    endHour.value,
-  )
-  const effectiveGrid = overrideGrid.value.map((c) => c.effective)
-  for (let i = minI; i <= maxI; i++) {
-    effectiveGrid[i] = painting.value === 'paint'
-  }
+  const minDay = Math.min(dragStartDay.value, dragCurrentDay.value)
+  const maxDay = Math.max(dragStartDay.value, dragCurrentDay.value)
+  const minSlot = Math.min(dragStartSlot.value, dragCurrentSlot.value)
+  const maxSlot = Math.max(dragStartSlot.value, dragCurrentSlot.value)
 
-  const blocked: boolean[] = []
-  const unblocked: boolean[] = []
-  for (let i = 0; i < effectiveGrid.length; i++) {
-    blocked.push(!!baseGrid[i] && !effectiveGrid[i])
-    unblocked.push(!baseGrid[i] && !!effectiveGrid[i])
-  }
+  let newOverrides = [...user.overrides]
 
-  const dateStr = formatDateKey(selectedDate.value)
-  const newOverrides = user.overrides.filter(
-    (o) => (typeof o.date === 'string' ? o.date : formatDateKey(new Date(o.date))) !== dateStr,
-  )
+  for (let d = minDay; d <= maxDay; d++) {
+    const date = overrideWeekDates.value[d]!
+    const dateStr = formatDateKey(date)
+    const dayKey = dateToDayKey(date)
+    const baseGrid = availabilityToGrid(
+      user.weeklyAvailability[dayKey] ?? [],
+      startHour.value,
+      endHour.value,
+    )
+    const effectiveGrid = overrideWeekGrids.value[d]!.map((c) => c.effective)
+    for (let s = minSlot; s <= maxSlot; s++) {
+      effectiveGrid[s] = painting.value === 'paint'
+    }
 
-  const hasBlocks = blocked.some(Boolean)
-  const hasUnblocks = unblocked.some(Boolean)
+    const blocked: boolean[] = []
+    const unblocked: boolean[] = []
+    for (let i = 0; i < effectiveGrid.length; i++) {
+      blocked.push(!!baseGrid[i] && !effectiveGrid[i])
+      unblocked.push(!baseGrid[i] && !!effectiveGrid[i])
+    }
 
-  if (hasBlocks) {
-    newOverrides.push({
-      date: dateStr,
-      type: 'block',
-      availability: gridToAvailability(blocked, startHour.value),
-    })
-  }
-  if (hasUnblocks) {
-    newOverrides.push({
-      date: dateStr,
-      type: 'unblock',
-      availability: gridToAvailability(unblocked, startHour.value),
-    })
+    newOverrides = newOverrides.filter(
+      (o) => (typeof o.date === 'string' ? o.date : formatDateKey(new Date(o.date))) !== dateStr,
+    )
+
+    if (blocked.some(Boolean)) {
+      newOverrides.push({
+        date: dateStr,
+        type: 'block',
+        availability: gridToAvailability(blocked, startHour.value),
+      })
+    }
+    if (unblocked.some(Boolean)) {
+      newOverrides.push({
+        date: dateStr,
+        type: 'unblock',
+        availability: gridToAvailability(unblocked, startHour.value),
+      })
+    }
   }
 
   room.saveOverrides(newOverrides)
@@ -240,13 +285,6 @@ function isInWeeklyDragRange(dayIdx: number, slotIdx: number) {
   return dayIdx >= minDay && dayIdx <= maxDay && slotIdx >= minSlot && slotIdx <= maxSlot
 }
 
-function isInDragRange(index: number) {
-  if (painting.value === null) return false
-  const minI = Math.min(dragStartSlot.value, dragCurrentSlot.value)
-  const maxI = Math.max(dragStartSlot.value, dragCurrentSlot.value)
-  return index >= minI && index <= maxI
-}
-
 function weeklySlotClass(dayIdx: number, slotIdx: number) {
   const day = DAY_KEYS[dayIdx]!
   const on = weeklyGrids.value[day][slotIdx]
@@ -256,11 +294,11 @@ function weeklySlotClass(dayIdx: number, slotIdx: number) {
   return on ? 'bg-accent' : 'bg-secondary/10'
 }
 
-function overrideSlotClass(index: number) {
-  if (!overrideGrid.value) return 'bg-secondary/10'
-  const cell = overrideGrid.value[index]
+function overrideSlotClass(dayIdx: number, slotIdx: number) {
+  if (!overrideWeekGrids.value) return 'bg-secondary/10'
+  const cell = overrideWeekGrids.value[dayIdx]?.[slotIdx]
   if (!cell) return 'bg-secondary/10'
-  const inRange = isInDragRange(index)
+  const inRange = isInWeeklyDragRange(dayIdx, slotIdx)
 
   if (inRange) {
     return painting.value === 'paint' ? 'bg-green-400/40' : 'bg-red-400/40'
@@ -281,7 +319,7 @@ watch(activeTab, () => {
     <!-- Tabs -->
     <div class="flex gap-2 mb-1 sticky top-0 z-10 bg-bg pt-0.5 pb-1">
       <button
-        v-for="tab in ['weekly', 'overrides'] as Tab[]"
+        v-for="tab in ['weekly', 'overrides', 'combined'] as Tab[]"
         :key="tab"
         class="flex-1 py-2 rounded-lg font-heading font-bold text-sm transition-colors cursor-pointer"
         :class="
@@ -291,14 +329,14 @@ watch(activeTab, () => {
         "
         @click="activeTab = tab"
       >
-        {{ t(tab === 'weekly' ? 'room.tabWeekly' : 'room.tabOverrides') }}
+        {{ t(tab === 'weekly' ? 'room.tabWeekly' : tab === 'overrides' ? 'room.tabOverrides' : 'room.tabCombined') }}
       </button>
     </div>
 
     <!-- Subtitle + info -->
     <div class="flex items-center gap-1.5 mb-1 px-1 justify-between">
       <p class="text-md text-primary font-bold font-heading">
-        {{ t(activeTab === 'weekly' ? 'room.weeklySubtitle' : 'room.overridesSubtitle') }}
+        {{ t(activeTab === 'weekly' ? 'room.weeklySubtitle' : activeTab === 'overrides' ? 'room.overridesSubtitle' : 'room.combinedSubtitle') }}
       </p>
       <button
         class="shrink-0 text-xl font-heading rounded-full h-7 w-7 pb-1 flex items-center justify-center text-secondary hover:text-secondary hover:bg-secondary/15 transition-colors cursor-pointer font-bold border border-secondary"
@@ -314,7 +352,7 @@ watch(activeTab, () => {
         v-if="showInfo"
         class="mx-1 mb-2 px-3 py-3 rounded-lg bg-secondary/10 text-md text-secondary/80 font-heading leading-relaxed"
       >
-        {{ t(activeTab === 'weekly' ? 'room.weeklyInfo' : 'room.overridesInfo') }}
+        {{ t(activeTab === 'weekly' ? 'room.weeklyInfo' : activeTab === 'overrides' ? 'room.overridesInfo' : 'room.combinedInfo') }}
       </div>
     </Transition>
 
@@ -358,7 +396,7 @@ watch(activeTab, () => {
     </template>
 
     <!-- Override mode -->
-    <template v-else>
+    <template v-else-if="activeTab === 'overrides'">
       <!-- Collapsible calendar -->
       <div v-if="selectedDate && !calendarExpanded" class="mb-2">
         <button
@@ -382,31 +420,60 @@ watch(activeTab, () => {
         <MiniCalendar
           :model-value="selectedDate"
           :override-dates="overrideDates"
+          :highlight-week="overrideHighlightWeek"
           @update:model-value="onDateSelected"
         />
       </div>
 
-      <!-- Override grid -->
-      <template v-if="selectedDate && overrideGrid">
-        <div class="flex-1 min-h-0 overflow-y-auto select-none">
-          <div class="flex flex-col gap-px">
-            <div v-for="i in slotCount" :key="i - 1" class="flex items-stretch min-h-7">
+      <!-- Override grid (7-day week) -->
+      <template v-if="selectedDate && overrideWeekGrids">
+        <div class="select-none mr-5 lg:mr-0">
+          <div class="grid gap-x-0.5 gap-y-px" style="grid-template-columns: 2.5rem repeat(7, 1fr)">
+            <!-- Day headers -->
+            <div />
+            <div
+              v-for="day in DAY_KEYS"
+              :key="day"
+              class="text-center text-xs font-heading font-bold pb-1 text-secondary"
+            >
+              {{ t(dayI18nKeys[day]) }}
+            </div>
+
+            <!-- Date numbers -->
+            <div />
+            <div
+              v-for="(date, idx) in overrideWeekDates"
+              :key="'od' + idx"
+              class="text-center text-xs font-heading font-bold pb-1 rounded"
+              :class="[
+                formatDateKey(date) === formatDateKey(new Date()) ? 'bg-primary/20 text-primary' : 'text-secondary/60',
+                selectedDate && formatDateKey(date) === formatDateKey(selectedDate) ? 'ring-1 ring-accent/50' : '',
+              ]"
+            >
+              {{ date.getDate() }}
+            </div>
+
+            <!-- Time slot rows -->
+            <template v-for="i in slotCount" :key="i - 1">
               <div
-                class="w-12 shrink-0 text-right pr-2 text-xs text-secondary/60 font-heading flex items-center justify-end"
+                class="text-right pr-1 text-xs text-secondary font-heading flex items-center justify-end leading-none"
               >
                 <span v-if="(i - 1) % 2 === 0">{{ formatSlotTime(i - 1, startHour) }}</span>
               </div>
               <div
+                v-for="(day, dayIdx) in DAY_KEYS"
+                :key="day"
+                :data-day="dayIdx"
                 :data-slot="i - 1"
-                class="flex-1 mr-5 lg:mr-0 rounded-sm transition-colors duration-75"
+                class="rounded-sm transition-colors duration-75 min-h-6"
                 style="touch-action: none"
-                :class="overrideSlotClass(i - 1)"
+                :class="overrideSlotClass(dayIdx, i - 1)"
                 @pointerdown="onPointerDown"
                 @pointermove="onPointerMove"
                 @pointerup="onPointerUp"
                 @pointercancel="onPointerUp"
               />
-            </div>
+            </template>
           </div>
         </div>
       </template>
@@ -414,6 +481,11 @@ watch(activeTab, () => {
       <div v-else-if="!selectedDate" class="flex-1 flex items-center justify-center">
         <p class="text-secondary/60 font-heading text-sm">{{ t('room.noDateSelected') }}</p>
       </div>
+    </template>
+
+    <!-- Combined mode -->
+    <template v-else-if="activeTab === 'combined'">
+      <CombinedCalendar />
     </template>
 
     <!-- Saved toast -->

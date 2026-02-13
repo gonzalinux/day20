@@ -7,6 +7,8 @@ import AppInput from '@/components/AppInput.vue'
 import BaseModal from '@/components/BaseModal.vue'
 import { useRoomStore } from '@/stores/room'
 
+const emit = defineEmits<{ 'open-combined': [] }>()
+
 const room = useRoomStore()
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -64,9 +66,18 @@ async function handleLogout() {
 
 <template>
   <div class="h-full p-2 overflow-y-auto flex flex-col">
-    <h2 class="text-3xl font-heading font-bold text-accent mb-4">
-      {{ t('room.navUsers') }}
-    </h2>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-3xl font-heading font-bold text-accent">
+        {{ t('room.navUsers') }}
+      </h2>
+      <button
+        :disabled="loggingOut"
+        class="px-3 py-1.5 rounded-lg bg-secondary/20 text-secondary hover:bg-secondary/30 transition-colors cursor-pointer font-heading font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        @click="handleLogout"
+      >
+        {{ t('room.logout') }}
+      </button>
+    </div>
 
     <ul class="flex flex-col gap-2">
       <li
@@ -105,8 +116,10 @@ async function handleLogout() {
     </ul>
 
     <!-- Bottom actions -->
-    <div class="mt-auto pt-4 flex flex-col gap-3">
+    <div class="mt-auto pt-4 flex flex-col gap-2">
       <!-- Add player form (admin only) -->
+      <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
+
       <div v-if="room.isAdmin">
         <form class="flex gap-2" @submit.prevent="submitAddPlayer">
           <div class="flex-1">
@@ -115,22 +128,18 @@ async function handleLogout() {
           <button
             type="submit"
             :disabled="addingPlayer || !newPlayerName.trim()"
-            class="bg-accent text-bg font-heading font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed self-end"
+            class="bg-accent text-bg font-heading font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed self-start"
           >
             {{ t('room.add') }}
           </button>
         </form>
       </div>
-
-      <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
-
-      <!-- Logout button -->
+      <!-- Combined Calendar button -->
       <button
-        :disabled="loggingOut"
-        class="w-full px-4 py-3 mb-15 text-lg lg:my-0 rounded-lg bg-secondary/20 text-secondary hover:bg-secondary/30 transition-colors cursor-pointer font-heading font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-        @click="handleLogout"
+        class="w-full px-4 py-3 mb-15 text-lg lg:my-0 rounded-lg bg-accent/20 text-accent hover:bg-accent/30 transition-colors cursor-pointer font-heading font-bold"
+        @click="emit('open-combined')"
       >
-        {{ t('room.logout') }}
+        {{ t('room.combinedCalendar') }}
       </button>
     </div>
 
@@ -138,12 +147,22 @@ async function handleLogout() {
       v-if="confirmRemovePinFor"
       :title="t('room.removePin')"
       :actions="[
-        { label: t('room.durationCancel'), handler: () => (confirmRemovePinFor = ''), variant: 'secondary' },
+        {
+          label: t('room.durationCancel'),
+          handler: () => (confirmRemovePinFor = ''),
+          variant: 'secondary',
+        },
         { label: t('room.removePin'), handler: handleRemovePin, variant: 'danger' },
       ]"
       @close="confirmRemovePinFor = ''"
     >
-      <p class="text-primary/80 font-body">{{ t('room.removePinConfirm', { name: room.users.find(u => u.id === confirmRemovePinFor)?.name }) }}</p>
+      <p class="text-primary/80 font-body">
+        {{
+          t('room.removePinConfirm', {
+            name: room.users.find((u) => u.id === confirmRemovePinFor)?.name,
+          })
+        }}
+      </p>
     </BaseModal>
   </div>
 </template>

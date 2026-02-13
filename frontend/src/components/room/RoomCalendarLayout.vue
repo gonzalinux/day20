@@ -6,8 +6,15 @@ import CalendarPanel from './CalendarPanel.vue'
 import SettingsPanel from './SettingsPanel.vue'
 
 type Panel = 'users' | 'calendar' | 'settings'
+type CalendarTab = 'weekly' | 'overrides' | 'combined'
 
 const activePanel = ref<Panel>('calendar')
+const calendarTab = ref<CalendarTab>('weekly')
+
+function openCombined() {
+  calendarTab.value = 'combined'
+  activePanel.value = 'calendar'
+}
 </script>
 
 <template>
@@ -22,10 +29,10 @@ const activePanel = ref<Panel>('calendar')
       }"
     >
       <div class="w-1/3 h-full overflow-hidden lg:w-full lg:border-r lg:border-secondary/20">
-        <UsersPanel />
+        <UsersPanel @open-combined="openCombined" />
       </div>
       <div class="w-1/3 h-full overflow-hidden lg:w-full">
-        <CalendarPanel />
+        <CalendarPanel :initial-tab="calendarTab" @update:tab="calendarTab = $event" />
       </div>
       <div class="w-1/3 h-full overflow-hidden lg:w-full lg:border-l lg:border-secondary/20">
         <SettingsPanel />

@@ -77,7 +77,13 @@ function decrement() {
       class="w-full px-4 pt-2 pb-2 rounded-lg bg-bg border-2 outline-none text-primary font-heading transition-colors caret-primary"
       @input="onInput"
     />
-    <p class="text-red-500 text-sm mt-1" :class="error ? 'visible' : 'invisible'">&nbsp;{{ error }}</p>
+    <p
+      v-if="error !== undefined"
+      class="text-red-500 text-sm mt-1"
+      :class="error ? 'visible' : 'invisible'"
+    >
+      &nbsp;{{ error }}
+    </p>
   </div>
 </template>
 

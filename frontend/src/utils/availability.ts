@@ -102,6 +102,38 @@ export function dateToDayKey(date: Date): DayKey {
   return DAY_KEYS[jsDay === 0 ? 6 : jsDay - 1]!
 }
 
+export function applyOverridesToGrid(
+  baseGrid: boolean[],
+  overrides: Override[],
+  dateStr: string,
+  startHour: number,
+  endHour: number,
+): boolean[] {
+  const effective = [...baseGrid]
+  for (const override of overrides) {
+    const oDate = typeof override.date === 'string' ? override.date : formatDateKey(new Date(override.date))
+    if (oDate !== dateStr) continue
+    const overrideSlots = availabilityToGrid(override.availability, startHour, endHour)
+    for (let i = 0; i < effective.length; i++) {
+      if (override.type === 'block') {
+        if (overrideSlots[i]) effective[i] = false
+      } else {
+        if (overrideSlots[i]) effective[i] = true
+      }
+    }
+  }
+  return effective
+}
+
+export function getMondayOfWeek(date: Date): Date {
+  const d = new Date(date)
+  const day = d.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  d.setDate(d.getDate() + diff)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
 export function formatDateKey(date: Date): string {
   const y = date.getFullYear()
   const m = (date.getMonth() + 1).toString().padStart(2, '0')
