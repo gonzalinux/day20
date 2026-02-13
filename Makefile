@@ -12,7 +12,7 @@ dev-ui:
 	cd frontend &&  ENV="dev"  bun run dev --port 3500
 
 prod:
-	docker compose up -d
+	docker compose up --build -d
 
 prod-down:
 	docker compose down
