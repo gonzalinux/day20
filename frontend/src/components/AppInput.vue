@@ -8,6 +8,7 @@ const props = defineProps<{
   class?: string
   min?: number
   max?: number
+  error?: string
 }>()
 
 const model = defineModel<string | number>()
@@ -38,7 +39,7 @@ function decrement() {
 
 <template>
   <div>
-    <label v-if="label" :for="id" class="block text-sm font-semibold text-secondary mb-1">
+    <label v-if="label" :for="id" class="block text-md font-semibold text-secondary mb-1">
       {{ label }}
     </label>
     <div v-if="type === 'number'" class="relative">
@@ -47,8 +48,8 @@ function decrement() {
         type="number"
         :placeholder="placeholder"
         :value="modelValue"
-        :class="$props.class"
-        class="app-number-input font-heading w-full px-10 pt-2 pb-2 rounded-lg bg-bg border-2 border-secondary/30 outline-none text-primary transition-colors caret-primary text-center"
+        :class="[props.class, error ? 'border-red-500' : 'border-secondary/30']"
+        class="app-number-input font-heading w-full px-10 pt-2 pb-2 rounded-lg bg-bg border-2 outline-none text-primary transition-colors caret-primary text-center"
         @input="onInput"
       />
       <button
@@ -72,10 +73,11 @@ function decrement() {
       :type="type ?? 'text'"
       :placeholder="placeholder"
       :value="modelValue"
-      :class="$props.class"
-      class="w-full px-4 pt-2 pb-2 rounded-lg bg-bg border-2 border-secondary/30 outline-none text-primary font-heading transition-colors caret-primary"
+      :class="[props.class, error ? 'border-red-500' : 'border-secondary/30']"
+      class="w-full px-4 pt-2 pb-2 rounded-lg bg-bg border-2 outline-none text-primary font-heading transition-colors caret-primary"
       @input="onInput"
     />
+    <p class="text-red-500 text-sm mt-1" :class="error ? 'visible' : 'invisible'">&nbsp;{{ error }}</p>
   </div>
 </template>
 

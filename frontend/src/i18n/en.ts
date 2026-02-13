@@ -27,6 +27,8 @@ export default {
     availableFrom: 'From',
     availableTo: 'To',
     roomAlreadyExists: 'A room with that name already exists',
+    nameRequired: 'Room name is required',
+    passwordRequired: 'Password is required',
     day_monday: 'Mon',
     day_tuesday: 'Tue',
     day_wednesday: 'Wed',

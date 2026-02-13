@@ -45,11 +45,16 @@ watch(sessionMinHours, (min) => {
 function setPanel(mode: 'create' | 'join' | null) {
   activePanel.value = mode
   if (mode !== 'create') createStep.value = 1
+  nameError.value = ''
+  passwordError.value = ''
+  createError.value = ''
+  joinError.value = ''
   router.replace({ query: mode ? { mode } : {} })
 }
 
 async function nextCreateStep() {
   if (createStep.value === 1) {
+    if (!validateStep1()) return
     createError.value = ''
     loading.value = true
     try {
@@ -74,6 +79,23 @@ function prevCreateStep() {
 const loading = ref(false)
 const createError = ref('')
 const joinError = ref('')
+const nameError = ref('')
+const passwordError = ref('')
+
+function validateStep1(): boolean {
+  nameError.value = ''
+  passwordError.value = ''
+  let valid = true
+  if (!roomName.value.trim()) {
+    nameError.value = t('roomLogin.nameRequired')
+    valid = false
+  }
+  if (!roomPassword.value.trim()) {
+    passwordError.value = t('roomLogin.passwordRequired')
+    valid = false
+  }
+  return valid
+}
 
 type TimeOfDay = { hour: number; minute: number }
 type DayKey = keyof typeof enabledDays
@@ -116,6 +138,7 @@ async function submitCreateRoom() {
 }
 
 async function submitJoinRoom() {
+  if (!validateStep1()) return
   loading.value = true
   joinError.value = ''
   try {
@@ -152,13 +175,13 @@ async function submitJoinRoom() {
     </nav>
 
     <!-- Content -->
-    <main class="flex flex-col items-center justify-center px-6 min-h-screen pt-16">
+    <main class="flex flex-col items-center justify-center px-6 min-h-screen pt-2 lg:pt-16">
       <!-- Title -->
       <h1 class="font-bold text-primary mb-2 font-heading">
-        <span class="text-8xl">D</span><span class="text-5xl">ay</span
-        ><span class="text-8xl">20</span>
+        <span class="text-6xl lg:text-8xl">D</span><span class="text-4xl">ay</span
+        ><span class="text-6xl">20</span>
       </h1>
-      <p class="text-xl text-secondary mb-12 font-body">{{ t('roomLogin.title') }}</p>
+      <p class="text-xl text-secondary mb-6 lg:mb-12 font-body">{{ t('roomLogin.title') }}</p>
 
       <!-- Default: two big buttons -->
       <Transition name="fade" mode="out-in">
@@ -218,20 +241,23 @@ async function submitJoinRoom() {
             <!-- Step indicator -->
             <div class="flex items-center gap-2 mb-6">
               <span
-                class="size-7 rounded-full flex items-center justify-center text-sm font-bold font-heading"
+                @click="createStep = 1"
+                class="size-7 rounded-full flex items-center justify-center text-sm font-bold font-heading pb-1 select-none cursor-pointer"
                 :class="createStep === 1 ? 'bg-accent text-bg' : 'bg-secondary/30 text-secondary'"
                 >1</span
               >
               <span class="h-0.5 flex-1 bg-secondary/30" />
               <span
-                class="size-7 rounded-full flex items-center justify-center text-sm font-bold font-heading"
-                :class="createStep === 2 ? 'bg-accent text-bg' : 'bg-secondary/30 text-secondary'"
+                @click="createStep > 1 ? createStep = 2 : null"
+                class="size-7 rounded-full flex items-center justify-center text-sm font-bold font-heading pb-1 select-none"
+                :class="[createStep === 2 ? 'bg-accent text-bg' : 'bg-secondary/30 text-secondary', createStep > 1 ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']"
                 >2</span
               >
               <span class="h-0.5 flex-1 bg-secondary/30" />
               <span
-                class="size-7 rounded-full flex items-center justify-center text-sm font-bold font-heading"
-                :class="createStep === 3 ? 'bg-accent text-bg' : 'bg-secondary/30 text-secondary'"
+                @click="createStep > 2 ? createStep = 3 : null"
+                class="size-7 rounded-full flex items-center justify-center text-sm font-bold font-heading pb-1 select-none"
+                :class="[createStep === 3 ? 'bg-accent text-bg' : 'bg-secondary/30 text-secondary', createStep > 2 ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']"
                 >3</span
               >
             </div>
@@ -248,6 +274,7 @@ async function submitJoinRoom() {
                   v-model="roomName"
                   :label="t('roomLogin.roomName')"
                   :placeholder="t('roomLogin.roomName')"
+                  :error="nameError"
                   class="focus:border-accent"
                 />
                 <AppInput
@@ -255,6 +282,7 @@ async function submitJoinRoom() {
                   type="password"
                   :label="t('roomLogin.password')"
                   :placeholder="t('roomLogin.password')"
+                  :error="passwordError"
                   class="focus:border-accent"
                 />
                 <p v-if="createError" class="text-red-500 text-sm">{{ createError }}</p>
@@ -383,6 +411,7 @@ async function submitJoinRoom() {
                 v-model="roomName"
                 :label="t('roomLogin.roomName')"
                 :placeholder="t('roomLogin.roomName')"
+                :error="nameError"
                 class="focus:border-primary"
               />
               <AppInput
@@ -390,6 +419,7 @@ async function submitJoinRoom() {
                 type="password"
                 :label="t('roomLogin.password')"
                 :placeholder="t('roomLogin.password')"
+                :error="passwordError"
                 class="focus:border-primary"
               />
               <p v-if="joinError" class="text-red-500 text-sm">{{ joinError }}</p>

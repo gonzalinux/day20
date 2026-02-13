@@ -28,6 +28,8 @@ export default {
     availableFrom: 'Desde',
     availableTo: 'Hasta',
     roomAlreadyExists: 'Ya existe una sala con ese nombre',
+    nameRequired: 'El nombre de la sala es obligatorio',
+    passwordRequired: 'La contraseña es obligatoria',
     day_monday: 'Lun',
     day_tuesday: 'Mar',
     day_wednesday: 'Mié',
