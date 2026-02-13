@@ -14,8 +14,8 @@ services:
     restart: unless-stopped
     build: ./backend
     container_name: day20-elysia
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     env_file:
       - ./backend/.env
     environment:

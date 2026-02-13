@@ -9,7 +9,7 @@ dev-api:
 	cd backend && bun run index.ts
 
 dev-ui:
-	cd frontend && bun run dev --port 3500
+	cd frontend &&  ENV="dev"  bun run dev --port 3500
 
 prod:
 	docker compose up -d
