@@ -13,7 +13,7 @@ const titleEl = ref<HTMLElement | null>(null)
 function onScroll() {
   if (!titleEl.value) return
   const bottom = titleEl.value.getBoundingClientRect().bottom
-  scrolled.value = bottom < 0
+  scrolled.value = bottom < 30
 }
 
 onMounted(() => {
@@ -36,7 +36,7 @@ onUnmounted(() => {
       <div class="flex gap-4 align-bottom">
         <RouterLink
           :to="localePath('/', locale)"
-          class="font-heading font-bold text-primary no-underline"
+          class="font-heading font-bold text-primary no-underline lg:block hidden"
         >
           <span class="text-4xl">D</span><span class="text-2xl">ay</span
           ><span class="text-4xl">20</span>
@@ -66,10 +66,10 @@ onUnmounted(() => {
     <main class="flex flex-col items-center justify-center px-6 min-h-screen md:flex-row md:gap-16">
       <div class="flex flex-col items-start md:-translate-x-8">
         <h1 ref="titleEl" class="font-bold text-primary mb-6 font-heading">
-          <span class="text-8xl">D</span><span class="text-5xl">ay</span
-          ><span class="text-8xl">20</span>
+          <span class="text-6xl lg:text-8xl">D</span><span class="text-4xl lg:text-5xl">ay</span
+          ><span class="text-6xl lg:text-8xl">20</span>
         </h1>
-        <div class="text-2xl text-secondary space-y-2 mb-8 ml-6">
+        <div class="text-xl lg:text-2xl text-secondary space-y-2 mb-8 ml-6">
           <p>{{ t('home.q1') }}</p>
           <p>{{ t('home.q2') }}</p>
           <p>{{ t('home.q3') }}</p>
