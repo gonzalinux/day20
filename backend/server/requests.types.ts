@@ -13,8 +13,8 @@ export const TimeSelectionSchema = t.Object({
 });
 
 export const SessionDurationSchema = t.Object({
-  min: t.Number({ minimum: 0, maximum: 23 }),
-  max: t.Number({ minimum: 0, maximum: 23 }),
+  min: t.Number({ minimum: 0, maximum: 24 }),
+  max: t.Number({ minimum: 0, maximum: 24 }),
 });
 
 export const WeeklyAvailabilitySchema = t.Object({

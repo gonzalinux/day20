@@ -248,16 +248,22 @@ async function submitJoinRoom() {
               >
               <span class="h-0.5 flex-1 bg-secondary/30" />
               <span
-                @click="createStep > 1 ? createStep = 2 : null"
+                @click="createStep > 1 ? (createStep = 2) : null"
                 class="size-7 rounded-full flex items-center justify-center text-sm font-bold font-heading pb-1 select-none"
-                :class="[createStep === 2 ? 'bg-accent text-bg' : 'bg-secondary/30 text-secondary', createStep > 1 ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']"
+                :class="[
+                  createStep === 2 ? 'bg-accent text-bg' : 'bg-secondary/30 text-secondary',
+                  createStep > 1 ? 'cursor-pointer' : 'cursor-not-allowed opacity-50',
+                ]"
                 >2</span
               >
               <span class="h-0.5 flex-1 bg-secondary/30" />
               <span
-                @click="createStep > 2 ? createStep = 3 : null"
+                @click="createStep > 2 ? (createStep = 3) : null"
                 class="size-7 rounded-full flex items-center justify-center text-sm font-bold font-heading pb-1 select-none"
-                :class="[createStep === 3 ? 'bg-accent text-bg' : 'bg-secondary/30 text-secondary', createStep > 2 ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']"
+                :class="[
+                  createStep === 3 ? 'bg-accent text-bg' : 'bg-secondary/30 text-secondary',
+                  createStep > 2 ? 'cursor-pointer' : 'cursor-not-allowed opacity-50',
+                ]"
                 >3</span
               >
             </div>
@@ -346,7 +352,7 @@ async function submitJoinRoom() {
                 <p class="text-sm text-secondary/70 italic">
                   {{ t('roomLogin.availableTimesHint') }}
                 </p>
-                <div class="flex gap-2.5 justify-center">
+                <div class="flex gap-1 lg:gap-2.5 justify-center">
                   <button
                     v-for="[name, enabled] in Object.entries(enabledDays)"
                     :key="name"
