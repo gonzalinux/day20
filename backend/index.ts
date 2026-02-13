@@ -4,6 +4,7 @@ import { openapi } from "@elysiajs/openapi";
 import { routes } from "./server/routes";
 import { connectToDatabase } from "./repository/db";
 import { logger } from "./server/logger";
+import { startCleanupScheduler } from "./domain/service";
 
 const server = new Elysia()
   .use(logger)
@@ -18,6 +19,7 @@ async function startServer() {
   await connectToDatabase();
 
   server.listen(3000);
+  startCleanupScheduler();
 
   console.log("Server started port 3000");
 }

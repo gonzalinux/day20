@@ -72,6 +72,11 @@ async function deleteUsers(deleteUsers: User[]) {
   return result.deletedCount;
 }
 
+async function findStaleRooms(before: Date) {
+  const rooms = getRoomsCollection();
+  return rooms.find({ updatedAt: { $lt: before } }).toArray();
+}
+
 async function deleteRoom(roomId: string) {
   const rooms = getRoomsCollection();
   const usersOfRoom = await getUsersFromRoom(roomId);
@@ -83,6 +88,7 @@ async function deleteRoom(roomId: string) {
 export default {
   insertRoom,
   findRoom,
+  findStaleRooms,
   updateRoom,
   deleteRoom,
   createUser,

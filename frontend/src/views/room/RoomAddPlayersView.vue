@@ -48,7 +48,7 @@ function finishAddPlayers() {
           :key="user.id"
           class="flex items-center justify-between px-4 py-2 rounded-lg bg-bg/50"
         >
-          <span class="text-primary font-body">{{ user.name }}</span>
+          <span class="text-primary font-heading">{{ user.name }}</span>
           <span
             v-if="user.role === 'admin'"
             class="text-xs font-heading font-bold text-accent bg-accent/15 px-2 py-0.5 rounded"
@@ -69,7 +69,7 @@ function finishAddPlayers() {
         <button
           type="submit"
           :disabled="addingPlayer || !newPlayerName.trim()"
-          class="bg-accent text-bg font-heading font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed self-end"
+          class="bg-accent text-bg font-heading font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed self-start"
         >
           {{ t('room.add') }}
         </button>

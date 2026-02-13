@@ -11,6 +11,9 @@ import {
 } from "../server/errors.types";
 import type { CreateRoomRequest } from "../server/requests.types";
 
+const STALE_ROOM_MS = 30 * 24 * 60 * 60 * 1000;
+const CLEANUP_INTERVAL_MS = 7.3 * 60 * 60 * 1000;
+
 function stripPin(user: User) {
   const { pin, ...rest } = user;
   return { ...rest, hasPin: !!pin };
@@ -52,6 +55,8 @@ export async function loginRoom(
   } else {
     throw new UnauthorizedError("Password or token required");
   }
+
+  await Repository.updateRoom({ _id: roomId, updatedAt: new Date() });
 
   const { password: _, ...roomWithoutPassword } = room;
   const users = await Repository.getUsersFromRoom(roomId);
@@ -184,4 +189,20 @@ export async function removeUsersFromRoom(
 
   const deletedCount = await Repository.deleteUsers(usersToDelete);
   return deletedCount;
+}
+
+async function cleanupStaleRooms() {
+  const cutoff = new Date(Date.now() - STALE_ROOM_MS);
+  const staleRooms = await Repository.findStaleRooms(cutoff);
+  for (const room of staleRooms) {
+    await Repository.deleteRoom(room._id);
+    console.log(`Deleted stale room: ${room._id}`);
+  }
+  if (staleRooms.length > 0)
+    console.log(`Cleanup: removed ${staleRooms.length} stale room(s)`);
+}
+
+export function startCleanupScheduler() {
+  cleanupStaleRooms();
+  setInterval(cleanupStaleRooms, CLEANUP_INTERVAL_MS);
 }

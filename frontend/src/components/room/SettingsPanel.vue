@@ -70,6 +70,7 @@ function copyShareLink() {
             >{{ room.room.duration.min }}{{ t('room.settingsDurationUnit') }} –
             {{ room.room.duration.max }}{{ t('room.settingsDurationUnit') }}</template
           >
+          <VIcon name="gi-sands-of-time" class="text-secondary/50" scale="1.2" />
         </SettingsRow>
 
         <SettingsRow @click="showPinModal = true">
@@ -83,11 +84,13 @@ function copyShareLink() {
         <SettingsRow @click="showResetConfirm = true">
           <template #label>{{ t('room.resetAvailability') }}</template>
           <template #subtitle>{{ resetSuccess || t('room.resetAvailabilityHint') }}</template>
+          <VIcon name="gi-return-arrow" class="text-secondary/50" scale="1.2" />
         </SettingsRow>
 
         <SettingsRow v-if="room.isAdmin" @click="showTimeWindowModal = true">
           <template #label>{{ t('room.editTimeWindow') }}</template>
           <template #subtitle>{{ t('room.editTimeWindowHint') }}</template>
+          <VIcon name="gi-calendar-half-year" class="text-secondary/50" scale="1.2" />
         </SettingsRow>
       </div>
     </div>
