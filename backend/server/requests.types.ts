@@ -3,7 +3,7 @@ import { t } from "elysia";
 // ===== Nested Schemas =====
 
 const TimeOfDaySchema = t.Object({
-  hour: t.Number({ minimum: 0, maximum: 23 }),
+  hour: t.Number({ minimum: 0, maximum: 24 }),
   minute: t.Number({ minimum: 0, maximum: 59 }),
 });
 
