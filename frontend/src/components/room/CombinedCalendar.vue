@@ -19,7 +19,6 @@ const room = useRoomStore()
 
 const selectedWeekStart = ref(getMondayOfWeek(new Date()))
 const calendarExpanded = ref(true)
-const showInfo = ref(false)
 
 const weekDates = computed(() => {
   const dates: Date[] = []
@@ -163,7 +162,9 @@ const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
         class="w-full flex items-center justify-between px-1 cursor-pointer"
         @click="toggleCalendar"
       >
-        <span class="text-sm font-heading font-bold text-primary capitalize">{{ weekMonthLabel }}</span>
+        <span class="text-sm font-heading font-bold text-primary capitalize">{{
+          weekMonthLabel
+        }}</span>
         <VIcon name="gi-arrow-dunk" scale="0.7" class="text-secondary" />
       </button>
     </div>
@@ -179,28 +180,33 @@ const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
     </div>
 
     <!-- Legend -->
-    <div class="fixed bottom-15 lg:bottom-0 left-0 right-0 z-40 flex flex-wrap justify-center gap-x-3 gap-y-1 px-3 py-2 bg-bg/90 backdrop-blur-sm text-xs font-heading text-secondary">
+    <div
+      class="fixed bottom-15 lg:bottom-0 left-0 right-0 z-40 flex flex-wrap justify-center gap-x-3 gap-y-1 px-3 py-2 bg-bg/90 backdrop-blur-sm text-xs font-heading text-secondary"
+    >
       <span class="flex items-center gap-1">
         <span class="inline-block w-3 h-3 rounded-sm bg-accent ring-1 ring-accent/50" />
-        {{ t('room.combinedSubtitle') === t('room.combinedSubtitle') ? 'Viable' : '' }}
+        {{ t('room.viable') }}
       </span>
       <span class="flex items-center gap-1">
         <span class="inline-block w-3 h-3 rounded-sm bg-accent/70" />
-        All free
+        {{ t('room.all_free') }}
       </span>
       <span class="flex items-center gap-1">
         <span class="inline-block w-3 h-3 rounded-sm bg-accent/30" />
-        Some free
+        {{ t('room.some_free') }}
       </span>
       <span class="flex items-center gap-1">
         <span class="inline-block w-3 h-3 rounded-sm bg-secondary/10" />
-        None
+        {{ t('room.none') }}
       </span>
     </div>
 
     <!-- Combined grid -->
     <div class="select-none mr-1 lg:mr-0 pb-10">
-      <div class="grid gap-x-0.5 gap-y-px" style="grid-template-columns: 2.5rem repeat(7, 1fr) 1.25rem">
+      <div
+        class="grid gap-x-0.5 gap-y-px"
+        style="grid-template-columns: 2.5rem repeat(7, 1fr) 1.25rem"
+      >
         <!-- Day headers -->
         <div />
         <div
@@ -213,18 +219,28 @@ const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
         <div class="pointer-events-none" />
 
         <!-- Date numbers with prev/next arrows in adjacent cells -->
-        <button class="flex items-center justify-center cursor-pointer text-secondary/60 hover:text-primary transition-colors" @click="prevWeek">
+        <button
+          class="flex items-center justify-center cursor-pointer text-secondary/60 hover:text-primary transition-colors"
+          @click="prevWeek"
+        >
           <VIcon name="gi-arrow-dunk" class="rotate-90" scale="0.8" />
         </button>
         <div
           v-for="(date, idx) in weekDates"
           :key="'d' + idx"
           class="flex items-center justify-center text-xs font-heading font-bold pb-1 rounded"
-          :class="formatDateKey(date) === formatDateKey(new Date()) ? 'bg-primary/20 text-primary' : 'text-secondary/60'"
+          :class="
+            formatDateKey(date) === formatDateKey(new Date())
+              ? 'bg-primary/20 text-primary'
+              : 'text-secondary/60'
+          "
         >
           {{ date.getDate() }}
         </div>
-        <button class="pointer-events-auto flex items-center justify-end cursor-pointer text-secondary/60 hover:text-primary transition-colors" @click="nextWeek">
+        <button
+          class="pointer-events-auto flex items-center justify-end cursor-pointer text-secondary/60 hover:text-primary transition-colors"
+          @click="nextWeek"
+        >
           <VIcon name="gi-arrow-dunk" class="-rotate-90" scale="0.8" />
         </button>
 

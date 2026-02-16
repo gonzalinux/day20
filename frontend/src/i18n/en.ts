@@ -104,6 +104,10 @@ export default {
     tabCombined: 'Combined',
     combinedSubtitle: 'Party availability overview',
     combinedInfo: 'Shows when everyone is free for the selected week. Highlighted blocks are viable session times where all players are available for the minimum session duration.',
+    viable: 'Viable session',
+    all_free: 'All free',
+    some_free: 'Some free',
+    none: 'None',
   },
   home: {
     q1: 'Scheduling is hard?',

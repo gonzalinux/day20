@@ -105,6 +105,10 @@ export default {
     tabCombined: 'Combinado',
     combinedSubtitle: 'Disponibilidad del grupo',
     combinedInfo: 'Muestra cuándo todos están libres en la semana seleccionada. Los bloques resaltados son horarios viables donde todos los jugadores están disponibles por la duración mínima de sesión.',
+    viable: 'Sesión viable',
+    all_free: 'Todos libres',
+    some_free: 'Algunos libres',
+    none: 'Ninguno',
   },
   home: {
     q1: '¿Organizar horarios es difícil?',

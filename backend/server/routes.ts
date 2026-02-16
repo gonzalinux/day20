@@ -42,7 +42,6 @@ export const routes = new Elysia()
       roomMap[roomId] = ""
 
       const token = await jwt.sign({rooms: roomMap});
-      console.log(token)
       session.set({
         value: token,
         httpOnly: true,

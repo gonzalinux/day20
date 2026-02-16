@@ -36,8 +36,8 @@ export const OverrideSchema = t.Object({
 // ===== Room Request Schemas =====
 
 export const CreateRoomRequest = t.Object({
-  name: t.String({ minLength: 1 }),
-  description: t.String(),
+  name: t.String({ minLength: 3, maxLength:100, format: "^[a-zA-Z0-9\\s]+$" }),
+  description: t.String({maxLength:500}),
   password: t.String({ minLength: 1 }),
   duration: SessionDurationSchema,
   defaultAvailability: WeeklyAvailabilitySchema,
