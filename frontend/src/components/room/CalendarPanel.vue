@@ -309,10 +309,6 @@ function commitOverridePaint() {
       unblocked.push(!baseGrid[i] && !!effectiveGrid[i])
     }
 
-    newOverrides = newOverrides.filter(
-      (o) => (typeof o.date === 'string' ? o.date : formatDateKey(new Date(o.date))) !== dateStr,
-    )
-
     if (blocked.some(Boolean)) {
       newOverrides.push({
         date: date,
