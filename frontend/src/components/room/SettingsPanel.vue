@@ -8,6 +8,7 @@ import SettingsRow from './SettingsRow.vue'
 import DurationModal from './DurationModal.vue'
 import PinModal from './PinModal.vue'
 import DefaultAvailabilityModal from './DefaultAvailabilityModal.vue'
+import TimezoneModal from './TimezoneModal.vue'
 import BaseModal from '@/components/BaseModal.vue'
 
 const room = useRoomStore()
@@ -18,8 +19,10 @@ const showDurationModal = ref(false)
 const showPinModal = ref(false)
 const showTimeWindowModal = ref(false)
 const showResetConfirm = ref(false)
+const showTimezoneModal = ref(false)
 const pinSuccess = ref('')
 const resetSuccess = ref('')
+const tzSuccess = ref('')
 
 async function saveDuration(min: number, max: number) {
   showDurationModal.value = false
@@ -38,6 +41,13 @@ async function confirmReset() {
   await room.resetAvailability()
   resetSuccess.value = t('room.resetAvailabilityDone')
   setTimeout(() => (resetSuccess.value = ''), 2000)
+}
+
+async function saveTimezone(tz: string) {
+  showTimezoneModal.value = false
+  await room.saveUserTimezone(tz)
+  tzSuccess.value = t('room.timezoneUpdated')
+  setTimeout(() => (tzSuccess.value = ''), 2000)
 }
 
 async function handleSaveDefaultAvailability(availability: WeeklyAvailability) {
@@ -71,6 +81,12 @@ function copyShareLink() {
             {{ room.room.duration.max }}{{ t('room.settingsDurationUnit') }}</template
           >
           <VIcon name="gi-sands-of-time" class="text-secondary/50" scale="1.2" />
+        </SettingsRow>
+
+        <SettingsRow @click="showTimezoneModal = true">
+          <template #label>{{ t('room.timezone') }}</template>
+          <template #subtitle>{{ tzSuccess || room.currentUser?.timezone || room.browserTimezone }}</template>
+          <VIcon name="gi-world" class="text-secondary/50" scale="1.2" />
         </SettingsRow>
 
         <SettingsRow @click="showPinModal = true">
@@ -126,6 +142,8 @@ function copyShareLink() {
       @save="saveDuration"
       @close="showDurationModal = false"
     />
+
+    <TimezoneModal v-if="showTimezoneModal" @save="saveTimezone" @close="showTimezoneModal = false" />
 
     <PinModal v-if="showPinModal" @save="savePin" @close="showPinModal = false" />
 

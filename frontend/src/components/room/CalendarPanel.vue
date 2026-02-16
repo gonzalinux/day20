@@ -10,11 +10,15 @@ import {
   DAY_KEYS,
   availabilityToGrid,
   gridToAvailability,
-  formatSlotTime,
   dateToDayKey,
   formatDateKey,
   getMondayOfWeek,
 } from '@/utils/availability'
+import {
+  convertUserDayToLocalGrid,
+  convertLocalGridToUserTz,
+  formatLocalSlotTime,
+} from '@/utils/timezone'
 
 const props = defineProps<{
   initialTab?: 'weekly' | 'overrides' | 'combined'
@@ -29,9 +33,12 @@ type Tab = 'weekly' | 'overrides' | 'combined'
 const activeTab = ref<Tab>(props.initialTab ?? 'weekly')
 const showInfo = ref(false)
 
-watch(() => props.initialTab, (val) => {
-  if (val) activeTab.value = val
-})
+watch(
+  () => props.initialTab,
+  (val) => {
+    if (val) activeTab.value = val
+  },
+)
 
 watch(activeTab, (val) => {
   emit('update:tab', val)
@@ -48,19 +55,29 @@ const dayI18nKeys: Record<DayKey, string> = {
   sunday: 'roomLogin.day_sunday',
 }
 
+const localWindow = computed(() => room.localTimeWindow)
+const slotCount = computed(() => localWindow.value.totalSlots)
 const startHour = computed(() => room.timeRange.startHour)
 const endHour = computed(() => room.timeRange.endHour)
-const slotCount = computed(() => (endHour.value - startHour.value) * 2)
 
 const weeklyGrids = computed(() => {
   const user = room.currentUser
   const empty = new Array(slotCount.value).fill(false) as boolean[]
   if (!user)
     return Object.fromEntries(DAY_KEYS.map((d) => [d, [...empty]])) as Record<DayKey, boolean[]>
+  const userTz = user.timezone
+  const viewerTz = room.browserTimezone
   return Object.fromEntries(
     DAY_KEYS.map((d) => [
       d,
-      availabilityToGrid(user.weeklyAvailability[d] ?? [], startHour.value, endHour.value),
+      convertUserDayToLocalGrid(
+        user.weeklyAvailability,
+        userTz,
+        viewerTz,
+        new Date(),
+        d,
+        localWindow.value,
+      ),
     ]),
   ) as Record<DayKey, boolean[]>
 })
@@ -111,12 +128,24 @@ const overrideWeekGrids = computed(() => {
     if (!override) {
       grids[dayIdx] = baseGrid.map((on) => ({ base: on, effective: on, overridden: false }))
     } else {
-      const overrideSlots = availabilityToGrid(override.availability, startHour.value, endHour.value)
+      const overrideSlots = availabilityToGrid(
+        override.availability,
+        startHour.value,
+        endHour.value,
+      )
       grids[dayIdx] = baseGrid.map((base, i) => {
         if (override.type === 'block') {
-          return { base, effective: base && !overrideSlots[i], overridden: base && !!overrideSlots[i] }
+          return {
+            base,
+            effective: base && !overrideSlots[i],
+            overridden: base && !!overrideSlots[i],
+          }
         }
-        return { base, effective: base || !!overrideSlots[i], overridden: !base && !!overrideSlots[i] }
+        return {
+          base,
+          effective: base || !!overrideSlots[i],
+          overridden: !base && !!overrideSlots[i],
+        }
       })
     }
   }
@@ -140,7 +169,21 @@ const dragCurrentSlot = ref(-1)
 const dragStartDay = ref(-1)
 const dragCurrentDay = ref(-1)
 const savedVisible = ref(false)
+const errorVisible = ref(false)
 let savedTimer: ReturnType<typeof setTimeout> | null = null
+let errorTimer: ReturnType<typeof setTimeout> | null = null
+
+watch(
+  () => room.saveError,
+  (val) => {
+    if (!val) return
+    savedVisible.value = false
+    errorVisible.value = true
+    room.saveError = false
+    if (errorTimer) clearTimeout(errorTimer)
+    errorTimer = setTimeout(() => (errorVisible.value = false), 3000)
+  },
+)
 
 function flashSaved() {
   savedVisible.value = true
@@ -209,14 +252,28 @@ function commitWeeklyPaint() {
   const minSlot = Math.min(dragStartSlot.value, dragCurrentSlot.value)
   const maxSlot = Math.max(dragStartSlot.value, dragCurrentSlot.value)
 
+  const userTz = user.timezone
+  const viewerTz = room.browserTimezone
   const updated: WeeklyAvailability = { ...user.weeklyAvailability }
+
   for (let d = minDay; d <= maxDay; d++) {
     const day = DAY_KEYS[d]!
     const grid = [...weeklyGrids.value[day]]
     for (let s = minSlot; s <= maxSlot; s++) {
       grid[s] = painting.value === 'paint'
     }
-    updated[day] = gridToAvailability(grid, startHour.value)
+
+    const converted = convertLocalGridToUserTz(
+      grid,
+      localWindow.value,
+      new Date(),
+      day,
+      viewerTz,
+      userTz,
+    )
+    for (const { dayKey, selections } of converted) {
+      updated[dayKey] = selections
+    }
   }
   room.saveWeeklyAvailability(updated)
 }
@@ -234,7 +291,6 @@ function commitOverridePaint() {
 
   for (let d = minDay; d <= maxDay; d++) {
     const date = overrideWeekDates.value[d]!
-    const dateStr = formatDateKey(date)
     const dayKey = dateToDayKey(date)
     const baseGrid = availabilityToGrid(
       user.weeklyAvailability[dayKey] ?? [],
@@ -259,14 +315,14 @@ function commitOverridePaint() {
 
     if (blocked.some(Boolean)) {
       newOverrides.push({
-        date: dateStr,
+        date: date,
         type: 'block',
         availability: gridToAvailability(blocked, startHour.value),
       })
     }
     if (unblocked.some(Boolean)) {
       newOverrides.push({
-        date: dateStr,
+        date: date,
         type: 'unblock',
         availability: gridToAvailability(unblocked, startHour.value),
       })
@@ -329,14 +385,30 @@ watch(activeTab, () => {
         "
         @click="activeTab = tab"
       >
-        {{ t(tab === 'weekly' ? 'room.tabWeekly' : tab === 'overrides' ? 'room.tabOverrides' : 'room.tabCombined') }}
+        {{
+          t(
+            tab === 'weekly'
+              ? 'room.tabWeekly'
+              : tab === 'overrides'
+                ? 'room.tabOverrides'
+                : 'room.tabCombined',
+          )
+        }}
       </button>
     </div>
 
     <!-- Subtitle + info -->
     <div class="flex items-center gap-1.5 mb-1 px-1 justify-between">
       <p class="text-md text-primary font-bold font-heading">
-        {{ t(activeTab === 'weekly' ? 'room.weeklySubtitle' : activeTab === 'overrides' ? 'room.overridesSubtitle' : 'room.combinedSubtitle') }}
+        {{
+          t(
+            activeTab === 'weekly'
+              ? 'room.weeklySubtitle'
+              : activeTab === 'overrides'
+                ? 'room.overridesSubtitle'
+                : 'room.combinedSubtitle',
+          )
+        }}
       </p>
       <button
         class="shrink-0 text-xl font-heading rounded-full h-7 w-7 pb-1 flex items-center justify-center text-secondary hover:text-secondary hover:bg-secondary/15 transition-colors cursor-pointer font-bold border border-secondary"
@@ -352,7 +424,15 @@ watch(activeTab, () => {
         v-if="showInfo"
         class="mx-1 mb-2 px-3 py-3 rounded-lg bg-secondary/10 text-md text-secondary/80 font-heading leading-relaxed"
       >
-        {{ t(activeTab === 'weekly' ? 'room.weeklyInfo' : activeTab === 'overrides' ? 'room.overridesInfo' : 'room.combinedInfo') }}
+        {{
+          t(
+            activeTab === 'weekly'
+              ? 'room.weeklyInfo'
+              : activeTab === 'overrides'
+                ? 'room.overridesInfo'
+                : 'room.combinedInfo',
+          )
+        }}
       </div>
     </Transition>
 
@@ -372,10 +452,17 @@ watch(activeTab, () => {
 
           <!-- Time slot rows -->
           <template v-for="i in slotCount" :key="i - 1">
+            <!-- Gap separator for cross-midnight wrapping -->
+            <div
+              v-if="localWindow.wraps && i - 1 === localWindow.topSlots"
+              class="col-span-full text-center text-xs text-secondary/50 font-heading py-1.5 bg-secondary/5 rounded"
+            >
+              {{ t('room.noSessionHours') }}
+            </div>
             <div
               class="text-right pr-1 text-xs text-secondary font-heading flex items-center justify-end leading-none"
             >
-              <span v-if="(i - 1) % 2 === 0">{{ formatSlotTime(i - 1, startHour) }}</span>
+              <span v-if="(i - 1) % 2 === 0">{{ formatLocalSlotTime(i - 1, localWindow) }}</span>
             </div>
             <div
               v-for="(day, dayIdx) in DAY_KEYS"
@@ -446,8 +533,12 @@ watch(activeTab, () => {
               :key="'od' + idx"
               class="text-center text-xs font-heading font-bold pb-1 rounded"
               :class="[
-                formatDateKey(date) === formatDateKey(new Date()) ? 'bg-primary/20 text-primary' : 'text-secondary/60',
-                selectedDate && formatDateKey(date) === formatDateKey(selectedDate) ? 'ring-1 ring-accent/50' : '',
+                formatDateKey(date) === formatDateKey(new Date())
+                  ? 'bg-primary/20 text-primary'
+                  : 'text-secondary/60',
+                selectedDate && formatDateKey(date) === formatDateKey(selectedDate)
+                  ? 'ring-1 ring-accent/50'
+                  : '',
               ]"
             >
               {{ date.getDate() }}
@@ -456,9 +547,15 @@ watch(activeTab, () => {
             <!-- Time slot rows -->
             <template v-for="i in slotCount" :key="i - 1">
               <div
+                v-if="localWindow.wraps && i - 1 === localWindow.topSlots"
+                class="col-span-full text-center text-xs text-secondary/50 font-heading py-1.5 bg-secondary/5 rounded"
+              >
+                {{ t('room.noSessionHours') }}
+              </div>
+              <div
                 class="text-right pr-1 text-xs text-secondary font-heading flex items-center justify-end leading-none"
               >
-                <span v-if="(i - 1) % 2 === 0">{{ formatSlotTime(i - 1, startHour) }}</span>
+                <span v-if="(i - 1) % 2 === 0">{{ formatLocalSlotTime(i - 1, localWindow) }}</span>
               </div>
               <div
                 v-for="(day, dayIdx) in DAY_KEYS"
@@ -495,6 +592,16 @@ watch(activeTab, () => {
         class="fixed bottom-20 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg bg-accent text-bg text-sm font-heading font-bold shadow-lg"
       >
         {{ t('room.saved') }}
+      </div>
+    </Transition>
+
+    <!-- Error toast -->
+    <Transition name="toast">
+      <div
+        v-if="errorVisible"
+        class="fixed bottom-20 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-heading font-bold shadow-lg"
+      >
+        {{ t('room.saveError') }}
       </div>
     </Transition>
   </div>

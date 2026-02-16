@@ -9,12 +9,14 @@ import {
   gridToAvailability,
   formatSlotTime,
 } from '@/utils/availability'
+import { useRoomStore } from '@/stores/room'
 
 const props = defineProps<{ defaultAvailability: WeeklyAvailability }>()
 const emit = defineEmits<{ save: [availability: WeeklyAvailability]; close: [] }>()
 
 const { t } = useI18n()
 
+const roomStore = useRoomStore()
 const availability = ref<WeeklyAvailability>(JSON.parse(JSON.stringify(props.defaultAvailability)))
 
 const dayI18nKeys: Record<DayKey, string> = {
@@ -140,9 +142,12 @@ onMounted(async () => {
       <div
         class="relative rounded-2xl bg-bg shadow-xl p-4 w-full max-w-lg mx-4 max-h-[85vh] flex flex-col"
       >
-        <h3 class="text-xl font-heading font-bold text-accent mb-3">
+        <h3 class="text-xl font-heading font-bold text-accent mb-1">
           {{ t('room.editTimeWindow') }}
         </h3>
+        <p class="text-xs text-secondary/50 font-heading mb-3">
+          {{ t('room.timeWindowTimezone', { tz: roomStore.room.timezone }) }}
+        </p>
 
         <!-- Time grid -->
         <div ref="scrollContainer" class="flex-1 min-h-0 overflow-y-auto select-none">

@@ -1,5 +1,5 @@
 export interface Room {
-  _id: string;
+  id: string;
   name: string;
   description: string;
   password: string;
@@ -8,6 +8,7 @@ export interface Room {
   updatedAt?: Date;
   duration: SessionDuration;
   defaultAvailability: WeeklyAvailability;
+  timezone: string;
 }
 
 export interface SessionDuration {

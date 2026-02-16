@@ -11,6 +11,7 @@ import {
 import { selectUser as apiSelectUser, logoutUser as apiLogoutUser } from '@/services/auth'
 import type { WeeklyAvailability, Override } from '@/utils/availability'
 import { getTimeRange, formatDateKey } from '@/utils/availability'
+import { detectTimezone, convertRoomWindowToLocal } from '@/utils/timezone'
 
 export interface RoomUser {
   id: string
@@ -19,6 +20,7 @@ export interface RoomUser {
   hasPin: boolean
   weeklyAvailability: WeeklyAvailability
   overrides: Override[]
+  timezone: string
 }
 
 export interface Room {
@@ -27,6 +29,7 @@ export interface Room {
   magicToken: string
   duration: { min: number; max: number }
   defaultAvailability: WeeklyAvailability
+  timezone: string
 }
 
 const emptyWeek: WeeklyAvailability = {
@@ -45,16 +48,27 @@ const emptyRoom: Room = {
   magicToken: '',
   duration: { min: 1, max: 4 },
   defaultAvailability: { ...emptyWeek },
+  timezone: 'UTC',
 }
 
 export const useRoomStore = defineStore('room', () => {
   const room = ref<Room>({ ...emptyRoom })
   const users = ref<RoomUser[]>([])
   const currentUserId = ref('')
+  const browserTimezone = ref(detectTimezone())
 
   const currentUser = computed(() => users.value.find((u) => u.id === currentUserId.value))
   const isAdmin = computed(() => currentUser.value?.role === 'admin')
   const timeRange = computed(() => getTimeRange(room.value.defaultAvailability))
+  const localTimeWindow = computed(() =>
+    convertRoomWindowToLocal(
+      timeRange.value.startHour,
+      timeRange.value.endHour,
+      room.value.timezone,
+      browserTimezone.value,
+      new Date(),
+    ),
+  )
 
   async function fetchRoom() {
     const { room: fetched } = await getRoom(room.value.id)
@@ -62,38 +76,25 @@ export const useRoomStore = defineStore('room', () => {
     room.value.magicToken = fetched.magicToken
     room.value.duration = { min: fetched.duration.min, max: fetched.duration.max }
     room.value.defaultAvailability = fetched.defaultAvailability as WeeklyAvailability
+    room.value.timezone = fetched.timezone
   }
 
   async function fetchUsers() {
     const rawUsers = await getUsersFromRoom(room.value.id)
-    users.value = rawUsers.map((u) => ({
-      id: u.id,
-      name: u.name,
-      role: u.role,
-      hasPin: u.hasPin,
-      weeklyAvailability: (u.weeklyAvailability as WeeklyAvailability) ?? { ...emptyWeek },
-      overrides: ((u.overrides as unknown as Override[]) ?? []).map((o) => ({
-        ...o,
-        date: typeof o.date === 'string' ? o.date : formatDateKey(new Date(o.date)),
-      })),
-    }))
+
+    users.value = rawUsers
   }
 
   async function addUser(name: string, role: 'admin' | 'user') {
+    const tz = browserTimezone.value
     const user = await apiAddUser(room.value.id, {
       name,
       role,
       weeklyAvailability: { ...emptyWeek },
       overrides: [],
+      timezone: tz,
     })
-    users.value.push({
-      id: user._id,
-      name: user.name,
-      role: user.role,
-      hasPin: user.hasPin,
-      weeklyAvailability: { ...emptyWeek },
-      overrides: [],
-    })
+    users.value.push(user)
     return user
   }
 
@@ -122,35 +123,44 @@ export const useRoomStore = defineStore('room', () => {
   async function saveDuration(min: number, max: number) {
     room.value.duration = { min, max }
     await updateRoom(room.value.id, {
-      _id: room.value.id,
+      id: room.value.id,
       duration: { min, max },
     })
   }
 
-  let saveTimer: ReturnType<typeof setTimeout> | null = null
+  let weeklyTimer: ReturnType<typeof setTimeout> | null = null
+  let overrideTimer: ReturnType<typeof setTimeout> | null = null
+  const saveError = ref(false)
 
   async function saveWeeklyAvailability(availability: WeeklyAvailability) {
     const user = currentUser.value
     if (!user) return
+    const prev = user.weeklyAvailability
     user.weeklyAvailability = availability
-    if (saveTimer) clearTimeout(saveTimer)
-    saveTimer = setTimeout(async () => {
-      await apiUpdateUser(room.value.id, user.id, { weeklyAvailability: availability })
+    if (weeklyTimer) clearTimeout(weeklyTimer)
+    weeklyTimer = setTimeout(async () => {
+      try {
+        await apiUpdateUser(room.value.id, user.id, { weeklyAvailability: availability })
+      } catch {
+        user.weeklyAvailability = prev
+        saveError.value = true
+      }
     }, 600)
   }
 
   async function saveOverrides(overrides: Override[]) {
     const user = currentUser.value
     if (!user) return
+    const prev = user.overrides
     user.overrides = overrides
-    if (saveTimer) clearTimeout(saveTimer)
-    saveTimer = setTimeout(async () => {
-      await apiUpdateUser(room.value.id, user.id, {
-        overrides: overrides.map((o) => ({
-          ...o,
-          date: new Date(o.date),
-        })),
-      })
+    if (overrideTimer) clearTimeout(overrideTimer)
+    overrideTimer = setTimeout(async () => {
+      try {
+        await apiUpdateUser(room.value.id, user.id, { overrides })
+      } catch {
+        user.overrides = prev
+        saveError.value = true
+      }
     }, 600)
   }
 
@@ -165,10 +175,18 @@ export const useRoomStore = defineStore('room', () => {
     })
   }
 
+  async function saveUserTimezone(tz: string) {
+    const user = currentUser.value
+    if (!user) return
+    await apiUpdateUser(room.value.id, user.id, { timezone: tz })
+    user.timezone = tz
+    browserTimezone.value = tz
+  }
+
   async function saveDefaultAvailability(availability: WeeklyAvailability) {
     room.value.defaultAvailability = availability
     await updateRoom(room.value.id, {
-      _id: room.value.id,
+      id: room.value.id,
       defaultAvailability: availability,
     })
   }
@@ -186,6 +204,8 @@ export const useRoomStore = defineStore('room', () => {
     currentUser,
     isAdmin,
     timeRange,
+    browserTimezone,
+    localTimeWindow,
     fetchRoom,
     fetchUsers,
     addUser,
@@ -196,8 +216,10 @@ export const useRoomStore = defineStore('room', () => {
     saveDuration,
     saveWeeklyAvailability,
     saveOverrides,
+    saveError,
     resetAvailability,
     saveDefaultAvailability,
+    saveUserTimezone,
     $reset,
   }
 })

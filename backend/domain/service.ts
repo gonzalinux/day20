@@ -30,13 +30,13 @@ export async function createRoom(request: CreateRoomRequest) {
     ...request,
     password: await Bun.password.hash(request.password),
     magicToken,
-    _id: request.name,
+    id: request.name,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
 
   const createdRoom = await Repository.insertRoom(room);
-  return { _id: createdRoom, magicToken };
+  return { id: createdRoom, magicToken };
 }
 
 export async function loginRoom(
@@ -56,7 +56,7 @@ export async function loginRoom(
     throw new UnauthorizedError("Password or token required");
   }
 
-  await Repository.updateRoom({ _id: roomId, updatedAt: new Date() });
+  await Repository.updateRoom({ id: roomId, updatedAt: new Date() });
 
   const { password: _, ...roomWithoutPassword } = room;
   const users = await Repository.getUsersFromRoom(roomId);
@@ -81,7 +81,7 @@ export async function getUsersFromRoom(roomId: string) {
 }
 
 export async function updateRoom(updates: PartialWithId<Room>) {
-  const existing = await Repository.findRoom(updates._id);
+  const existing = await Repository.findRoom(updates.id);
   if (!existing) throw new NotFoundError("Room not found");
 
   updates.updatedAt = new Date();
@@ -97,14 +97,14 @@ export async function addUserToRoom(roomId: string, user: WithoutId<User>) {
   if (existingUsers.some((existing) => existing.name === user.name))
     throw new AlreadyExistsError("This user already exists in this room");
 
-  const fullUser: User = { ...user, roomId, _id: user.name };
+  const fullUser: User = { ...user, roomId, id: user.name };
   const created = await Repository.createUser(fullUser);
   return stripPin(created);
 }
 
 export async function selectUser(roomId: string, userId: string, pin?: string) {
   const users = await Repository.getUsersFromRoom(roomId);
-  const user = users.find((u) => u._id === userId);
+  const user = users.find((u) => u.id === userId);
   if (!user) throw new NotFoundError("User not found in this room");
 
   if (user.pin) {
@@ -126,7 +126,7 @@ export async function setUserPin(
     throw new ForbiddenError("You can only set your own PIN");
 
   const users = await Repository.getUsersFromRoom(roomId);
-  const target = users.find((u) => u._id === targetUserId);
+  const target = users.find((u) => u.id === targetUserId);
   if (!target) throw new NotFoundError("User not found");
 
   const hashedPin = await Bun.password.hash(pin);
@@ -139,12 +139,12 @@ export async function removeUserPin(
   targetUserId: string,
 ) {
   const users = await Repository.getUsersFromRoom(roomId);
-  const authUser = users.find((u) => u._id === authUserId);
+  const authUser = users.find((u) => u.id === authUserId);
   if (!authUser) throw new NotFoundError("Auth user not found");
   if (authUser.role !== "admin")
     throw new ForbiddenError("Only admins can remove PINs");
 
-  const target = users.find((u) => u._id === targetUserId);
+  const target = users.find((u) => u.id === targetUserId);
   if (!target) throw new NotFoundError("User not found");
 
   await Repository.removeUserPin(roomId, targetUserId);
@@ -154,19 +154,20 @@ export async function updateUserAvailability(
   roomId: string,
   authUserId: string,
   targetUserId: string,
-  updates: Partial<Pick<User, "weeklyAvailability" | "overrides">>,
+  updates: Partial<Pick<User, "weeklyAvailability" | "overrides" | "timezone">>,
 ) {
   if (authUserId !== targetUserId)
     throw new ForbiddenError("You can only edit your own availability");
 
   const users = await Repository.getUsersFromRoom(roomId);
-  const target = users.find((u) => u._id === targetUserId);
+  const target = users.find((u) => u.id === targetUserId);
   if (!target) throw new NotFoundError("User not found");
 
-  const updatePayload: PartialWithId<User> = { _id: targetUserId, roomId };
+  const updatePayload: PartialWithId<User> = { id: targetUserId, roomId };
   if (updates.weeklyAvailability)
     updatePayload.weeklyAvailability = updates.weeklyAvailability;
   if (updates.overrides) updatePayload.overrides = updates.overrides;
+  if (updates.timezone) updatePayload.timezone = updates.timezone;
 
   await Repository.updateUser(updatePayload);
   return stripPin({ ...target, ...updatePayload });
@@ -181,7 +182,7 @@ export async function removeUsersFromRoom(
 
   const existingUsers = await Repository.getUsersFromRoom(roomId);
   const usersToDelete = existingUsers.filter((user) =>
-    userIds.some((id) => id===user._id),
+    userIds.some((id) => id === user.id),
   );
 
   if (usersToDelete.length === 0)
@@ -195,8 +196,8 @@ async function cleanupStaleRooms() {
   const cutoff = new Date(Date.now() - STALE_ROOM_MS);
   const staleRooms = await Repository.findStaleRooms(cutoff);
   for (const room of staleRooms) {
-    await Repository.deleteRoom(room._id);
-    console.log(`Deleted stale room: ${room._id}`);
+    await Repository.deleteRoom(room.id);
+    console.log(`Deleted stale room: ${room.id}`);
   }
   if (staleRooms.length > 0)
     console.log(`Cleanup: removed ${staleRooms.length} stale room(s)`);

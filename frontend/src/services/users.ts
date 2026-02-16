@@ -21,14 +21,7 @@ export async function deleteUsers(
 export async function getUsersFromRoom(roomId: string) {
   const { data, error } = await api.rooms({ room_id: roomId }).users.get()
   if (error) throw error
-  return data.map((user) => ({
-    id: user._id,
-    name: user.name,
-    role: user.role,
-    hasPin: user.hasPin,
-    weeklyAvailability: user.weeklyAvailability,
-    overrides: user.overrides,
-  }))
+  return data
 }
 
 export async function setPin(roomId: string, userId: string, pin: string) {

@@ -8,6 +8,7 @@ import LangToggle from '@/components/LangToggle.vue'
 import AppInput from '@/components/AppInput.vue'
 import { createRoom, roomExists } from '@/services/rooms'
 import { loginRoom } from '@/services/auth'
+import { detectTimezone } from '@/utils/timezone'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -27,6 +28,7 @@ const sessionMinHours = ref(1)
 const sessionMaxHours = ref(4)
 const availableFrom = ref(10)
 const availableTo = ref(23)
+const roomTimezone = ref(detectTimezone())
 
 const enabledDays = {
   monday: true,
@@ -122,14 +124,15 @@ async function submitCreateRoom() {
   loading.value = true
   createError.value = ''
   try {
-    const { _id, magicToken } = await createRoom({
+    const { id, magicToken } = await createRoom({
       name: roomName.value,
       description: roomDescription.value,
       password: roomPassword.value,
       duration: { min: sessionMinHours.value, max: sessionMaxHours.value },
       defaultAvailability: buildDefaultAvailability(),
+      timezone: roomTimezone.value,
     })
-    router.push({ path: localePath(`/rooms/${_id}`, locale.value), query: { token: magicToken } })
+    router.push({ path: localePath(`/rooms/${id}`, locale.value), query: { token: magicToken } })
   } catch (e: unknown) {
     createError.value = (e as Error)?.message ?? String(e)
   } finally {
@@ -146,7 +149,7 @@ async function submitJoinRoom() {
       password: roomPassword.value,
     })
     router.push({
-      path: localePath(`/rooms/${room._id}`, locale.value),
+      path: localePath(`/rooms/${room.id}`, locale.value),
       query: { token: room.magicToken },
     })
   } catch (e: unknown) {
@@ -351,6 +354,9 @@ async function submitJoinRoom() {
               >
                 <p class="text-sm text-secondary/70 italic">
                   {{ t('roomLogin.availableTimesHint') }}
+                </p>
+                <p class="text-xs text-secondary/50 font-heading">
+                  {{ t('roomLogin.timezone') }}: {{ roomTimezone }}
                 </p>
                 <div class="flex gap-1 lg:gap-2.5 justify-center">
                   <button

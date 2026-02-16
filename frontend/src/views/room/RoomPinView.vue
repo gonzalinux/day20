@@ -40,7 +40,11 @@ async function submitSetPin() {
       </h2>
       <p class="text-sm text-secondary/70 mb-6 text-center">{{ t('room.pinHint') }}</p>
 
-      <PinPad v-model="pinValue" @complete="submitSetPin" />
+      <PinPad
+        :canSkip="room.currentUser?.role !== 'admin'"
+        v-model="pinValue"
+        @complete="submitSetPin"
+      />
       <p v-if="error" class="text-red-500 text-sm text-center mt-4">{{ error }}</p>
     </div>
   </div>

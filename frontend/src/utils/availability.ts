@@ -30,7 +30,7 @@ export const DAY_KEYS: DayKey[] = [
 ]
 
 export interface Override {
-  date: string
+  date: Date
   availability: TimeSelection[]
   type: 'unblock' | 'block'
 }
@@ -71,7 +71,7 @@ export function gridToAvailability(grid: boolean[], startHour: number): TimeSele
 }
 
 function slotToTime(index: number, startHour: number): TimeOfDay {
-  const totalMinutes = (startHour * 60) + (index * 30)
+  const totalMinutes = startHour * 60 + index * 30
   return { hour: Math.floor(totalMinutes / 60), minute: totalMinutes % 60 }
 }
 
@@ -111,7 +111,8 @@ export function applyOverridesToGrid(
 ): boolean[] {
   const effective = [...baseGrid]
   for (const override of overrides) {
-    const oDate = typeof override.date === 'string' ? override.date : formatDateKey(new Date(override.date))
+    const oDate =
+      typeof override.date === 'string' ? override.date : formatDateKey(new Date(override.date))
     if (oDate !== dateStr) continue
     const overrideSlots = availabilityToGrid(override.availability, startHour, endHour)
     for (let i = 0; i < effective.length; i++) {

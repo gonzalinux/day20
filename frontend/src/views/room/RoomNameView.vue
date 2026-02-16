@@ -21,7 +21,7 @@ async function submitName() {
   error.value = ''
   try {
     const user = await room.addUser(adminName.value, 'admin')
-    await room.selectUser(user._id)
+    await room.selectUser(user.id)
     router.push(localePath(`/rooms/${roomId}/pin?next=add-players`, locale.value))
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : String(e)

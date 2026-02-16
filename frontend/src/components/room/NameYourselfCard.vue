@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import AppInput from '@/components/AppInput.vue'
 import { addUser } from '@/services/users'
 import { selectUser } from '@/services/auth'
+import { detectTimezone } from '@/utils/timezone'
 
 const props = defineProps<{
   roomId: string
@@ -37,9 +38,10 @@ async function submit() {
       role: 'admin' as const,
       weeklyAvailability: emptyWeek,
       overrides: [],
+      timezone: detectTimezone(),
     })
-    await selectUser(props.roomId, user._id)
-    emit('done', { id: user._id, name: user.name, role: user.role })
+    await selectUser(props.roomId, user.id)
+    emit('done', { id: user.id, name: user.name, role: user.role })
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : String(e)
   } finally {

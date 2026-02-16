@@ -1,5 +1,9 @@
 import { t } from "elysia";
 
+// ===== Shared Schemas =====
+
+const TimezoneSchema = t.String({ minLength: 1, maxLength: 100 });
+
 // ===== Nested Schemas =====
 
 const TimeOfDaySchema = t.Object({
@@ -36,11 +40,12 @@ export const OverrideSchema = t.Object({
 // ===== Room Request Schemas =====
 
 export const CreateRoomRequest = t.Object({
-  name: t.String({ minLength: 3, maxLength:100, format: "^[a-zA-Z0-9\\s]+$" }),
+  name: t.String({ minLength: 3, maxLength:100, patern: "^[a-zA-Z0-9\\s]+$" }),
   description: t.String({maxLength:500}),
   password: t.String({ minLength: 1 }),
   duration: SessionDurationSchema,
   defaultAvailability: WeeklyAvailabilitySchema,
+  timezone: TimezoneSchema,
 });
 
 export type CreateRoomRequest = typeof CreateRoomRequest.static;
@@ -57,11 +62,12 @@ export const SelectUserRequest = t.Object({
 });
 
 export const UpdateRoomRequest = t.Object({
-  _id: t.String(),
+  id: t.String(),
   name: t.Optional(t.String({ minLength: 1 })),
   description: t.Optional(t.String()),
   duration: t.Optional(SessionDurationSchema),
   defaultAvailability: t.Optional(WeeklyAvailabilitySchema),
+  timezone: t.Optional(TimezoneSchema),
 });
 
 export const RoomIdParam = t.Object({
@@ -75,10 +81,11 @@ export const CreateUserRequest = t.Object({
   role: t.Union([t.Literal("admin"), t.Literal("user")]),
   weeklyAvailability: WeeklyAvailabilitySchema,
   overrides: t.Array(OverrideSchema),
+  timezone: TimezoneSchema,
 });
 
 export const UpdateUserRequest = t.Object({
-  _id: t.String(),
+  id: t.String(),
   roomId: t.Optional(t.String()),
   name: t.Optional(t.String({ minLength: 1 })),
   role: t.Optional(t.Union([t.Literal("admin"), t.Literal("user")])),
@@ -89,6 +96,7 @@ export const UpdateUserRequest = t.Object({
 export const UpdateUserAvailabilityRequest = t.Object({
   weeklyAvailability: t.Optional(WeeklyAvailabilitySchema),
   overrides: t.Optional(t.Array(OverrideSchema)),
+  timezone: t.Optional(TimezoneSchema),
 });
 
 export const DeleteUsersRequest = t.Object({

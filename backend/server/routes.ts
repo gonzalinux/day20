@@ -19,8 +19,8 @@ export const routes = new Elysia()
   .post(
     "/rooms",
     async ({ body, status }) => {
-      const { _id, magicToken } = await Service.createRoom(body);
-      return status(201, { _id, magicToken });
+      const { id, magicToken } = await Service.createRoom(body);
+      return status(201, { id, magicToken });
     },
     { body: CreateRoomRequest },
   )
@@ -131,10 +131,10 @@ export const routes = new Elysia()
   .patch(
     "/rooms/:room_id",
     async ({ params, body }) => {
-      const { _id, ...updateFields } = body;
+      const { id, ...updateFields } = body;
       const updates = {
         ...updateFields,
-        _id: params.room_id,
+        id: params.room_id,
       };
       const modified = await Service.updateRoom(updates);
       return { modified };

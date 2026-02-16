@@ -23,6 +23,7 @@ onMounted(async () => {
     const me = await getMe(roomId).catch(() => null)
     if (me) {
       if (me.userId) {
+        console.log('bbb')
         room.currentUserId = me.userId
         await Promise.all([room.fetchRoom(), room.fetchUsers()])
         if (route.query.token) router.replace({ query: {} })
@@ -31,8 +32,11 @@ onMounted(async () => {
       }
       await Promise.all([room.fetchRoom(), room.fetchUsers()])
       if (route.query.token) router.replace({ query: {} })
-      router.replace(roomPath('pick-user'))
-      return
+
+      if (room.users.length !== 0) {
+        router.replace(roomPath('pick-user'))
+        return
+      }
     }
   } catch {
     // No valid session — fall through to login
@@ -48,6 +52,7 @@ onMounted(async () => {
     const result = await loginRoom(roomId, { token })
     room.room.name = result.room.name
     await room.fetchUsers()
+
     if (room.users.length === 0) {
       router.replace(roomPath('name'))
     } else {

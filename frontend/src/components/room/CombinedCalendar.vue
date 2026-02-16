@@ -6,13 +6,12 @@ import MiniCalendar from './MiniCalendar.vue'
 import {
   type DayKey,
   DAY_KEYS,
-  availabilityToGrid,
   applyOverridesToGrid,
   getMondayOfWeek,
   formatDateKey,
-  formatSlotTime,
   dateToDayKey,
 } from '@/utils/availability'
+import { convertUserDayToLocalGrid, formatLocalSlotTime } from '@/utils/timezone'
 
 const { t } = useI18n()
 const room = useRoomStore()
@@ -49,12 +48,14 @@ const weekMonthLabel = computed(() => {
   return `${start.toLocaleString(undefined, { month: 'long' })} / ${end.toLocaleString(undefined, { month: 'long' })}`
 })
 
+const localWindow = computed(() => room.localTimeWindow)
+const slotCount = computed(() => localWindow.value.totalSlots)
 const startHour = computed(() => room.timeRange.startHour)
 const endHour = computed(() => room.timeRange.endHour)
-const slotCount = computed(() => (endHour.value - startHour.value) * 2)
 const totalUsers = computed(() => room.users.length)
 
 const combinedGrid = computed(() => {
+  const viewerTz = room.browserTimezone
   const grid: number[][] = []
   for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
     const date = weekDates.value[dayIdx]!
@@ -63,13 +64,17 @@ const combinedGrid = computed(() => {
     const slots = new Array(slotCount.value).fill(0)
 
     for (const user of room.users) {
-      const baseGrid = availabilityToGrid(
-        user.weeklyAvailability[dayKey] ?? [],
-        startHour.value,
-        endHour.value,
+      const userTz = user.timezone
+      const userGrid = convertUserDayToLocalGrid(
+        user.weeklyAvailability,
+        userTz,
+        viewerTz,
+        date,
+        dayKey,
+        localWindow.value,
       )
       const effective = applyOverridesToGrid(
-        baseGrid,
+        userGrid,
         user.overrides,
         dateStr,
         startHour.value,
@@ -247,9 +252,15 @@ const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
         <!-- Time slot rows -->
         <template v-for="i in slotCount" :key="i - 1">
           <div
+            v-if="localWindow.wraps && i - 1 === localWindow.topSlots"
+            class="col-span-full text-center text-xs text-secondary/50 font-heading py-1.5 bg-secondary/5 rounded"
+          >
+            {{ t('room.noSessionHours') }}
+          </div>
+          <div
             class="text-right pr-1 text-xs text-secondary font-heading flex items-center justify-end leading-none"
           >
-            <span v-if="(i - 1) % 2 === 0">{{ formatSlotTime(i - 1, startHour) }}</span>
+            <span v-if="(i - 1) % 2 === 0">{{ formatLocalSlotTime(i - 1, localWindow) }}</span>
           </div>
           <div
             v-for="dayIdx in 7"

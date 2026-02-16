@@ -1,15 +1,14 @@
-import type { ObjectId } from "mongodb";
 import type { TimeSelection, WeeklyAvailability } from "./room";
 
 export interface User {
-
-  _id: string;
+  id: string;
   roomId: string;
   name: string;
   role: UserRole;
   pin?: string;
   weeklyAvailability: WeeklyAvailability;
   overrides: Override[];
+  timezone: string;
 }
 
 export type UserRole = "admin" | "user";

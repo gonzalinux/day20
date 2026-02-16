@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import BaseModal from '@/components/BaseModal.vue'
 
+const { t } = useI18n()
 const model = defineModel<string>({ default: '' })
 const emit = defineEmits<{ complete: [pin: string] }>()
+
+defineProps<{ canSkip?: boolean }>()
+
+const showSkipConfirm = ref(false)
 
 const digits = ref<string[]>([])
 
@@ -74,8 +81,16 @@ defineExpose({ clear })
         {{ d }}
       </button>
 
-      <!-- Empty cell -->
-      <div />
+      <button
+        v-if="canSkip"
+        type="button"
+        class="aspect-square rounded-xl bg-bg/80 border border-secondary/20 text-secondary font-heading text-sm hover:bg-accent/15 hover:border-accent/40 active:scale-95 transition-all cursor-pointer select-none flex flex-col items-center justify-center gap-0.5"
+        @click="showSkipConfirm = true"
+      >
+        <VIcon name="gi-arrow-dunk" class="-rotate-90" scale="0.9" />
+        <span>{{ t('room.skipPin') }}</span>
+      </button>
+      <div v-else />
 
       <!-- 0 -->
       <button
@@ -109,5 +124,17 @@ defineExpose({ clear })
         </svg>
       </button>
     </div>
+
+    <BaseModal
+      v-if="showSkipConfirm"
+      :title="t('room.skipPinTitle')"
+      :actions="[
+        { label: t('room.durationCancel'), handler: () => (showSkipConfirm = false), variant: 'secondary' },
+        { label: t('room.skipPinConfirm'), handler: () => { showSkipConfirm = false; emit('complete', '') }, variant: 'danger' },
+      ]"
+      @close="showSkipConfirm = false"
+    >
+      <p class="text-secondary text-sm">{{ t('room.skipPinMessage') }}</p>
+    </BaseModal>
   </div>
 </template>
