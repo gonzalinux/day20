@@ -111,8 +111,7 @@ export function applyOverridesToGrid(
 ): boolean[] {
   const effective = [...baseGrid]
   for (const override of overrides) {
-    const oDate =
-      typeof override.date === 'string' ? override.date : formatDateKey(new Date(override.date))
+    const oDate = formatDateKey(override.date)
     if (oDate !== dateStr) continue
     const overrideSlots = availabilityToGrid(override.availability, startHour, endHour)
     for (let i = 0; i < effective.length; i++) {

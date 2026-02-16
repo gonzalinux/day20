@@ -98,6 +98,7 @@ export default {
     skipPinTitle: 'Omitir PIN',
     skipPinMessage: 'Sin un PIN, cualquier persona en la sala podrá seleccionar tu avatar y modificar tu disponibilidad. ¿Estás seguro?',
     skipPinConfirm: 'Omitir',
+    pinSkippedWarning: 'Tu avatar no tiene PIN — cualquiera puede usarlo',
     logout: 'Cambiar usuario',
     resetAvailability: 'Reiniciar mi disponibilidad',
     resetAvailabilityHint: 'Borrar todos tus horarios pintados y excepciones',

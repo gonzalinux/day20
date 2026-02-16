@@ -75,6 +75,15 @@ async function setUserPin(roomId: string, userId: string, hashedPin: string) {
   return result.matchedCount;
 }
 
+async function skipUserPin(roomId: string, userId: string) {
+  const users = getUsersCollection();
+  const result = await users.updateOne(
+    { _id: userId, roomId },
+    { $set: { pinSkipped: true }, $unset: { pin: "" } },
+  );
+  return result.matchedCount;
+}
+
 async function removeUserPin(roomId: string, userId: string) {
   const users = getUsersCollection();
   const result = await users.updateOne(
@@ -115,6 +124,7 @@ export default {
   getUsersFromRoom,
   updateUser,
   setUserPin,
+  skipUserPin,
   removeUserPin,
   deleteUsers,
 };

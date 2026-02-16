@@ -97,6 +97,7 @@ export default {
     skipPinTitle: 'Skip PIN setup',
     skipPinMessage: 'Without a PIN, anyone in the room can select your avatar and modify your availability. Are you sure?',
     skipPinConfirm: 'Skip',
+    pinSkippedWarning: 'Your avatar has no PIN — anyone can use it',
     logout: 'Switch user',
     resetAvailability: 'Reset my availability',
     resetAvailabilityHint: 'Clear all your painted times and overrides',

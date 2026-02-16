@@ -18,6 +18,7 @@ export interface RoomUser {
   name: string
   role: string
   hasPin: boolean
+  pinSkipped: boolean
   weeklyAvailability: WeeklyAvailability
   overrides: Override[]
   timezone: string
@@ -106,7 +107,15 @@ export const useRoomStore = defineStore('room', () => {
   async function setPin(userId: string, pin: string) {
     await apiSetPin(room.value.id, userId, pin)
     const user = users.value.find((u) => u.id === userId)
-    if (user) user.hasPin = true
+    if (user) {
+      if (pin === '') {
+        user.pinSkipped = true
+        user.hasPin = false
+      } else {
+        user.hasPin = true
+        user.pinSkipped = false
+      }
+    }
   }
 
   async function removePin(userId: string) {

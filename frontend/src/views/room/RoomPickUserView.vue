@@ -5,11 +5,13 @@ import { localePath } from '@/i18n'
 import { useRoute, useRouter } from 'vue-router'
 import PinPad from '@/components/PinPad.vue'
 import { useRoomStore } from '@/stores/room'
+import { useToast } from '@/composables/useToast'
 
 const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const room = useRoomStore()
+const toast = useToast()
 
 const selectingUser = ref(false)
 const pickPinUserId = ref('')
@@ -34,7 +36,10 @@ async function pickUserAndContinue(userId: string, pin?: string) {
   try {
     await room.selectUser(userId, pin)
     const user = room.users.find((u) => u.id === userId)
-    if (user?.hasPin) {
+    if (user?.hasPin || user?.pinSkipped) {
+      if (user?.pinSkipped) {
+        toast.show(t('room.pinSkippedWarning'), 'warning')
+      }
       router.push(localePath(`/rooms/${roomId}/calendar`, locale.value))
     } else {
       router.push(localePath(`/rooms/${roomId}/pin?next=calendar`, locale.value))
@@ -87,5 +92,6 @@ function submitPickPin() {
       </ul>
       <p v-if="error && !pickPinUserId" class="text-red-500 text-sm mt-4">{{ error }}</p>
     </div>
+
   </div>
 </template>

@@ -104,7 +104,7 @@ describe('applyOverridesToGrid', () => {
 
   test('block override removes slots', () => {
     const overrides: Override[] = [
-      { date: '2025-01-06', type: 'block', availability: [{ start: { hour: 10, minute: 0 }, end: { hour: 10, minute: 30 } }] },
+      { date: new Date('2025-01-06'), type: 'block', availability: [{ start: { hour: 10, minute: 0 }, end: { hour: 10, minute: 30 } }] },
     ]
     const result = applyOverridesToGrid(base, overrides, '2025-01-06', 10, 12)
     expect(result).toEqual([false, true, false, false])
@@ -112,7 +112,7 @@ describe('applyOverridesToGrid', () => {
 
   test('unblock override adds slots', () => {
     const overrides: Override[] = [
-      { date: '2025-01-06', type: 'unblock', availability: [{ start: { hour: 11, minute: 0 }, end: { hour: 11, minute: 30 } }] },
+      { date: new Date('2025-01-06'), type: 'unblock', availability: [{ start: { hour: 11, minute: 0 }, end: { hour: 11, minute: 30 } }] },
     ]
     const result = applyOverridesToGrid(base, overrides, '2025-01-06', 10, 12)
     expect(result).toEqual([true, true, true, false])
@@ -120,7 +120,7 @@ describe('applyOverridesToGrid', () => {
 
   test('override for different date has no effect', () => {
     const overrides: Override[] = [
-      { date: '2025-01-07', type: 'block', availability: [{ start: { hour: 10, minute: 0 }, end: { hour: 12, minute: 0 } }] },
+      { date: new Date('2025-01-07'), type: 'block', availability: [{ start: { hour: 10, minute: 0 }, end: { hour: 12, minute: 0 } }] },
     ]
     const result = applyOverridesToGrid(base, overrides, '2025-01-06', 10, 12)
     expect(result).toEqual(base)

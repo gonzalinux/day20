@@ -6,6 +6,7 @@ export interface User {
   name: string;
   role: UserRole;
   pin?: string;
+  pinSkipped?: boolean;
   weeklyAvailability: WeeklyAvailability;
   overrides: Override[];
   timezone: string;

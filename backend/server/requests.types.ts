@@ -104,7 +104,7 @@ export const DeleteUsersRequest = t.Object({
 });
 
 export const SetPinRequest = t.Object({
-  pin: t.String({ pattern: '^\\d{4}$' }),
+  pin: t.String({ pattern: '^(\\d{4}|)$' }),
 });
 
 export const UserIdParam = t.Object({

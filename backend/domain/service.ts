@@ -16,7 +16,7 @@ const CLEANUP_INTERVAL_MS = 7.3 * 60 * 60 * 1000;
 
 function stripPin(user: User) {
   const { pin, ...rest } = user;
-  return { ...rest, hasPin: !!pin };
+  return { ...rest, hasPin: !!pin, pinSkipped: !!user.pinSkipped };
 }
 
 export async function roomExists(roomId: string) {
@@ -128,6 +128,11 @@ export async function setUserPin(
   const users = await Repository.getUsersFromRoom(roomId);
   const target = users.find((u) => u.id === targetUserId);
   if (!target) throw new NotFoundError("User not found");
+
+  if (pin === "") {
+    await Repository.skipUserPin(roomId, targetUserId);
+    return;
+  }
 
   const hashedPin = await Bun.password.hash(pin);
   await Repository.setUserPin(roomId, targetUserId, hashedPin);

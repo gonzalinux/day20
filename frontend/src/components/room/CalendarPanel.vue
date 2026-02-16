@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoomStore } from '@/stores/room'
+import { useToast } from '@/composables/useToast'
 import MiniCalendar from './MiniCalendar.vue'
 import CombinedCalendar from './CombinedCalendar.vue'
 import {
@@ -28,6 +29,7 @@ const emit = defineEmits<{ 'update:tab': [tab: Tab] }>()
 
 const { t } = useI18n()
 const room = useRoomStore()
+const toast = useToast()
 
 type Tab = 'weekly' | 'overrides' | 'combined'
 const activeTab = ref<Tab>(props.initialTab ?? 'weekly')
@@ -93,7 +95,7 @@ const overrideDates = computed(() => {
   const user = room.currentUser
   if (!user) return []
   return user.overrides.map((o) =>
-    typeof o.date === 'string' ? o.date : formatDateKey(new Date(o.date)),
+    formatDateKey(o.date),
   )
 })
 
@@ -123,7 +125,7 @@ const overrideWeekGrids = computed(() => {
     )
     const dateStr = formatDateKey(date)
     const override = room.currentUser.overrides.find(
-      (o) => (typeof o.date === 'string' ? o.date : formatDateKey(new Date(o.date))) === dateStr,
+      (o) => formatDateKey(o.date) === dateStr,
     )
     if (!override) {
       grids[dayIdx] = baseGrid.map((on) => ({ base: on, effective: on, overridden: false }))
@@ -168,28 +170,14 @@ const dragStartSlot = ref(-1)
 const dragCurrentSlot = ref(-1)
 const dragStartDay = ref(-1)
 const dragCurrentDay = ref(-1)
-const savedVisible = ref(false)
-const errorVisible = ref(false)
-let savedTimer: ReturnType<typeof setTimeout> | null = null
-let errorTimer: ReturnType<typeof setTimeout> | null = null
-
 watch(
   () => room.saveError,
   (val) => {
     if (!val) return
-    savedVisible.value = false
-    errorVisible.value = true
+    toast.show(t('room.saveError'), 'error')
     room.saveError = false
-    if (errorTimer) clearTimeout(errorTimer)
-    errorTimer = setTimeout(() => (errorVisible.value = false), 3000)
   },
 )
-
-function flashSaved() {
-  savedVisible.value = true
-  if (savedTimer) clearTimeout(savedTimer)
-  savedTimer = setTimeout(() => (savedVisible.value = false), 1500)
-}
 
 function onPointerDown(e: PointerEvent) {
   const el = (e.target as HTMLElement).closest('[data-slot]') as HTMLElement | null
@@ -236,7 +224,7 @@ function onPointerUp() {
     commitOverridePaint()
   }
 
-  flashSaved()
+  toast.show(t('room.saved'), 'success')
   painting.value = null
   dragStartSlot.value = -1
   dragCurrentSlot.value = -1
@@ -287,7 +275,7 @@ function commitOverridePaint() {
   const minSlot = Math.min(dragStartSlot.value, dragCurrentSlot.value)
   const maxSlot = Math.max(dragStartSlot.value, dragCurrentSlot.value)
 
-  let newOverrides = [...user.overrides]
+  const newOverrides = [...user.overrides]
 
   for (let d = minDay; d <= maxDay; d++) {
     const date = overrideWeekDates.value[d]!
@@ -581,25 +569,6 @@ watch(activeTab, () => {
       <CombinedCalendar />
     </template>
 
-    <!-- Saved toast -->
-    <Transition name="toast">
-      <div
-        v-if="savedVisible"
-        class="fixed bottom-20 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg bg-accent text-bg text-sm font-heading font-bold shadow-lg"
-      >
-        {{ t('room.saved') }}
-      </div>
-    </Transition>
-
-    <!-- Error toast -->
-    <Transition name="toast">
-      <div
-        v-if="errorVisible"
-        class="fixed bottom-20 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-heading font-bold shadow-lg"
-      >
-        {{ t('room.saveError') }}
-      </div>
-    </Transition>
   </div>
 </template>
 
@@ -621,16 +590,5 @@ watch(activeTab, () => {
 .info-leave-from {
   max-height: 100px;
   overflow: hidden;
-}
-.toast-enter-active {
-  transition: all 0.2s ease;
-}
-.toast-leave-active {
-  transition: all 0.3s ease;
-}
-.toast-enter-from,
-.toast-leave-to {
-  opacity: 0;
-  transform: translateX(-50%) translateY(8px);
 }
 </style>
