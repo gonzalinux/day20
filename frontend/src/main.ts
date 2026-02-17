@@ -20,6 +20,7 @@ import {
   GiPadlock,
   GiArrowDunk,
   GiBrokenSkull,
+  GiWorld,
 } from 'oh-vue-icons/icons'
 
 import App from './App.vue'
@@ -44,6 +45,7 @@ addIcons(
   GiPadlock,
   GiArrowDunk,
   GiBrokenSkull,
+  GiWorld,
 )
 
 const app = createApp(App)

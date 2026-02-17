@@ -53,6 +53,18 @@ const slotCount = computed(() => localWindow.value.totalSlots)
 const startHour = computed(() => room.timeRange.startHour)
 const endHour = computed(() => room.timeRange.endHour)
 
+const defaultGrids = computed(() => {
+  const roomTz = room.room.timezone
+  const viewerTz = room.browserTimezone
+  const da = room.room.defaultAvailability
+  return Object.fromEntries(
+    DAY_KEYS.map((d) => [
+      d,
+      convertUserDayToLocalGrid(da, roomTz, viewerTz, new Date(), d, localWindow.value),
+    ]),
+  ) as Record<DayKey, boolean[]>
+})
+
 const weeklyGrids = computed(() => {
   const user = room.currentUser
   const empty = new Array(slotCount.value).fill(false) as boolean[]
@@ -169,14 +181,15 @@ watch(
 function onPointerDown(e: PointerEvent) {
   const el = (e.target as HTMLElement).closest('[data-slot]') as HTMLElement | null
   if (!el) return
-  ;(e.target as HTMLElement).setPointerCapture?.(e.pointerId)
 
   const slotIdx = parseInt(el.dataset.slot!, 10)
-  dragStartSlot.value = slotIdx
-  dragCurrentSlot.value = slotIdx
-
   const dayIdx = parseInt(el.dataset.day!, 10)
   if (isNaN(dayIdx)) return
+  if (!isDefaultSlot(dayIdx, slotIdx)) return
+
+  ;(e.target as HTMLElement).setPointerCapture?.(e.pointerId)
+  dragStartSlot.value = slotIdx
+  dragCurrentSlot.value = slotIdx
   dragStartDay.value = dayIdx
   dragCurrentDay.value = dayIdx
 
@@ -317,7 +330,13 @@ function isInWeeklyDragRange(dayIdx: number, slotIdx: number) {
   return dayIdx >= minDay && dayIdx <= maxDay && slotIdx >= minSlot && slotIdx <= maxSlot
 }
 
+function isDefaultSlot(dayIdx: number, slotIdx: number) {
+  const day = DAY_KEYS[dayIdx]!
+  return defaultGrids.value[day][slotIdx]
+}
+
 function weeklySlotClass(dayIdx: number, slotIdx: number) {
+  if (!isDefaultSlot(dayIdx, slotIdx)) return 'bg-secondary/5 opacity-30'
   const day = DAY_KEYS[dayIdx]!
   const on = weeklyGrids.value[day][slotIdx]
   if (isInWeeklyDragRange(dayIdx, slotIdx)) {
@@ -327,6 +346,7 @@ function weeklySlotClass(dayIdx: number, slotIdx: number) {
 }
 
 function overrideSlotClass(dayIdx: number, slotIdx: number) {
+  if (!isDefaultSlot(dayIdx, slotIdx)) return 'bg-secondary/5 opacity-30'
   if (!overrideWeekGrids.value) return 'bg-secondary/10'
   const cell = overrideWeekGrids.value[dayIdx]?.[slotIdx]
   if (!cell) return 'bg-secondary/10'

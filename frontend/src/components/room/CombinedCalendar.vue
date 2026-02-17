@@ -11,6 +11,7 @@ import {
   formatDateKey,
   dateToDayKey,
 } from '@/utils/availability'
+import type { DayKey } from '@/utils/availability'
 import { convertUserDayToLocalGrid, formatLocalSlotTime } from '@/utils/timezone'
 
 const { t } = useI18n()
@@ -43,6 +44,23 @@ const slotCount = computed(() => localWindow.value.totalSlots)
 const startHour = computed(() => room.timeRange.startHour)
 const endHour = computed(() => room.timeRange.endHour)
 const totalUsers = computed(() => room.users.length)
+
+const defaultGrids = computed(() => {
+  const roomTz = room.room.timezone
+  const viewerTz = room.browserTimezone
+  const da = room.room.defaultAvailability
+  return Object.fromEntries(
+    DAY_KEYS.map((d) => [
+      d,
+      convertUserDayToLocalGrid(da, roomTz, viewerTz, new Date(), d, localWindow.value),
+    ]),
+  ) as Record<DayKey, boolean[]>
+})
+
+function isDefaultSlot(dayIdx: number, slotIdx: number) {
+  const day = DAY_KEYS[dayIdx]!
+  return defaultGrids.value[day][slotIdx]
+}
 
 const combinedGrid = computed(() => {
   const viewerTz = room.browserTimezone
@@ -107,6 +125,7 @@ const viableSlots = computed(() => {
 })
 
 function slotClass(dayIdx: number, slotIdx: number) {
+  if (!isDefaultSlot(dayIdx, slotIdx)) return 'bg-secondary/5 opacity-30'
   const count = combinedGrid.value[dayIdx]![slotIdx]!
   const total = totalUsers.value
 
