@@ -13,8 +13,10 @@ const server = new Elysia()
     credentials: true,
   }))
   .use(openapi())
-  .get("/", "ping")
-  .use(routes);
+  .group("/v1/api", (app) => app
+    .get("/", "ping")
+    .use(routes)
+  );
 
 export type App = typeof server;
 

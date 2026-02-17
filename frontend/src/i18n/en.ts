@@ -129,6 +129,10 @@ export default {
     deleteRoomConfirmMessage: 'This will permanently delete the room, all players, and all availability data. This action cannot be undone.',
     deleteRoomConfirmButton: 'Delete',
   },
+  notFound: {
+    message: 'This page does not exist.',
+    home: 'Back to home',
+  },
   home: {
     q1: 'Scheduling is hard?',
     q2: "Your friends can't communicate?",

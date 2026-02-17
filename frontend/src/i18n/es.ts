@@ -130,6 +130,10 @@ export default {
     deleteRoomConfirmMessage: 'Esto eliminará permanentemente la sala, todos los jugadores y todos los datos de disponibilidad. Esta acción no se puede deshacer.',
     deleteRoomConfirmButton: 'Eliminar',
   },
+  notFound: {
+    message: 'Esta página no existe.',
+    home: 'Volver al inicio',
+  },
   home: {
     q1: '¿Organizar horarios es difícil?',
     q2: '¿Tus amigos no se ponen de acuerdo?',

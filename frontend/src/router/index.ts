@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import i18n from '@/i18n'
 
 const Home = () => import('@/views/HomeView.vue')
+const NotFound = () => import('@/views/NotFoundView.vue')
 const RoomLogin = () => import('@/views/RoomLoginView.vue')
 const RoomLayout = () => import('@/views/RoomView.vue')
 const RoomEntry = () => import('@/views/room/RoomEntry.vue')
@@ -36,6 +37,7 @@ const router = createRouter({
     { path: '/', component: Home },
     { path: '/room-login', component: RoomLogin },
     { path: '/rooms/:id', component: RoomLayout, children: roomChildren },
+    { path: '/:pathMatch(.*)*', component: NotFound },
   ],
 })
 

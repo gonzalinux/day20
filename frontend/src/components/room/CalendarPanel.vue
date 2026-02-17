@@ -48,11 +48,13 @@ watch(activeTab, (val) => {
 })
 
 // === Weekly mode ===
+// Room time window converted to the viewer's local timezone
 const localWindow = computed(() => room.localTimeWindow)
 const slotCount = computed(() => localWindow.value.totalSlots)
 const startHour = computed(() => room.timeRange.startHour)
 const endHour = computed(() => room.timeRange.endHour)
 
+// Room's default availability converted to local tz — used to grey out slots outside allowed hours/days
 const defaultGrids = computed(() => {
   const roomTz = room.room.timezone
   const viewerTz = room.browserTimezone
@@ -65,6 +67,7 @@ const defaultGrids = computed(() => {
   ) as Record<DayKey, boolean[]>
 })
 
+// Current user's weekly availability converted to local tz — the paintable grid
 const weeklyGrids = computed(() => {
   const user = room.currentUser
   const empty = new Array(slotCount.value).fill(false) as boolean[]
@@ -90,16 +93,19 @@ const weeklyGrids = computed(() => {
 // === Override mode ===
 const selectedDate = ref<Date | null>(null)
 const calendarExpanded = ref(true)
+// Monday of the week containing the selected date — used to highlight a full week row
 const overrideHighlightWeek = computed(() =>
   selectedDate.value ? getMondayOfWeek(selectedDate.value) : null,
 )
 
+// Date strings (YYYY-MM-DD) of days that have overrides — shown as dots in the mini calendar
 const overrideDates = computed(() => {
   const user = room.currentUser
   if (!user) return []
   return user.overrides.map((o) => formatDateKey(o.date))
 })
 
+// The 7 dates (Mon-Sun) of the selected week
 const overrideWeekDates = computed(() => {
   if (!overrideHighlightWeek.value) return []
   const dates: Date[] = []
@@ -111,8 +117,10 @@ const overrideWeekDates = computed(() => {
   return dates
 })
 
+// Each cell tracks: base (weekly), effective (after overrides), overridden (differs from base)
 type OverrideCell = { base: boolean; effective: boolean; overridden: boolean }
 
+// Merges user's weekly grid with any block/unblock overrides for each day of the selected week
 const overrideWeekGrids = computed(() => {
   if (!selectedDate.value || !room.currentUser) return null
   const grids: Record<number, OverrideCell[]> = {}
@@ -162,9 +170,10 @@ function toggleCalendar() {
   calendarExpanded.value = !calendarExpanded.value
 }
 
-// === Paint logic ===
+// === Paint logic (click-and-drag to toggle slots) ===
 type PaintMode = 'paint' | 'erase' | null
 const painting = ref<PaintMode>(null)
+// Track the rectangular drag selection: start corner + current corner
 const dragStartSlot = ref(-1)
 const dragCurrentSlot = ref(-1)
 const dragStartDay = ref(-1)
@@ -232,6 +241,7 @@ function onPointerUp() {
   dragCurrentDay.value = -1
 }
 
+// Apply the drag selection to the weekly grid and convert back to the user's tz before saving
 function commitWeeklyPaint() {
   const user = room.currentUser
   if (!user) return
@@ -251,6 +261,7 @@ function commitWeeklyPaint() {
       grid[s] = painting.value === 'paint'
     }
 
+    // Convert local grid back to user's timezone (may split across day boundaries)
     const converted = convertLocalGridToUserTz(
       grid,
       localWindow.value,
@@ -266,6 +277,7 @@ function commitWeeklyPaint() {
   room.saveWeeklyAvailability(updated)
 }
 
+// Diff the painted effective grid against the base weekly grid to produce block/unblock overrides
 function commitOverridePaint() {
   const user = room.currentUser
   if (!user || !overrideWeekGrids.value) return
@@ -275,6 +287,7 @@ function commitOverridePaint() {
   const minSlot = Math.min(dragStartSlot.value, dragCurrentSlot.value)
   const maxSlot = Math.max(dragStartSlot.value, dragCurrentSlot.value)
 
+  // Remove existing overrides for painted dates — they'll be rebuilt below
   const paintedDateStrs = new Set(
     Array.from({ length: maxDay - minDay + 1 }, (_, i) =>
       formatDateKey(overrideWeekDates.value[minDay + i]!),
@@ -295,6 +308,7 @@ function commitOverridePaint() {
       effectiveGrid[s] = painting.value === 'paint'
     }
 
+    // Compare effective vs base to determine what was blocked or unblocked
     const blocked: boolean[] = []
     const unblocked: boolean[] = []
     for (let i = 0; i < effectiveGrid.length; i++) {
@@ -321,6 +335,7 @@ function commitOverridePaint() {
   room.saveOverrides(newOverrides)
 }
 
+// Check if a cell is inside the current drag rectangle
 function isInWeeklyDragRange(dayIdx: number, slotIdx: number) {
   if (painting.value === null || dragStartDay.value < 0) return false
   const minDay = Math.min(dragStartDay.value, dragCurrentDay.value)
@@ -330,11 +345,13 @@ function isInWeeklyDragRange(dayIdx: number, slotIdx: number) {
   return dayIdx >= minDay && dayIdx <= maxDay && slotIdx >= minSlot && slotIdx <= maxSlot
 }
 
+// Whether this slot falls within the room's allowed hours for that day
 function isDefaultSlot(dayIdx: number, slotIdx: number) {
   const day = DAY_KEYS[dayIdx]!
   return defaultGrids.value[day][slotIdx]
 }
 
+// Returns the CSS class for a weekly slot: greyed if outside default, accent if available, or drag preview
 function weeklySlotClass(dayIdx: number, slotIdx: number) {
   if (!isDefaultSlot(dayIdx, slotIdx)) return 'bg-secondary/5 opacity-30'
   const day = DAY_KEYS[dayIdx]!
@@ -345,6 +362,7 @@ function weeklySlotClass(dayIdx: number, slotIdx: number) {
   return on ? 'bg-accent' : 'bg-secondary/10'
 }
 
+// Returns CSS class for override slots: greyed if outside default, red/green for block/unblock
 function overrideSlotClass(dayIdx: number, slotIdx: number) {
   if (!isDefaultSlot(dayIdx, slotIdx)) return 'bg-secondary/5 opacity-30'
   if (!overrideWeekGrids.value) return 'bg-secondary/10'

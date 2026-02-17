@@ -20,6 +20,7 @@ const room = useRoomStore()
 const selectedWeekStart = ref(getMondayOfWeek(new Date()))
 const calendarExpanded = ref(true)
 
+// The 7 dates (Mon-Sun) of the currently viewed week
 const weekDates = computed(() => {
   const dates: Date[] = []
   for (let i = 0; i < 7; i++) {
@@ -39,12 +40,14 @@ const weekMonthLabel = computed(() => {
   return `${start.toLocaleString(undefined, { month: 'long' })} / ${end.toLocaleString(undefined, { month: 'long' })}`
 })
 
+// Room time window converted to the viewer's local timezone
 const localWindow = computed(() => room.localTimeWindow)
 const slotCount = computed(() => localWindow.value.totalSlots)
 const startHour = computed(() => room.timeRange.startHour)
 const endHour = computed(() => room.timeRange.endHour)
 const totalUsers = computed(() => room.users.length)
 
+// Room's default availability in local tz — used to grey out slots outside allowed hours/days
 const defaultGrids = computed(() => {
   const roomTz = room.room.timezone
   const viewerTz = room.browserTimezone
@@ -57,11 +60,13 @@ const defaultGrids = computed(() => {
   ) as Record<DayKey, boolean[]>
 })
 
+// Whether this slot falls within the room's allowed hours for that day
 function isDefaultSlot(dayIdx: number, slotIdx: number) {
   const day = DAY_KEYS[dayIdx]!
   return defaultGrids.value[day][slotIdx]
 }
 
+// For each day×slot, count how many users are available (after applying their overrides)
 const combinedGrid = computed(() => {
   const viewerTz = room.browserTimezone
   const grid: number[][] = []
@@ -97,6 +102,7 @@ const combinedGrid = computed(() => {
   return grid
 })
 
+// Mark slots where ALL users are free for at least min session duration (consecutive slots)
 const viableSlots = computed(() => {
   const minSlots = room.room.duration.min * 2
   const viable: boolean[][] = []
@@ -124,6 +130,7 @@ const viableSlots = computed(() => {
   return viable
 })
 
+// CSS class: greyed if outside default, then intensity based on fraction of users available
 function slotClass(dayIdx: number, slotIdx: number) {
   if (!isDefaultSlot(dayIdx, slotIdx)) return 'bg-secondary/5 opacity-30'
   const count = combinedGrid.value[dayIdx]![slotIdx]!
