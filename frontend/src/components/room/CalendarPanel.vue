@@ -85,9 +85,7 @@ const overrideHighlightWeek = computed(() =>
 const overrideDates = computed(() => {
   const user = room.currentUser
   if (!user) return []
-  return user.overrides.map((o) =>
-    formatDateKey(o.date),
-  )
+  return user.overrides.map((o) => formatDateKey(o.date))
 })
 
 const overrideWeekDates = computed(() => {
@@ -115,9 +113,7 @@ const overrideWeekGrids = computed(() => {
       endHour.value,
     )
     const dateStr = formatDateKey(date)
-    const override = room.currentUser.overrides.find(
-      (o) => formatDateKey(o.date) === dateStr,
-    )
+    const override = room.currentUser.overrides.find((o) => formatDateKey(o.date) === dateStr)
     if (!override) {
       grids[dayIdx] = baseGrid.map((on) => ({ base: on, effective: on, overridden: false }))
     } else {
@@ -268,12 +264,10 @@ function commitOverridePaint() {
 
   const paintedDateStrs = new Set(
     Array.from({ length: maxDay - minDay + 1 }, (_, i) =>
-      formatDateKey(overrideWeekDates.value[minDay + i]!)
-    )
+      formatDateKey(overrideWeekDates.value[minDay + i]!),
+    ),
   )
-  const newOverrides = user.overrides.filter(
-    (o) => !paintedDateStrs.has(formatDateKey(o.date))
-  )
+  const newOverrides = user.overrides.filter((o) => !paintedDateStrs.has(formatDateKey(o.date)))
 
   for (let d = minDay; d <= maxDay; d++) {
     const date = overrideWeekDates.value[d]!
@@ -437,7 +431,7 @@ watch(activeTab, () => {
             <!-- Gap separator for cross-midnight wrapping -->
             <div
               v-if="localWindow.wraps && i - 1 === localWindow.topSlots"
-              class="col-span-full text-center text-xs text-secondary/50 font-heading py-1.5 bg-secondary/5 rounded"
+              class="col-span-full text-center text-xs text-secondary font-heading py-1.5 bg-secondary rounded"
             >
               {{ t('room.noSessionHours') }}
             </div>
@@ -451,6 +445,7 @@ watch(activeTab, () => {
               :key="day"
               :data-day="dayIdx"
               :data-slot="i - 1"
+              name="slot"
               class="rounded-sm transition-colors duration-75 min-h-6"
               style="touch-action: none"
               :class="weeklySlotClass(dayIdx, i - 1)"
@@ -566,7 +561,6 @@ watch(activeTab, () => {
     <template v-else-if="activeTab === 'combined'">
       <CombinedCalendar />
     </template>
-
   </div>
 </template>
 
