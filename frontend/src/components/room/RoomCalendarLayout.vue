@@ -15,7 +15,9 @@ const room = useRoomStore()
 
 let pollInterval: ReturnType<typeof setInterval> | null = null
 onMounted(() => {
-  pollInterval = setInterval(() => room.fetchUsers(), 5000)
+  pollInterval = setInterval(() => {
+    if (!document.hidden) room.fetchUsers()
+  }, 5000)
 })
 onUnmounted(() => {
   if (pollInterval) clearInterval(pollInterval)

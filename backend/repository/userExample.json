@@ -1,8 +1,9 @@
 {
-  "id": "grog-01",
+  "id": "the-lost-mines:Grog",
   "roomId": "the-lost-mines",
   "name": "Grog",
   "role": "admin",
+  "timezone": "America/New_York",
   "weeklyAvailability": {
     "monday": [{ "start": { "hour": 18, "minute": 0 }, "end": { "hour": 22, "minute": 0 } }],
     "tuesday": [],
@@ -19,12 +20,12 @@
     {
       "date": "2025-07-15",
       "availability": [{ "start": { "hour": 0, "minute": 0 }, "end": { "hour": 23, "minute": 0 } }],
-      "reason": "Day off work"
+      "type": "unblock"
     },
     {
       "date": "2025-07-20",
       "availability": [],
-      "reason": "Family trip"
+      "type": "block"
     }
   ]
 }

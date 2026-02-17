@@ -14,6 +14,13 @@ import type { CreateRoomRequest } from "../server/requests.types";
 const STALE_ROOM_MS = 30 * 24 * 60 * 60 * 1000;
 const CLEANUP_INTERVAL_MS = 7.3 * 60 * 60 * 1000;
 
+async function assertAdmin(roomId: string, userId: string) {
+  const users = await Repository.getUsersFromRoom(roomId);
+  const user = users.find((u) => u.id === userId);
+  if (!user || user.role !== "admin")
+    throw new ForbiddenError("Only admins can perform this action");
+}
+
 function stripPin(user: User) {
   const { pin, ...rest } = user;
   return { ...rest, hasPin: !!pin, pinSkipped: !!user.pinSkipped };
@@ -80,24 +87,28 @@ export async function getUsersFromRoom(roomId: string) {
   return users.map(stripPin);
 }
 
-export async function updateRoom(updates: PartialWithId<Room>) {
+export async function updateRoom(updates: PartialWithId<Room>, authUserId?: string) {
   const existing = await Repository.findRoom(updates.id);
   if (!existing) throw new NotFoundError("Room not found");
 
+  if (authUserId) await assertAdmin(updates.id, authUserId);
+
   updates.updatedAt = new Date();
-  const result = await Repository.updateRoom({...existing,...updates});
+  const result = await Repository.updateRoom(updates);
   return result;
 }
 
-export async function addUserToRoom(roomId: string, user: WithoutId<User>) {
+export async function addUserToRoom(roomId: string, user: WithoutId<User>, authUserId?: string) {
   const room = await Repository.findRoom(roomId);
   if (!room) throw new NotFoundError("Room not found");
+
+  if (authUserId) await assertAdmin(roomId, authUserId);
 
   const existingUsers = await Repository.getUsersFromRoom(roomId);
   if (existingUsers.some((existing) => existing.name === user.name))
     throw new AlreadyExistsError("This user already exists in this room");
 
-  const fullUser: User = { ...user, roomId, id: user.name };
+  const fullUser: User = { ...user, roomId, id: `${roomId}:${user.name}` };
   const created = await Repository.createUser(fullUser);
   return stripPin(created);
 }
@@ -178,12 +189,23 @@ export async function updateUserAvailability(
   return stripPin({ ...target, ...updatePayload });
 }
 
+export async function deleteRoom(roomId: string, authUserId: string) {
+  const room = await Repository.findRoom(roomId);
+  if (!room) throw new NotFoundError("Room not found");
+
+  await assertAdmin(roomId, authUserId);
+  await Repository.deleteRoom(roomId);
+}
+
 export async function removeUsersFromRoom(
   roomId: string,
   userIds: string[],
+  authUserId?: string,
 ) {
   const room = await Repository.findRoom(roomId);
   if (!room) throw new NotFoundError("Room not found");
+
+  if (authUserId) await assertAdmin(roomId, authUserId);
 
   const existingUsers = await Repository.getUsersFromRoom(roomId);
   const usersToDelete = existingUsers.filter((user) =>
@@ -193,7 +215,7 @@ export async function removeUsersFromRoom(
   if (usersToDelete.length === 0)
     throw new NotFoundError("No matching users found");
 
-  const deletedCount = await Repository.deleteUsers(usersToDelete);
+  const deletedCount = await Repository.deleteUsers(usersToDelete, roomId);
   return deletedCount;
 }
 

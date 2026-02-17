@@ -40,7 +40,7 @@ export const OverrideSchema = t.Object({
 // ===== Room Request Schemas =====
 
 export const CreateRoomRequest = t.Object({
-  name: t.String({ minLength: 3, maxLength:100, patern: "^[a-zA-Z0-9\\s]+$" }),
+  name: t.String({ minLength: 3, maxLength:100, pattern: "^[a-zA-Z0-9\\s]+$" }),
   description: t.String({maxLength:500}),
   password: t.String({ minLength: 1 }),
   duration: SessionDurationSchema,
@@ -95,7 +95,7 @@ export const UpdateUserRequest = t.Object({
 
 export const UpdateUserAvailabilityRequest = t.Object({
   weeklyAvailability: t.Optional(WeeklyAvailabilitySchema),
-  overrides: t.Optional(t.Array(OverrideSchema)),
+  overrides: t.Optional(t.Array(OverrideSchema, { maxItems: 500 })),
   timezone: t.Optional(TimezoneSchema),
 });
 

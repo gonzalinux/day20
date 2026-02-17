@@ -241,9 +241,7 @@ export function convertUserDayToLocalGrid(
     const { hour: localHour, minute: localMinute } = localSlotToTime(s, window)
     const isTopSection = window.wraps && s < window.topSlots
 
-    const localDayOffset = isTopSection ? 0 : 0
     const tempDate = new Date(refDate)
-    tempDate.setUTCDate(tempDate.getUTCDate() + localDayOffset)
 
     const conv = convertTimeOfDay(localHour, localMinute, tempDate, viewerTz, userTz)
 

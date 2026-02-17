@@ -1,14 +1,17 @@
-import { Elysia, t } from "elysia";
+import { Elysia } from "elysia";
 import {cors} from "@elysiajs/cors";
 import { openapi } from "@elysiajs/openapi";
 import { routes } from "./server/routes";
-import { connectToDatabase } from "./repository/db";
+import { connectToDatabase, disconnectFromDatabase } from "./repository/db";
 import { logger } from "./server/logger";
 import { startCleanupScheduler } from "./domain/service";
 
 const server = new Elysia()
   .use(logger)
-  .use(cors())
+  .use(cors({
+    origin: ["http://localhost:3500", "https://day-20.com"],
+    credentials: true,
+  }))
   .use(openapi())
   .get("/", "ping")
   .use(routes);
@@ -23,5 +26,15 @@ async function startServer() {
 
   console.log("Server started port 3000");
 }
+
+async function shutdown() {
+  console.log("Shutting down...");
+  await disconnectFromDatabase();
+  server.stop();
+  process.exit(0);
+}
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
 startServer();

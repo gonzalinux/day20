@@ -13,6 +13,7 @@ import {
   SetPinRequest,
 } from "./requests.types";
 import { jwtAuth, protectedRoutes } from "./auth.ts";
+import { UnauthorizedError } from "./errors.types";
 
 export const routes = new Elysia()
   .use(jwtAuth)
@@ -47,6 +48,7 @@ export const routes = new Elysia()
         httpOnly: true,
         sameSite: "lax",
         path: "/",
+        secure: true,
       });
 
       return result;
@@ -95,6 +97,7 @@ export const routes = new Elysia()
         httpOnly: true,
         sameSite: "lax",
         path: "/",
+        secure: true,
       });
 
       return { userId: body.userId, name: user.name };
@@ -114,8 +117,19 @@ export const routes = new Elysia()
         httpOnly: true,
         sameSite: "lax",
         path: "/",
+        secure: true,
       });
 
+      return { ok: true };
+    },
+    { params: RoomIdParam },
+  )
+  .delete(
+    "/rooms/:room_id",
+    async ({ params, auth }) => {
+      const roomId = params.room_id;
+      const authUserId = auth.rooms[roomId] ?? "";
+      await Service.deleteRoom(roomId, authUserId);
       return { ok: true };
     },
     { params: RoomIdParam },
@@ -130,32 +144,35 @@ export const routes = new Elysia()
   )
   .patch(
     "/rooms/:room_id",
-    async ({ params, body }) => {
+    async ({ params, body, auth }) => {
       const { id, ...updateFields } = body;
       const updates = {
         ...updateFields,
         id: params.room_id,
       };
-      const modified = await Service.updateRoom(updates);
+      const authUserId = auth.rooms[params.room_id];
+      const modified = await Service.updateRoom(updates, authUserId);
       return { modified };
     },
     { params: RoomIdParam, body: UpdateRoomRequest },
   )
   .post(
     "/rooms/:room_id/users",
-    async ({ params, body, status }) => {
+    async ({ params, body, status, auth }) => {
       const roomId = params.room_id;
-      const user = await Service.addUserToRoom(roomId, { ...body, roomId });
+      const authUserId = auth.rooms[roomId];
+      const user = await Service.addUserToRoom(roomId, { ...body, roomId }, authUserId);
       return status(201, user);
     },
     { params: RoomIdParam, body: CreateUserRequest },
   )
   .delete(
     "/rooms/:room_id/users",
-    async ({ params, body }) => {
+    async ({ params, body, auth }) => {
       const roomId = params.room_id;
       const userIds = body.userIds;
-      const deletedCount = await Service.removeUsersFromRoom(roomId, userIds);
+      const authUserId = auth.rooms[roomId];
+      const deletedCount = await Service.removeUsersFromRoom(roomId, userIds, authUserId);
       return { deletedCount };
     },
     { params: RoomIdParam, body: DeleteUsersRequest },
@@ -180,7 +197,7 @@ export const routes = new Elysia()
       const roomId = params.room_id;
       const authUserId = auth.rooms[roomId];
       if (!authUserId) {
-        throw new Error("User not selected");
+        throw new UnauthorizedError("User not selected");
       }
       await Service.setUserPin(roomId, authUserId, params.user_id, body.pin);
       return { ok: true };
@@ -193,7 +210,7 @@ export const routes = new Elysia()
       const roomId = params.room_id;
       const authUserId = auth.rooms[roomId];
       if (!authUserId) {
-        throw new Error("User not selected");
+        throw new UnauthorizedError("User not selected");
       }
       await Service.removeUserPin(roomId, authUserId, params.user_id);
       return { ok: true };

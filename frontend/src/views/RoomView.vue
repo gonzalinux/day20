@@ -6,11 +6,13 @@ import { useRoute } from 'vue-router'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import LangToggle from '@/components/LangToggle.vue'
 import { useRoomStore } from '@/stores/room'
+import { useToast } from '@/composables/useToast'
 import { getMe } from '@/services/auth'
 
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
 const room = useRoomStore()
+const toast = useToast()
 
 room.$reset()
 room.room.id = route.params.id as string
@@ -29,7 +31,11 @@ onMounted(async () => {
     }
   } catch {}
 
-  await Promise.all([room.fetchRoom().catch(() => {}), room.fetchUsers().catch(() => {})])
+  try {
+    await Promise.all([room.fetchRoom(), room.fetchUsers()])
+  } catch {
+    toast.show(t('room.loadError'), 'error')
+  }
 })
 </script>
 

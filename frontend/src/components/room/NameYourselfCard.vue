@@ -2,45 +2,24 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppInput from '@/components/AppInput.vue'
-import { addUser } from '@/services/users'
-import { selectUser } from '@/services/auth'
-import { detectTimezone } from '@/utils/timezone'
-
-const props = defineProps<{
-  roomId: string
-}>()
+import { useRoomStore } from '@/stores/room'
 
 const emit = defineEmits<{
   done: [user: { id: string; name: string; role: string }]
 }>()
 
 const { t } = useI18n()
+const room = useRoomStore()
 const adminName = ref('')
 const saving = ref(false)
 const error = ref('')
-
-const emptyWeek = {
-  monday: [],
-  tuesday: [],
-  wednesday: [],
-  thursday: [],
-  friday: [],
-  saturday: [],
-  sunday: [],
-}
 
 async function submit() {
   saving.value = true
   error.value = ''
   try {
-    const user = await addUser(props.roomId, {
-      name: adminName.value,
-      role: 'admin' as const,
-      weeklyAvailability: emptyWeek,
-      overrides: [],
-      timezone: detectTimezone(),
-    })
-    await selectUser(props.roomId, user.id)
+    const user = await room.addUser(adminName.value, 'admin')
+    await room.selectUser(user.id)
     emit('done', { id: user.id, name: user.name, role: user.role })
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : String(e)

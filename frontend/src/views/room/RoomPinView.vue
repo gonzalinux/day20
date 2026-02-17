@@ -17,11 +17,11 @@ const error = ref('')
 const roomId = route.params.id as string
 const next = (route.query.next as string) || 'calendar'
 
-async function submitSetPin() {
+async function submitSetPin(pin: string) {
   settingPin.value = true
   error.value = ''
   try {
-    await room.setPin(room.currentUserId, pinValue.value)
+    await room.setPin(room.currentUserId, pin)
     router.push(localePath(`/rooms/${roomId}/${next}`, locale.value))
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : String(e)

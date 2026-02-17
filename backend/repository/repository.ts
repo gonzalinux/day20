@@ -88,15 +88,17 @@ async function removeUserPin(roomId: string, userId: string) {
   const users = getUsersCollection();
   const result = await users.updateOne(
     { _id: userId, roomId },
-    { $unset: { pin: "" } },
+    { $set: { pinSkipped: false }, $unset: { pin: "" } },
   );
   return result.matchedCount;
 }
 
-async function deleteUsers(deleteUsers: User[]) {
+async function deleteUsers(deleteUsers: User[], roomId?: string) {
   const users = getUsersCollection();
   const ids = deleteUsers.map((u) => u.id);
-  const result = await users.deleteMany({ _id: { $in: ids } });
+  const query: Record<string, unknown> = { _id: { $in: ids } };
+  if (roomId) query.roomId = roomId;
+  const result = await users.deleteMany(query);
   return result.deletedCount;
 }
 

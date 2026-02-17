@@ -23,7 +23,6 @@ onMounted(async () => {
     const me = await getMe(roomId).catch(() => null)
     if (me) {
       if (me.userId) {
-        console.log('bbb')
         room.currentUserId = me.userId
         await Promise.all([room.fetchRoom(), room.fetchUsers()])
         if (route.query.token) router.replace({ query: {} })

@@ -5,6 +5,7 @@ import {
   type DayKey,
   type WeeklyAvailability,
   DAY_KEYS,
+  DAY_I18N_KEYS,
   availabilityToGrid,
   gridToAvailability,
   formatSlotTime,
@@ -18,16 +19,6 @@ const { t } = useI18n()
 
 const roomStore = useRoomStore()
 const availability = ref<WeeklyAvailability>(JSON.parse(JSON.stringify(props.defaultAvailability)))
-
-const dayI18nKeys: Record<DayKey, string> = {
-  monday: 'roomLogin.day_monday',
-  tuesday: 'roomLogin.day_tuesday',
-  wednesday: 'roomLogin.day_wednesday',
-  thursday: 'roomLogin.day_thursday',
-  friday: 'roomLogin.day_friday',
-  saturday: 'roomLogin.day_saturday',
-  sunday: 'roomLogin.day_sunday',
-}
 
 const START_HOUR = 0
 const END_HOUR = 24
@@ -162,7 +153,7 @@ onMounted(async () => {
               :key="'h-' + day"
               class="sticky top-0 z-10 bg-bg text-center text-xs font-heading font-bold pb-1 text-secondary"
             >
-              {{ t(dayI18nKeys[day]) }}
+              {{ t(DAY_I18N_KEYS[day]) }}
             </div>
 
             <!-- Time slot rows -->

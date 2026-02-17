@@ -47,6 +47,7 @@ router.beforeEach((to) => {
   if (global.locale.value !== locale) {
     global.locale.value = locale
   }
+  document.documentElement.lang = locale
 })
 
 export default router

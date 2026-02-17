@@ -29,6 +29,16 @@ export const DAY_KEYS: DayKey[] = [
   'sunday',
 ]
 
+export const DAY_I18N_KEYS: Record<DayKey, string> = {
+  monday: 'roomLogin.day_monday',
+  tuesday: 'roomLogin.day_tuesday',
+  wednesday: 'roomLogin.day_wednesday',
+  thursday: 'roomLogin.day_thursday',
+  friday: 'roomLogin.day_friday',
+  saturday: 'roomLogin.day_saturday',
+  sunday: 'roomLogin.day_sunday',
+}
+
 export interface Override {
   date: Date
   availability: TimeSelection[]

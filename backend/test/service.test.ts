@@ -162,7 +162,7 @@ describe("addUserToRoom", () => {
       overrides: [],
       timezone: "America/New_York",
     });
-    expect(result.id).toBe("frodo");
+    expect(result.id).toBe("test-room:frodo");
     expect(result.hasPin).toBe(false);
   });
 

@@ -3,7 +3,9 @@
   "name": "The Lost Mines",
   "description": "Friday night D&D campaign",
   "password": "hashed_password",
-  "createdAt": "2025-02-01T12:00:00Z",
+  "magicToken": "random_base64url_token",
+  "updatedAt": "2025-02-01T12:00:00Z",
+  "timezone": "America/New_York",
   "duration": {
     "min": 2,
     "max": 5

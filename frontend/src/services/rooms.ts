@@ -18,6 +18,12 @@ export async function getRoom(id: string) {
   return data
 }
 
+export async function deleteRoom(id: string) {
+  const { data, error } = await api.rooms({ room_id: id }).delete()
+  if (error) throw error
+  return data
+}
+
 export async function updateRoom(
   id: string,
   ...args: Parameters<ReturnType<typeof api.rooms>['patch']>

@@ -9,6 +9,7 @@ import {
   type DayKey,
   type WeeklyAvailability,
   DAY_KEYS,
+  DAY_I18N_KEYS,
   availabilityToGrid,
   gridToAvailability,
   dateToDayKey,
@@ -47,16 +48,6 @@ watch(activeTab, (val) => {
 })
 
 // === Weekly mode ===
-const dayI18nKeys: Record<DayKey, string> = {
-  monday: 'roomLogin.day_monday',
-  tuesday: 'roomLogin.day_tuesday',
-  wednesday: 'roomLogin.day_wednesday',
-  thursday: 'roomLogin.day_thursday',
-  friday: 'roomLogin.day_friday',
-  saturday: 'roomLogin.day_saturday',
-  sunday: 'roomLogin.day_sunday',
-}
-
 const localWindow = computed(() => room.localTimeWindow)
 const slotCount = computed(() => localWindow.value.totalSlots)
 const startHour = computed(() => room.timeRange.startHour)
@@ -275,7 +266,14 @@ function commitOverridePaint() {
   const minSlot = Math.min(dragStartSlot.value, dragCurrentSlot.value)
   const maxSlot = Math.max(dragStartSlot.value, dragCurrentSlot.value)
 
-  const newOverrides = [...user.overrides]
+  const paintedDateStrs = new Set(
+    Array.from({ length: maxDay - minDay + 1 }, (_, i) =>
+      formatDateKey(overrideWeekDates.value[minDay + i]!)
+    )
+  )
+  const newOverrides = user.overrides.filter(
+    (o) => !paintedDateStrs.has(formatDateKey(o.date))
+  )
 
   for (let d = minDay; d <= maxDay; d++) {
     const date = overrideWeekDates.value[d]!
@@ -431,7 +429,7 @@ watch(activeTab, () => {
             :key="day"
             class="text-center text-xs font-heading font-bold pb-1 text-secondary"
           >
-            {{ t(dayI18nKeys[day]) }}
+            {{ t(DAY_I18N_KEYS[day]) }}
           </div>
 
           <!-- Time slot rows -->
@@ -507,7 +505,7 @@ watch(activeTab, () => {
               :key="day"
               class="text-center text-xs font-heading font-bold pb-1 text-secondary"
             >
-              {{ t(dayI18nKeys[day]) }}
+              {{ t(DAY_I18N_KEYS[day]) }}
             </div>
 
             <!-- Date numbers -->

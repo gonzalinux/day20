@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { getRoom, updateRoom } from '@/services/rooms'
+import { getRoom, updateRoom, deleteRoom as apiDeleteRoom } from '@/services/rooms'
 import {
   getUsersFromRoom,
   addUser as apiAddUser,
@@ -33,27 +33,31 @@ export interface Room {
   timezone: string
 }
 
-const emptyWeek: WeeklyAvailability = {
-  monday: [],
-  tuesday: [],
-  wednesday: [],
-  thursday: [],
-  friday: [],
-  saturday: [],
-  sunday: [],
+function createEmptyWeek(): WeeklyAvailability {
+  return {
+    monday: [],
+    tuesday: [],
+    wednesday: [],
+    thursday: [],
+    friday: [],
+    saturday: [],
+    sunday: [],
+  }
 }
 
-const emptyRoom: Room = {
-  id: '',
-  name: '',
-  magicToken: '',
-  duration: { min: 1, max: 4 },
-  defaultAvailability: { ...emptyWeek },
-  timezone: 'UTC',
+function createEmptyRoom(): Room {
+  return {
+    id: '',
+    name: '',
+    magicToken: '',
+    duration: { min: 1, max: 4 },
+    defaultAvailability: createEmptyWeek(),
+    timezone: 'UTC',
+  }
 }
 
 export const useRoomStore = defineStore('room', () => {
-  const room = ref<Room>({ ...emptyRoom })
+  const room = ref<Room>(createEmptyRoom())
   const users = ref<RoomUser[]>([])
   const currentUserId = ref('')
   const browserTimezone = ref(detectTimezone())
@@ -91,7 +95,7 @@ export const useRoomStore = defineStore('room', () => {
     const user = await apiAddUser(room.value.id, {
       name,
       role,
-      weeklyAvailability: { ...emptyWeek },
+      weeklyAvailability: createEmptyWeek(),
       overrides: [],
       timezone: tz,
     })
@@ -176,10 +180,10 @@ export const useRoomStore = defineStore('room', () => {
   async function resetAvailability() {
     const user = currentUser.value
     if (!user) return
-    user.weeklyAvailability = { ...emptyWeek }
+    user.weeklyAvailability = createEmptyWeek()
     user.overrides = []
     await apiUpdateUser(room.value.id, user.id, {
-      weeklyAvailability: { ...emptyWeek },
+      weeklyAvailability: createEmptyWeek(),
       overrides: [],
     })
   }
@@ -200,8 +204,12 @@ export const useRoomStore = defineStore('room', () => {
     })
   }
 
+  async function deleteRoom() {
+    await apiDeleteRoom(room.value.id)
+  }
+
   function $reset() {
-    room.value = { ...emptyRoom }
+    room.value = createEmptyRoom()
     users.value = []
     currentUserId.value = ''
   }
@@ -229,6 +237,7 @@ export const useRoomStore = defineStore('room', () => {
     resetAvailability,
     saveDefaultAvailability,
     saveUserTimezone,
+    deleteRoom,
     $reset,
   }
 })

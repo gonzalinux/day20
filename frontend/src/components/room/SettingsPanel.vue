@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { localePath } from '@/i18n'
 import { useRoomStore } from '@/stores/room'
+import { useToast } from '@/composables/useToast'
 import type { WeeklyAvailability } from '@/utils/availability'
 import SettingsRow from './SettingsRow.vue'
 import DurationModal from './DurationModal.vue'
@@ -12,9 +14,12 @@ import TimezoneModal from './TimezoneModal.vue'
 import BaseModal from '@/components/BaseModal.vue'
 
 const room = useRoomStore()
+const router = useRouter()
 const { t, locale } = useI18n()
+const toast = useToast()
 
 const linkCopied = ref(false)
+const showDeleteConfirm = ref(false)
 const showDurationModal = ref(false)
 const showPinModal = ref(false)
 const showTimeWindowModal = ref(false)
@@ -55,14 +60,25 @@ async function handleSaveDefaultAvailability(availability: WeeklyAvailability) {
   await room.saveDefaultAvailability(availability)
 }
 
-function copyShareLink() {
+async function confirmDeleteRoom() {
+  showDeleteConfirm.value = false
+  await room.deleteRoom()
+  room.$reset()
+  router.push(localePath('/', locale.value))
+}
+
+async function copyShareLink() {
   const path = localePath(`/rooms/${room.room.id}`, locale.value)
   const url = new URL(path, window.location.origin)
   if (room.room.magicToken) url.searchParams.set('token', room.room.magicToken)
 
-  navigator.clipboard.writeText(url.toString())
-  linkCopied.value = true
-  setTimeout(() => (linkCopied.value = false), 2000)
+  try {
+    await navigator.clipboard.writeText(url.toString())
+    linkCopied.value = true
+    setTimeout(() => (linkCopied.value = false), 2000)
+  } catch {
+    toast.show(t('room.clipboardError'), 'error')
+  }
 }
 </script>
 
@@ -107,6 +123,12 @@ function copyShareLink() {
           <template #label>{{ t('room.editTimeWindow') }}</template>
           <template #subtitle>{{ t('room.editTimeWindowHint') }}</template>
           <VIcon name="gi-calendar-half-year" class="text-secondary/50" scale="1.2" />
+        </SettingsRow>
+
+        <SettingsRow v-if="room.isAdmin" @click="showDeleteConfirm = true">
+          <template #label><span class="text-red-400">{{ t('room.deleteRoom') }}</span></template>
+          <template #subtitle>{{ t('room.deleteRoomHint') }}</template>
+          <VIcon name="gi-broken-skull" class="text-red-400/50" scale="1.2" />
         </SettingsRow>
       </div>
     </div>
@@ -164,6 +186,18 @@ function copyShareLink() {
       @close="showResetConfirm = false"
     >
       <p class="text-primary/80 font-body">{{ t('room.resetConfirmMessage') }}</p>
+    </BaseModal>
+
+    <BaseModal
+      v-if="showDeleteConfirm"
+      :title="t('room.deleteRoomConfirmTitle')"
+      :actions="[
+        { label: t('room.durationCancel'), handler: () => (showDeleteConfirm = false), variant: 'secondary' },
+        { label: t('room.deleteRoomConfirmButton'), handler: confirmDeleteRoom, variant: 'danger' },
+      ]"
+      @close="showDeleteConfirm = false"
+    >
+      <p class="text-primary/80 font-body">{{ t('room.deleteRoomConfirmMessage') }}</p>
     </BaseModal>
   </div>
 </template>

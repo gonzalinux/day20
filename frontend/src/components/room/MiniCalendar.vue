@@ -1,19 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { DAY_KEYS, formatDateKey } from '@/utils/availability'
+import { DAY_KEYS, DAY_I18N_KEYS, formatDateKey } from '@/utils/availability'
 
 const { t } = useI18n()
-
-const dayI18nKeys = {
-  monday: 'roomLogin.day_monday',
-  tuesday: 'roomLogin.day_tuesday',
-  wednesday: 'roomLogin.day_wednesday',
-  thursday: 'roomLogin.day_thursday',
-  friday: 'roomLogin.day_friday',
-  saturday: 'roomLogin.day_saturday',
-  sunday: 'roomLogin.day_sunday',
-} as const
 
 const props = defineProps<{
   overrideDates: string[]
@@ -101,6 +91,7 @@ function nextMonth() {
     <div class="flex items-center justify-between mb-2">
       <button
         class="text-secondary hover:text-primary transition-colors cursor-pointer px-2 py-1"
+        aria-label="Previous month"
         @click="prevMonth"
       >
         <VIcon name="gi-arrow-dunk" class="rotate-90" scale="0.8" />
@@ -108,6 +99,7 @@ function nextMonth() {
       <span class="font-heading font-bold text-primary capitalize text-sm">{{ monthName }}</span>
       <button
         class="text-secondary hover:text-primary transition-colors cursor-pointer px-2 py-1"
+        aria-label="Next month"
         @click="nextMonth"
       >
         <VIcon name="gi-arrow-dunk" class="-rotate-90" scale="0.8" />
@@ -116,7 +108,7 @@ function nextMonth() {
 
     <div class="grid grid-cols-7 gap-0.5 text-center text-xs font-heading">
       <span v-for="day in DAY_KEYS" :key="day" class="text-secondary/60 py-1">
-        {{ t(dayI18nKeys[day]) }}
+        {{ t(DAY_I18N_KEYS[day]) }}
       </span>
       <template v-for="(day, i) in days" :key="i">
         <div v-if="day === null" />

@@ -4,8 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { useRoomStore } from '@/stores/room'
 import MiniCalendar from './MiniCalendar.vue'
 import {
-  type DayKey,
   DAY_KEYS,
+  DAY_I18N_KEYS,
   applyOverridesToGrid,
   getMondayOfWeek,
   formatDateKey,
@@ -28,16 +28,6 @@ const weekDates = computed(() => {
   }
   return dates
 })
-
-const dayI18nKeys: Record<DayKey, string> = {
-  monday: 'roomLogin.day_monday',
-  tuesday: 'roomLogin.day_tuesday',
-  wednesday: 'roomLogin.day_wednesday',
-  thursday: 'roomLogin.day_thursday',
-  friday: 'roomLogin.day_friday',
-  saturday: 'roomLogin.day_saturday',
-  sunday: 'roomLogin.day_sunday',
-}
 
 const weekMonthLabel = computed(() => {
   const start = weekDates.value[0]!
@@ -186,7 +176,7 @@ const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
 
     <!-- Legend -->
     <div
-      class="fixed bottom-15 lg:bottom-0 left-0 right-0 z-40 flex flex-wrap justify-center gap-x-3 gap-y-1 px-3 py-2 bg-bg/90 backdrop-blur-sm text-xs font-heading text-secondary"
+      class="sticky bottom-0 z-40 flex flex-wrap justify-center gap-x-3 gap-y-1 px-3 py-2 mb-15 lg:mb-0 bg-bg/90 backdrop-blur-sm text-xs font-heading text-secondary"
     >
       <span class="flex items-center gap-1">
         <span class="inline-block w-3 h-3 rounded-sm bg-accent ring-1 ring-accent/50" />
@@ -219,13 +209,14 @@ const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
           :key="day"
           class="text-center text-xs font-heading font-bold pb-1 text-secondary"
         >
-          {{ t(dayI18nKeys[day]) }}
+          {{ t(DAY_I18N_KEYS[day]) }}
         </div>
         <div class="pointer-events-none" />
 
         <!-- Date numbers with prev/next arrows in adjacent cells -->
         <button
           class="flex items-center justify-center cursor-pointer text-secondary/60 hover:text-primary transition-colors"
+          aria-label="Previous week"
           @click="prevWeek"
         >
           <VIcon name="gi-arrow-dunk" class="rotate-90" scale="0.8" />
@@ -244,6 +235,7 @@ const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
         </div>
         <button
           class="pointer-events-auto flex items-center justify-end cursor-pointer text-secondary/60 hover:text-primary transition-colors"
+          aria-label="Next week"
           @click="nextWeek"
         >
           <VIcon name="gi-arrow-dunk" class="-rotate-90" scale="0.8" />

@@ -17,7 +17,9 @@ export const jwtAuth = new Elysia({ name: "jwtAuth" })
       secret: JWT_SECRET,
       schema: t.Object({
         rooms: t.Record(t.String(), t.String()),
-      })
+        exp: t.Optional(t.Number()),
+      }),
+      exp: "30d",
     }),
   )
   .guard({ cookie: cookieSession })
