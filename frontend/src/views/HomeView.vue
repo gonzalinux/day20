@@ -30,7 +30,7 @@ onUnmounted(() => {
     <!-- Navbar -->
     <nav
       class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 transition-colors duration-300"
-      :class="scrolled ? 'bg-secondary/90 backdrop-blur-sm' : 'bg-transparent'"
+      :class="scrolled ? 'bg-secondary/90 backdrop-blur-sm dark:bg-bg/20' : 'bg-transparent'"
     >
       <!-- Left: logo + toggles -->
       <div class="flex gap-4 align-bottom">
@@ -104,28 +104,36 @@ onUnmounted(() => {
       <div class="max-w-4xl mx-auto flex flex-col md:flex-row md:items-center md:gap-16">
         <div class="space-y-8 text-center md:text-left">
           <h2
-            class="text-2xl md:text-4xl font-bold text-primary uppercase tracking-wide font-heading"
+            class="text-2xl md:text-4xl font-bold text-primary dark:text-bg uppercase tracking-wide font-heading"
           >
             {{ t('home.howItWorks') }}
           </h2>
-          <ol class="space-y-6 text-lg md:text-xl text-bg max-w-md mx-auto md:mx-0">
+          <ol class="space-y-6 text-lg md:text-xl text-bg dark:text-bg max-w-md mx-auto md:mx-0">
             <li class="flex items-center gap-3">
               <span
-                ><VIcon name="gi-doorway" class="text-primary shrink-0" scale="1.5" />{{
-                  t('home.step1')
-                }}</span
+                ><VIcon
+                  name="gi-doorway"
+                  class="text-primary dark:text-bg shrink-0"
+                  scale="1.5"
+                />{{ t('home.step1') }}</span
               >
             </li>
             <li class="flex items-center gap-3">
               <span
-                ><VIcon name="gi-paint-brush" class="text-primary shrink-0" scale="1.5" />{{
-                  t('home.step2')
-                }}</span
+                ><VIcon
+                  name="gi-paint-brush"
+                  class="text-primary dark:text-bg shrink-0"
+                  scale="1.5"
+                />{{ t('home.step2') }}</span
               >
             </li>
             <li class="flex items-center gap-3">
               <span
-                ><VIcon name="gi-sands-of-time" class="text-primary shrink-0" scale="1.5" />
+                ><VIcon
+                  name="gi-sands-of-time"
+                  class="text-primary dark:text-bg shrink-0"
+                  scale="1.5"
+                />
                 {{ t('home.step3') }}
               </span>
             </li>
