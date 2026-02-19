@@ -49,8 +49,7 @@ onMounted(async () => {
 
   try {
     const result = await loginRoom(roomId, { token })
-    room.room.name = result.room.name
-    room.room.description = result.room.description ?? ''
+    room.applyRoom(result.room)
     await room.fetchUsers()
 
     if (room.users.length === 0) {
