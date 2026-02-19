@@ -1,11 +1,11 @@
-import { api } from './client'
+import { api, throwError } from './client'
 
 export async function addUser(
   roomId: string,
   ...args: Parameters<ReturnType<typeof api.rooms>['users']['post']>
 ) {
   const { data, error } = await api.rooms({ room_id: roomId }).users.post(...args)
-  if (error) throw error
+  if (error) throwError(error)
   return data
 }
 
@@ -14,13 +14,13 @@ export async function deleteUsers(
   ...args: Parameters<ReturnType<typeof api.rooms>['users']['delete']>
 ) {
   const { data, error } = await api.rooms({ room_id: roomId }).users.delete(...args)
-  if (error) throw error
+  if (error) throwError(error)
   return data
 }
 
 export async function getUsersFromRoom(roomId: string) {
   const { data, error } = await api.rooms({ room_id: roomId }).users.get()
-  if (error) throw error
+  if (error) throwError(error)
   return data
 }
 
@@ -29,7 +29,7 @@ export async function setPin(roomId: string, userId: string, pin: string) {
     .rooms({ room_id: roomId })
     .users({ user_id: userId })
     .pin.put({ pin })
-  if (error) throw error
+  if (error) throwError(error)
   return data
 }
 
@@ -38,7 +38,7 @@ export async function removePin(roomId: string, userId: string) {
     .rooms({ room_id: roomId })
     .users({ user_id: userId })
     .pin.delete()
-  if (error) throw error
+  if (error) throwError(error)
   return data
 }
 
@@ -51,6 +51,6 @@ export async function updateUser(
     .rooms({ room_id: roomId })
     .users({ user_id: userId })
     .patch(body)
-  if (error) throw error
+  if (error) throwError(error)
   return data
 }

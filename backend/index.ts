@@ -13,7 +13,7 @@ const server = new Elysia()
     credentials: true,
   }))
   .use(openapi())
-  .group("/v1/api", (app) => app
+  .group("/api/v1", (app) => app
     .get("/", "ping")
     .use(routes)
   );

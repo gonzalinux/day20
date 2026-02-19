@@ -70,6 +70,8 @@ async function nextCreateStep() {
     } finally {
       loading.value = false
     }
+  } else if (createStep.value === 2) {
+    if (!validateStep2()) return
   }
   createStep.value++
 }
@@ -84,19 +86,42 @@ const joinError = ref('')
 const nameError = ref('')
 const passwordError = ref('')
 
+const NAME_PATTERN = /^[a-zA-Z0-9\s]+$/
+
 function validateStep1(): boolean {
   nameError.value = ''
   passwordError.value = ''
   let valid = true
-  if (!roomName.value.trim()) {
+  const name = roomName.value.trim()
+  if (!name) {
     nameError.value = t('roomLogin.nameRequired')
+    valid = false
+  } else if (name.length < 3) {
+    nameError.value = t('roomLogin.nameTooShort')
+    valid = false
+  } else if (name.length > 100) {
+    nameError.value = t('roomLogin.nameTooLong')
+    valid = false
+  } else if (!NAME_PATTERN.test(name)) {
+    nameError.value = t('roomLogin.nameInvalidChars')
     valid = false
   }
   if (!roomPassword.value.trim()) {
     passwordError.value = t('roomLogin.passwordRequired')
     valid = false
+  } else if (roomPassword.value.trim().length < 3) {
+    passwordError.value = t('roomLogin.passwordTooShort')
+    valid = false
   }
   return valid
+}
+
+function validateStep2(): boolean {
+  if (roomDescription.value.length > 500) {
+    createError.value = t('roomLogin.descriptionTooLong')
+    return false
+  }
+  return true
 }
 
 type TimeOfDay = { hour: number; minute: number }
@@ -123,6 +148,11 @@ function buildDefaultAvailability() {
 async function submitCreateRoom() {
   loading.value = true
   createError.value = ''
+  if (Object.values(enabledDays).every((day) => day === false)) {
+    createError.value = 'At least one day must be enabled'
+    loading.value = false
+    return
+  }
   try {
     const { id, magicToken } = await createRoom({
       name: roomName.value,
