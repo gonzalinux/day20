@@ -1,4 +1,4 @@
-import { createI18n } from 'vue-i18n'
+import { createI18n, type I18n } from 'vue-i18n'
 import en from './en'
 import es from './es'
 
@@ -9,11 +9,11 @@ export function localePath(path: string, locale: string): string {
   return locale === 'en' ? path : `/${locale}${path}`
 }
 
-const i18n = createI18n({
-  legacy: false,
-  locale: 'en',
-  fallbackLocale: 'en',
-  messages: { en, es },
-})
-
-export default i18n
+export function createI18nInstance(): I18n {
+  return createI18n({
+    legacy: false,
+    locale: 'en',
+    fallbackLocale: 'en',
+    messages: { en, es },
+  })
+}

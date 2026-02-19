@@ -1,5 +1,5 @@
 import './main.css'
-import { createApp } from 'vue'
+import { ViteSSG } from 'vite-ssg'
 import { createPinia } from 'pinia'
 import { OhVueIcon, addIcons } from 'oh-vue-icons'
 import {
@@ -24,8 +24,8 @@ import {
 } from 'oh-vue-icons/icons'
 
 import App from './App.vue'
-import router from './router'
-import i18n from './i18n'
+import { routes, setupRouterGuards } from './router'
+import { createI18nInstance } from './i18n'
 
 addIcons(
   GiDiceTwentyFacesTwenty,
@@ -48,11 +48,14 @@ addIcons(
   GiWorld,
 )
 
-const app = createApp(App)
-
-app.component('VIcon', OhVueIcon)
-app.use(createPinia())
-app.use(i18n)
-app.use(router)
-
-app.mount('#app')
+export const createApp = ViteSSG(
+  App,
+  { routes, base: import.meta.env.BASE_URL },
+  ({ app, router }) => {
+    const i18n = createI18nInstance()
+    app.component('VIcon', OhVueIcon)
+    app.use(createPinia())
+    app.use(i18n)
+    setupRouterGuards(router, i18n)
+  },
+)
