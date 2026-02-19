@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { localePath } from '@/i18n'
@@ -30,7 +30,7 @@ const availableFrom = ref(10)
 const availableTo = ref(23)
 const roomTimezone = ref(detectTimezone())
 
-const enabledDays = {
+const enabledDays = reactive({
   monday: true,
   tuesday: true,
   wednesday: true,
@@ -38,7 +38,7 @@ const enabledDays = {
   friday: true,
   saturday: true,
   sunday: true,
-}
+})
 
 watch(sessionMinHours, (min) => {
   if (sessionMaxHours.value < min) sessionMaxHours.value = min
