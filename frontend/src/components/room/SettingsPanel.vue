@@ -101,7 +101,9 @@ async function copyShareLink() {
 
         <SettingsRow @click="showTimezoneModal = true">
           <template #label>{{ t('room.timezone') }}</template>
-          <template #subtitle>{{ tzSuccess || room.currentUser?.timezone || room.browserTimezone }}</template>
+          <template #subtitle>{{
+            tzSuccess || room.currentUser?.timezone || room.browserTimezone
+          }}</template>
           <VIcon name="gi-world" class="text-secondary/50" scale="1.2" />
         </SettingsRow>
 
@@ -126,7 +128,9 @@ async function copyShareLink() {
         </SettingsRow>
 
         <SettingsRow v-if="room.isAdmin" @click="showDeleteConfirm = true">
-          <template #label><span class="text-red-400">{{ t('room.deleteRoom') }}</span></template>
+          <template #label
+            ><span class="text-red-400">{{ t('room.deleteRoom') }}</span></template
+          >
           <template #subtitle>{{ t('room.deleteRoomHint') }}</template>
           <VIcon name="gi-broken-skull" class="text-red-400/50" scale="1.2" />
         </SettingsRow>
@@ -165,7 +169,11 @@ async function copyShareLink() {
       @close="showDurationModal = false"
     />
 
-    <TimezoneModal v-if="showTimezoneModal" @save="saveTimezone" @close="showTimezoneModal = false" />
+    <TimezoneModal
+      v-if="showTimezoneModal"
+      @save="saveTimezone"
+      @close="showTimezoneModal = false"
+    />
 
     <PinModal v-if="showPinModal" @save="savePin" @close="showPinModal = false" />
 
@@ -180,7 +188,11 @@ async function copyShareLink() {
       v-if="showResetConfirm"
       :title="t('room.resetConfirmTitle')"
       :actions="[
-        { label: t('room.durationCancel'), handler: () => (showResetConfirm = false), variant: 'secondary' },
+        {
+          label: t('room.durationCancel'),
+          handler: () => (showResetConfirm = false),
+          variant: 'secondary',
+        },
         { label: t('room.resetConfirmButton'), handler: confirmReset, variant: 'danger' },
       ]"
       @close="showResetConfirm = false"
@@ -192,7 +204,11 @@ async function copyShareLink() {
       v-if="showDeleteConfirm"
       :title="t('room.deleteRoomConfirmTitle')"
       :actions="[
-        { label: t('room.durationCancel'), handler: () => (showDeleteConfirm = false), variant: 'secondary' },
+        {
+          label: t('room.durationCancel'),
+          handler: () => (showDeleteConfirm = false),
+          variant: 'secondary',
+        },
         { label: t('room.deleteRoomConfirmButton'), handler: confirmDeleteRoom, variant: 'danger' },
       ]"
       @close="showDeleteConfirm = false"
