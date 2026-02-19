@@ -12,6 +12,7 @@ dev-ui:
 	cd frontend &&  ENV="dev"  bun run dev --port 3500
 
 prod:
+	git pull
 	docker compose up --build -d
 
 prod-down:
