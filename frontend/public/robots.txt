@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://day-20.com/sitemap.xml
+
+# Day20 is a free D&D and tabletop RPG group scheduling app.
+# Players paint their weekly availability on a calendar grid,
+# and the app finds the optimal session times for the whole party.
+# Individual rooms are private and password-protected — only the home page is public.
