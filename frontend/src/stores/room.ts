@@ -27,6 +27,7 @@ export interface RoomUser {
 export interface Room {
   id: string
   name: string
+  description: string
   magicToken: string
   duration: { min: number; max: number }
   defaultAvailability: WeeklyAvailability
@@ -49,6 +50,7 @@ function createEmptyRoom(): Room {
   return {
     id: '',
     name: '',
+    description: '',
     magicToken: '',
     duration: { min: 1, max: 4 },
     defaultAvailability: createEmptyWeek(),
@@ -78,6 +80,7 @@ export const useRoomStore = defineStore('room', () => {
   async function fetchRoom() {
     const { room: fetched } = await getRoom(room.value.id)
     room.value.name = fetched.name
+    room.value.description = fetched.description ?? ''
     room.value.magicToken = fetched.magicToken
     room.value.duration = { min: fetched.duration.min, max: fetched.duration.max }
     room.value.defaultAvailability = fetched.defaultAvailability as WeeklyAvailability

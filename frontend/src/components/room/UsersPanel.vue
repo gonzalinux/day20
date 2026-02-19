@@ -79,6 +79,10 @@ async function handleLogout() {
       </button>
     </div>
 
+    <p v-if="room.room.description" class="text-primary/60 font-body text-sm mb-4 leading-relaxed">
+      {{ room.room.description }}
+    </p>
+
     <ul class="flex flex-col gap-2">
       <li
         v-for="user in room.users"
