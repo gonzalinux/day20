@@ -193,15 +193,15 @@ async function submitJoinRoom() {
 <template>
   <div class="min-h-screen bg-bg font-body">
     <!-- Navbar -->
-    <nav class="fixed top-0 left-0 right-0 z-50 flex items-center px-6 py-3 bg-transparent">
+    <nav class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 bg-transparent">
+      <RouterLink
+        :to="localePath('/', locale)"
+        class="font-heading font-bold text-primary no-underline"
+      >
+        <span class="text-4xl">D</span><span class="text-2xl">ay</span
+        ><span class="text-4xl">20</span>
+      </RouterLink>
       <div class="flex gap-4 align-bottom">
-        <RouterLink
-          :to="localePath('/', locale)"
-          class="font-heading font-bold text-primary no-underline"
-        >
-          <span class="text-4xl">D</span><span class="text-2xl">ay</span
-          ><span class="text-4xl">20</span>
-        </RouterLink>
         <ThemeToggle />
         <LangToggle />
       </div>

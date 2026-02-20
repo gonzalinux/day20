@@ -144,6 +144,25 @@ onUnmounted(() => {
       </div>
     </section>
 
+    <!-- FAQ -->
+    <section class="w-full py-16 px-6">
+      <div class="max-w-2xl mx-auto">
+        <h2
+          class="text-2xl md:text-4xl font-bold text-primary uppercase tracking-wide font-heading mb-10 text-center md:text-left"
+        >
+          {{ t('home.faq') }}
+        </h2>
+        <dl class="space-y-6">
+          <div v-for="n in 5" :key="n" class="border-b border-secondary/20 pb-6">
+            <dt class="font-heading font-bold text-primary text-lg mb-2">
+              {{ t(`home.faq${n}q`) }}
+            </dt>
+            <dd class="text-secondary">{{ t(`home.faq${n}a`) }}</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+
     <!-- Footer -->
     <footer class="bg-primary py-6 px-6 text-center text-sm text-bg">
       Created by
