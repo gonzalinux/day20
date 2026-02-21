@@ -140,7 +140,7 @@ function slotClass(dayIdx: number, slotIdx: number) {
 
   if (count === total) {
     if (viableSlots.value[dayIdx]![slotIdx]) {
-      return 'bg-accent ring-1 ring-accent/50'
+      return 'bg-green-400/60 ring-1 ring-green-400/50'
     }
     return 'bg-accent/70'
   }
@@ -186,7 +186,7 @@ const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
         <span class="text-sm font-heading font-bold text-primary capitalize">{{
           weekMonthLabel
         }}</span>
-        <VIcon name="gi-arrow-dunk" scale="0.7" class="text-secondary" />
+        <VIcon name="fa-chevron-down" scale="0.7" class="text-secondary" />
       </button>
     </div>
 
@@ -205,7 +205,7 @@ const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
       class="sticky bottom-0 z-40 flex flex-wrap justify-center gap-x-3 gap-y-1 px-3 py-2 mb-15 lg:mb-0 bg-bg/90 backdrop-blur-sm text-xs font-heading text-secondary"
     >
       <span class="flex items-center gap-1">
-        <span class="inline-block w-3 h-3 rounded-sm bg-accent ring-1 ring-accent/50" />
+        <span class="inline-block w-3 h-3 rounded-sm bg-green-400/60 ring-1 ring-green-400/50" />
         {{ t('room.viable') }}
       </span>
       <span class="flex items-center gap-1">
@@ -245,7 +245,7 @@ const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
           aria-label="Previous week"
           @click="prevWeek"
         >
-          <VIcon name="gi-arrow-dunk" class="rotate-90" scale="0.8" />
+          <VIcon name="fa-chevron-left" scale="0.8" />
         </button>
         <div
           v-for="(date, idx) in weekDates"
@@ -264,7 +264,7 @@ const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
           aria-label="Next week"
           @click="nextWeek"
         >
-          <VIcon name="gi-arrow-dunk" class="-rotate-90" scale="0.8" />
+          <VIcon name="fa-chevron-right" scale="0.8" />
         </button>
 
         <!-- Time slot rows -->

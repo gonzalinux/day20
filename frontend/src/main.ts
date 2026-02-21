@@ -18,9 +18,11 @@ import {
   GiLinkedRings,
   GiCheckMark,
   GiPadlock,
-  GiArrowDunk,
   GiBrokenSkull,
   GiWorld,
+  FaChevronLeft,
+  FaChevronRight,
+  FaChevronDown,
 } from 'oh-vue-icons/icons'
 
 import App from './App.vue'
@@ -43,9 +45,11 @@ addIcons(
   GiLinkedRings,
   GiCheckMark,
   GiPadlock,
-  GiArrowDunk,
   GiBrokenSkull,
   GiWorld,
+  FaChevronLeft,
+  FaChevronRight,
+  FaChevronDown,
 )
 
 export const createApp = ViteSSG(

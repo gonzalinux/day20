@@ -94,7 +94,7 @@ function nextMonth() {
         aria-label="Previous month"
         @click="prevMonth"
       >
-        <VIcon name="gi-arrow-dunk" class="rotate-90" scale="0.8" />
+        <VIcon name="fa-chevron-left" scale="0.8" />
       </button>
       <span class="font-heading font-bold text-primary capitalize text-sm">{{ monthName }}</span>
       <button
@@ -102,11 +102,11 @@ function nextMonth() {
         aria-label="Next month"
         @click="nextMonth"
       >
-        <VIcon name="gi-arrow-dunk" class="-rotate-90" scale="0.8" />
+        <VIcon name="fa-chevron-right" scale="0.8" />
       </button>
     </div>
 
-    <div class="grid grid-cols-7 gap-0.5 text-center text-xs font-heading">
+    <div class="grid grid-cols-7 text-center text-xs font-heading">
       <span v-for="day in DAY_KEYS" :key="day" class="text-secondary/60 py-1">
         {{ t(DAY_I18N_KEYS[day]) }}
       </span>
@@ -114,7 +114,8 @@ function nextMonth() {
         <div v-if="day === null" />
         <button
           v-else
-          class="relative w-8 h-8 mx-auto flex items-center justify-center text-xs cursor-pointer transition-colors"
+          @click="selectDay(day)"
+          class="w-full cursor-pointer transition-colors"
           :class="[
             isSelected(day)
               ? 'bg-accent text-bg font-bold rounded-lg'
@@ -126,14 +127,18 @@ function nextMonth() {
             highlightWeekPosition(day) === 'end' ? 'rounded-l-none' : '',
             highlightWeekPosition(day) === 'mid' ? 'rounded-none' : '',
           ]"
-          @click="selectDay(day)"
         >
-          {{ day }}
           <span
-            v-if="hasOverride(day)"
-            class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-            :class="isSelected(day) ? 'bg-bg' : 'bg-accent'"
-          />
+            class="relative w-8 h-8 mx-auto flex items-center justify-center text-xs"
+            @click="selectDay(day)"
+          >
+            {{ day }}
+            <span
+              v-if="hasOverride(day)"
+              class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+              :class="isSelected(day) ? 'bg-bg' : 'bg-accent'"
+            />
+          </span>
         </button>
       </template>
     </div>

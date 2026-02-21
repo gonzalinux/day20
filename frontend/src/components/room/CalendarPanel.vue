@@ -91,7 +91,7 @@ const weeklyGrids = computed(() => {
 })
 
 // === Override mode ===
-const selectedDate = ref<Date | null>(null)
+const selectedDate = ref<Date | null>(new Date())
 const calendarExpanded = ref(true)
 // Monday of the week containing the selected date — used to highlight a full week row
 const overrideHighlightWeek = computed(() =>
@@ -514,7 +514,7 @@ watch(activeTab, () => {
               })
             }}
           </span>
-          <VIcon name="gi-arrow-dunk" scale="0.7" class="text-secondary" />
+          <VIcon name="fa-chevron-down" scale="0.7" class="text-secondary" />
         </button>
       </div>
 
