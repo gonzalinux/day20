@@ -16,6 +16,7 @@ services:
     container_name: day20-elysia
     expose:
       - "3000"
+      - "3250"
     env_file:
       - ./backend/.env
     environment:
@@ -38,4 +39,3 @@ services:
 networks:
   day20-network:
     driver: bridge
-
