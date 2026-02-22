@@ -1,4 +1,4 @@
-import { Elysia, type Context } from "elysia";
+import { Elysia } from "elysia";
 import {
   collectDefaultMetrics,
   Registry,
@@ -17,10 +17,10 @@ const httpRequestCounter = new Counter({
 });
 
 const httpRequestDuration = new Histogram({
-  name: "http_request_duration_seconds",
-  help: "HTTP request duration in seconds",
+  name: "http_request_duration_milliseconds",
+  help: "HTTP request duration in milliseconds",
   labelNames: ["method", "path", "status"],
-  buckets: [0.003, 0.03, 0.1, 0.3, 1.5, 10],
+  buckets: [3, 30, 100, 300, 1500, 10000],
   registers: [register],
 });
 
@@ -37,21 +37,19 @@ interface LabelData {
 
 function getLabels(data: LabelData) {
   const path = normalizePath(data.route || data.path || "");
-  return { method: data.method, path, status:data.status };
+  return { method: data.method, path, status: data.status };
 }
 
 export const prometheus = new Elysia({ name: "prometheus" })
-  .derive({ as: "global" }, () => ({
-    endTimer: httpRequestDuration.startTimer(),
-  }))
-  .onAfterResponse({ as: "global" }, ({ set, path, route, request, endTimer }) => {
-    const labels = getLabels({route, path, method:request.method, status: set.status+"" })
+  .derive({ as: "global" }, () => ({ startTime: Date.now() }))
+  .onAfterResponse({ as: "global" }, ({ set, path, route, request, startTime }) => {
+    const labels = getLabels({ route, path, method: request.method, status: set.status + "" });
     httpRequestCounter.inc(labels);
-    endTimer(labels);
+    httpRequestDuration.observe(labels, Date.now() - startTime);
   })
-  .onError({ as: "global" }, ({endTimer, path, route, request, set}) => {
-    if (!endTimer) return;
-    const labels = getLabels({route, path, method:request.method, status: set.status+"" })
+  .onError({ as: "global" }, ({ startTime, path, route, request, set }) => {
+    if (!startTime) return;
+    const labels = getLabels({ route, path, method: request.method, status: set.status + "" });
     httpRequestCounter.inc(labels);
-   endTimer(labels);
+    httpRequestDuration.observe(labels, Date.now() - startTime);
   });
