@@ -1,5 +1,8 @@
 {
   "name": "day20",
   "private": true,
-  "workspaces": ["backend", "frontend"]
+  "workspaces": ["backend", "frontend"],
+  "dependencies": {
+    "elysia": "1.4.22"
+  }
 }

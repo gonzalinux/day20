@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "day20",
+      "dependencies": {
+        "elysia": "1.4.22",
+      },
     },
     "backend": {
       "name": "backend",

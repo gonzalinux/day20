@@ -28,30 +28,30 @@ function normalizePath(path: string) {
   return path.replace(/\/\d+([\/?]|$)/g, "/:id$1");
 }
 
-function getLabels(ctx: Context) {
-  const path = normalizePath((ctx.route as string) || ctx.path);
-  const status =
-    typeof ctx.response === "object" &&
-    ctx.response !== null &&
-    "code" in ctx.response &&
-    typeof ctx.response.code === "number"
-      ? ctx.response.code.toString()
-      : (ctx.set.status?.toString() ?? "500");
-  return { method: ctx.request.method, path, status };
+interface LabelData {
+  route?: string;
+  path?: string;
+  method?: string;
+  status?: string;
+}
+
+function getLabels(data: LabelData) {
+  const path = normalizePath(data.route || data.path || "");
+  return { method: data.method, path, status:data.status };
 }
 
 export const prometheus = new Elysia({ name: "prometheus" })
-  .derive({ as: "global" }, (ctx) => ({
-    endTimer: httpRequestDuration.startTimer(getLabels(ctx)),
+  .derive({ as: "global" }, () => ({
+    endTimer: httpRequestDuration.startTimer(),
   }))
-  .onAfterResponse({ as: "global" }, (ctx) => {
-    httpRequestCounter.inc(getLabels(ctx));
-    ctx.endTimer(getLabels(ctx));
+  .onAfterResponse({ as: "global" }, ({ set, path, route, request, endTimer }) => {
+    const labels = getLabels({route, path, method:request.method, status: set.status+"" })
+    httpRequestCounter.inc(labels);
+    endTimer(labels);
   })
-  .onError({ as: "global" }, (ctx) => {
-    if (!ctx.endTimer) return;
-    // @ts-ignore
-    httpRequestCounter.inc(getLabels(ctx));
-    // @ts-ignore
-    ctx.endTimer(getLabels(ctx));
+  .onError({ as: "global" }, ({endTimer, path, route, request, set}) => {
+    if (!endTimer) return;
+    const labels = getLabels({route, path, method:request.method, status: set.status+"" })
+    httpRequestCounter.inc(labels);
+   endTimer(labels);
   });
