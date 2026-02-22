@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { getAllRoomsAdmin, deleteRoomAdmin, STALE_ROOM_MS } from "./domain/service";
+import { getAllRoomsAdmin, deleteRoomAdmin, getUsersFromRoom, STALE_ROOM_MS } from "./domain/service";
 import { NotFoundError } from "./server/errors.types";
 import { register } from "./server/prometheus";
 
@@ -122,6 +122,38 @@ const HTML = `<!DOCTYPE html>
     .refresh-bar button:hover { background: #374060; }
     #last-updated { font-size: 0.75rem; color: #4a5568; }
     #error-msg { color: #f87171; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+    .room-id-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 0.8rem; color: #818cf8; font-family: monospace;
+      padding: 0; text-decoration: underline dotted;
+    }
+    .room-id-btn:hover { color: #a5b4fc; }
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: #1e2030; border: 1px solid #2d3148; border-radius: 14px;
+      width: 100%; max-width: 560px; max-height: 80vh;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.25rem; border-bottom: 1px solid #2d3148;
+    }
+    .modal-header h3 { font-size: 0.95rem; color: #f8fafc; }
+    .modal-header span { font-size: 0.8rem; color: #64748b; margin-left: 0.5rem; font-family: monospace; }
+    .modal-close {
+      background: none; border: none; color: #64748b;
+      font-size: 1.25rem; cursor: pointer; line-height: 1;
+    }
+    .modal-close:hover { color: #e2e8f0; }
+    .modal-body { overflow-y: auto; }
+    .badge-role-admin { background: #312e81; color: #a5b4fc; }
+    .badge-role-subAdmin { background: #1e3a5f; color: #7dd3fc; }
+    .badge-role-user { background: #1e293b; color: #94a3b8; }
   </style>
 </head>
 <body>
@@ -163,6 +195,28 @@ const HTML = `<!DOCTYPE html>
           <tr><td colspan="6" class="muted" style="padding:1.5rem">Loading...</td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="users-modal" onclick="closeModal(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <div><h3>Users <span id="modal-room-id"></span></h3></div>
+        <button class="modal-close" onclick="closeUsersModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Timezone</th>
+              <th>PIN</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -258,7 +312,7 @@ const HTML = `<!DOCTYPE html>
       }
       tbody.innerHTML = rooms.map(r => \`
         <tr>
-          <td><code style="font-size:0.8rem;color:#818cf8">\${r.id}</code></td>
+          <td><button class="room-id-btn" onclick="showUsers('\${r.id.replace(/'/g, "\\\\'")}')">\${r.id}</button></td>
           <td>\${r.name}</td>
           <td>\${r.userCount}</td>
           <td class="muted">\${formatDate(r.updatedAt)}</td>
@@ -267,6 +321,41 @@ const HTML = `<!DOCTYPE html>
         </tr>
       \`).join('');
     }
+
+    async function showUsers(roomId) {
+      document.getElementById('modal-room-id').textContent = roomId;
+      document.getElementById('users-tbody').innerHTML = '<tr><td colspan="4" class="muted" style="padding:1rem">Loading...</td></tr>';
+      document.getElementById('users-modal').classList.add('open');
+
+      const res = await fetch(\`/api/rooms/\${encodeURIComponent(roomId)}/users\`);
+      if (!res.ok) {
+        document.getElementById('users-tbody').innerHTML = '<tr><td colspan="4" class="muted" style="padding:1rem">Failed to load users.</td></tr>';
+        return;
+      }
+      const users = await res.json();
+      if (!users.length) {
+        document.getElementById('users-tbody').innerHTML = '<tr><td colspan="4" class="muted" style="padding:1rem">No users.</td></tr>';
+        return;
+      }
+      document.getElementById('users-tbody').innerHTML = users.map(u => \`
+        <tr>
+          <td>\${u.name}</td>
+          <td><span class="badge badge-role-\${u.role}">\${u.role}</span></td>
+          <td class="muted">\${u.timezone ?? '—'}</td>
+          <td class="muted">\${u.hasPin ? '✓' : '—'}</td>
+        </tr>
+      \`).join('');
+    }
+
+    function closeUsersModal() {
+      document.getElementById('users-modal').classList.remove('open');
+    }
+
+    function closeModal(e) {
+      if (e.target === document.getElementById('users-modal')) closeUsersModal();
+    }
+
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeUsersModal(); });
 
     loadAll();
   </script>
@@ -293,6 +382,14 @@ export const adminServer = new Elysia()
   })
   .get("/api/rooms", async () => {
     return getAllRoomsAdmin();
+  })
+  .get("/api/rooms/:id/users", async ({ params, status }) => {
+    try {
+      return getUsersFromRoom(params.id);
+    } catch (e) {
+      if (e instanceof NotFoundError) return status(404, { message: e.message });
+      throw e;
+    }
   })
   .get("/metrics", async () =>
     new Response(await register.metrics(), {
