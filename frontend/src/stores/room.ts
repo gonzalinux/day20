@@ -18,7 +18,6 @@ export interface RoomUser {
   id: string
   name: string
   role: string
-  isCreator?: boolean
   hasPin: boolean
   pinSkipped: boolean
   weeklyAvailability: WeeklyAvailability
@@ -67,8 +66,8 @@ export const useRoomStore = defineStore('room', () => {
   const browserTimezone = ref(detectTimezone())
 
   const currentUser = computed(() => users.value.find((u) => u.id === currentUserId.value))
-  const isAdmin = computed(() => currentUser.value?.role === 'admin')
-  const isCreator = computed(() => currentUser.value?.isCreator ?? false)
+  const isAdmin = computed(() => currentUser.value?.role === 'admin' || currentUser.value?.role === 'subAdmin')
+  const isCreator = computed(() => currentUser.value?.role === 'admin')
   const timeRange = computed(() => getTimeRange(room.defaultAvailability))
   const localTimeWindow = computed(() =>
     convertRoomWindowToLocal(
@@ -143,7 +142,7 @@ export const useRoomStore = defineStore('room', () => {
     users.value = users.value.filter((u) => u.id !== userId)
   }
 
-  async function changeUserRole(userId: string, role: 'admin' | 'user') {
+  async function changeUserRole(userId: string, role: 'subAdmin' | 'user') {
     await apiUpdateUser(room.id, userId, { role })
     const user = users.value.find((u) => u.id === userId)
     if (user) user.role = role

@@ -17,7 +17,7 @@ const CLEANUP_INTERVAL_MS = 7.3 * 60 * 60 * 1000;
 async function assertAdmin(roomId: string, userId: string) {
   const users = await Repository.getUsersFromRoom(roomId);
   const user = users.find((u) => u.id === userId);
-  if (!user || user.role !== "admin")
+  if (!user || (user.role !== "admin" && user.role !== "subAdmin"))
     throw new ForbiddenError("Only admins can perform this action");
 }
 
@@ -112,12 +112,7 @@ export async function addUserToRoom(roomId: string, user: WithoutId<User>, authU
   if (existingUsers.some((existing) => existing.name === user.name))
     throw new AlreadyExistsError("This user already exists in this room");
 
-  const fullUser: User = {
-    ...user,
-    roomId,
-    id: `${roomId}:${user.name}`,
-    ...(existingUsers.length === 0 && { isCreator: true }),
-  };
+  const fullUser: User = { ...user, roomId, id: `${roomId}:${user.name}` };
   const created = await Repository.createUser(fullUser);
   return stripPin(created);
 }
@@ -166,7 +161,7 @@ export async function removeUserPin(
   const users = await Repository.getUsersFromRoom(roomId);
   const authUser = users.find((u) => u.id === authUserId);
   if (!authUser) throw new NotFoundError("Auth user not found");
-  if (authUser.role !== "admin")
+  if (authUser.role !== "admin" && authUser.role !== "subAdmin")
     throw new ForbiddenError("Only admins can remove PINs");
 
   const target = users.find((u) => u.id === targetUserId);
@@ -188,7 +183,7 @@ export async function updateUserAvailability(
   if (!target) throw new NotFoundError("User not found");
 
   const isSelf = authUserId === targetUserId;
-  const isAdmin = authUser.role === "admin";
+  const isAdmin = authUser.role === "admin" || authUser.role === "subAdmin";
 
   if (
     (updates.weeklyAvailability !== undefined ||
@@ -210,9 +205,9 @@ export async function updateUserAvailability(
       throw new ForbiddenError("Only admins can change user roles");
     if (isSelf)
       throw new ForbiddenError("You cannot change your own role");
-    if (updates.role === "admin" && !target.pin)
+    if (updates.role === "subAdmin" && !target.pin)
       throw new ForbiddenError("User must have a PIN to become admin");
-    if (updates.role === "user" && !authUser.isCreator)
+    if (updates.role === "user" && authUser.role !== "admin")
       throw new ForbiddenError("Only the creator can demote admins");
   }
 

@@ -95,7 +95,7 @@ export const UpdateUserRequest = t.Object({
 
 export const UpdateUserAvailabilityRequest = t.Object({
   name: t.Optional(t.String({ minLength: 1 })),
-  role: t.Optional(t.Union([t.Literal('admin'), t.Literal('user')])),
+  role: t.Optional(t.Union([t.Literal('subAdmin'), t.Literal('user')])),
   weeklyAvailability: t.Optional(WeeklyAvailabilitySchema),
   overrides: t.Optional(t.Array(OverrideSchema, { maxItems: 500 })),
   timezone: t.Optional(TimezoneSchema),

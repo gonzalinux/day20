@@ -70,7 +70,7 @@ async function executeConfirm() {
     } else if (confirmingAction.value === 'removeUser') {
       await room.removeUser(userId)
     } else if (confirmingAction.value === 'makeAdmin') {
-      await room.changeUserRole(userId, 'admin')
+      await room.changeUserRole(userId, 'subAdmin')
     } else if (confirmingAction.value === 'removeAdmin') {
       await room.changeUserRole(userId, 'user')
     }
@@ -178,7 +178,7 @@ async function handleLogout() {
             {{ t('room.you') }}
           </span>
           <span
-            v-if="user.role === 'admin'"
+            v-if="user.role === 'admin' || user.role === 'subAdmin'"
             class="text-sm font-heading font-bold text-accent bg-accent/15 px-2 py-0.5 rounded"
           >
             {{ t('room.admin') }}
@@ -244,15 +244,21 @@ async function handleLogout() {
         <template v-if="room.isAdmin && editingUserId !== room.currentUserId">
           <hr class="border-primary/10" />
           <div class="flex flex-col gap-2">
+            <div v-if="editingUser?.role === 'user'" class="flex flex-col gap-1">
+              <button
+                :disabled="!editingUser?.hasPin"
+                class="w-full px-4 py-2 rounded-lg bg-accent/20 text-accent hover:bg-accent/30 transition-colors font-heading font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                :class="editingUser?.hasPin ? 'cursor-pointer' : ''"
+                @click="editingUser?.hasPin && startConfirm('makeAdmin')"
+              >
+                {{ t('room.makeAdmin') }}
+              </button>
+              <p v-if="!editingUser?.hasPin" class="text-xs text-primary/50 font-body text-center">
+                {{ t('room.makeAdminRequiresPin') }}
+              </p>
+            </div>
             <button
-              v-if="editingUser?.role !== 'admin' && editingUser?.hasPin"
-              class="w-full px-4 py-2 rounded-lg bg-accent/20 text-accent hover:bg-accent/30 transition-colors cursor-pointer font-heading font-bold text-sm"
-              @click="startConfirm('makeAdmin')"
-            >
-              {{ t('room.makeAdmin') }}
-            </button>
-            <button
-              v-if="editingUser?.role === 'admin' && room.isCreator"
+              v-if="editingUser?.role === 'subAdmin' && room.isCreator"
               class="w-full px-4 py-2 rounded-lg bg-secondary/20 text-secondary hover:bg-secondary/30 transition-colors cursor-pointer font-heading font-bold text-sm"
               @click="startConfirm('removeAdmin')"
             >

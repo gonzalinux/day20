@@ -5,7 +5,6 @@ export interface User {
   roomId: string;
   name: string;
   role: UserRole;
-  isCreator?: boolean;
   pin?: string;
   pinSkipped?: boolean;
   weeklyAvailability: WeeklyAvailability;
@@ -13,7 +12,7 @@ export interface User {
   timezone: string;
 }
 
-export type UserRole = "admin" | "user";
+export type UserRole = "admin" | "subAdmin" | "user";
 
 export interface Override {
   date: Date;
