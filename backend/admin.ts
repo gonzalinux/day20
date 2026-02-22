@@ -277,7 +277,6 @@ export const adminServer = new Elysia()
   .get("/", () => new Response(HTML, { headers: { "Content-Type": "text/html; charset=utf-8" } }))
   .get("/api/stats", async () => {
     const rooms = await getAllRoomsAdmin();
-    const now = Date.now();
     const freshCount = rooms.filter((r) => r.daysUntilExpiry > WARNING_THRESHOLD_DAYS).length;
     const expiringCount = rooms.filter(
       (r) => r.daysUntilExpiry > 0 && r.daysUntilExpiry <= WARNING_THRESHOLD_DAYS,
