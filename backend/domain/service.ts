@@ -91,7 +91,8 @@ export async function updateRoom(updates: PartialWithId<Room>, authUserId?: stri
   const existing = await Repository.findRoom(updates.id);
   if (!existing) throw new NotFoundError("Room not found");
 
-  if (authUserId) await assertAdmin(updates.id, authUserId);
+  if (!authUserId) throw new UnauthorizedError("Must select a user first");
+  await assertAdmin(updates.id, authUserId);
 
   updates.updatedAt = new Date();
   const result = await Repository.updateRoom(updates);
@@ -102,13 +103,21 @@ export async function addUserToRoom(roomId: string, user: WithoutId<User>, authU
   const room = await Repository.findRoom(roomId);
   if (!room) throw new NotFoundError("Room not found");
 
-  if (authUserId) await assertAdmin(roomId, authUserId);
-
   const existingUsers = await Repository.getUsersFromRoom(roomId);
+
+  if (existingUsers.length > 0) {
+    if (!authUserId) throw new UnauthorizedError("Must select a user first");
+    await assertAdmin(roomId, authUserId);
+  }
   if (existingUsers.some((existing) => existing.name === user.name))
     throw new AlreadyExistsError("This user already exists in this room");
 
-  const fullUser: User = { ...user, roomId, id: `${roomId}:${user.name}` };
+  const fullUser: User = {
+    ...user,
+    roomId,
+    id: `${roomId}:${user.name}`,
+    ...(existingUsers.length === 0 && { isCreator: true }),
+  };
   const created = await Repository.createUser(fullUser);
   return stripPin(created);
 }
@@ -170,20 +179,50 @@ export async function updateUserAvailability(
   roomId: string,
   authUserId: string,
   targetUserId: string,
-  updates: Partial<Pick<User, "weeklyAvailability" | "overrides" | "timezone">>,
+  updates: Partial<Pick<User, "weeklyAvailability" | "overrides" | "timezone" | "name" | "role">>,
 ) {
-  if (authUserId !== targetUserId)
-    throw new ForbiddenError("You can only edit your own availability");
-
   const users = await Repository.getUsersFromRoom(roomId);
+  const authUser = users.find((u) => u.id === authUserId);
+  if (!authUser) throw new NotFoundError("Auth user not found");
   const target = users.find((u) => u.id === targetUserId);
   if (!target) throw new NotFoundError("User not found");
+
+  const isSelf = authUserId === targetUserId;
+  const isAdmin = authUser.role === "admin";
+
+  if (
+    (updates.weeklyAvailability !== undefined ||
+      updates.overrides !== undefined ||
+      updates.timezone !== undefined) &&
+    !isSelf
+  )
+    throw new ForbiddenError("You can only edit your own availability");
+
+  if (updates.name !== undefined) {
+    if (!isSelf && !isAdmin)
+      throw new ForbiddenError("Only admins can rename other users");
+    if (users.some((u) => u.id !== targetUserId && u.name === updates.name))
+      throw new AlreadyExistsError("A user with that name already exists");
+  }
+
+  if (updates.role !== undefined) {
+    if (!isAdmin)
+      throw new ForbiddenError("Only admins can change user roles");
+    if (isSelf)
+      throw new ForbiddenError("You cannot change your own role");
+    if (updates.role === "admin" && !target.pin)
+      throw new ForbiddenError("User must have a PIN to become admin");
+    if (updates.role === "user" && !authUser.isCreator)
+      throw new ForbiddenError("Only the creator can demote admins");
+  }
 
   const updatePayload: PartialWithId<User> = { id: targetUserId, roomId };
   if (updates.weeklyAvailability)
     updatePayload.weeklyAvailability = updates.weeklyAvailability;
   if (updates.overrides) updatePayload.overrides = updates.overrides;
   if (updates.timezone) updatePayload.timezone = updates.timezone;
+  if (updates.name !== undefined) updatePayload.name = updates.name;
+  if (updates.role !== undefined) updatePayload.role = updates.role;
 
   await Repository.updateUser(updatePayload);
   return stripPin({ ...target, ...updatePayload });
@@ -205,7 +244,8 @@ export async function removeUsersFromRoom(
   const room = await Repository.findRoom(roomId);
   if (!room) throw new NotFoundError("Room not found");
 
-  if (authUserId) await assertAdmin(roomId, authUserId);
+  if (!authUserId) throw new UnauthorizedError("Must select a user first");
+  await assertAdmin(roomId, authUserId);
 
   const existingUsers = await Repository.getUsersFromRoom(roomId);
   const usersToDelete = existingUsers.filter((user) =>

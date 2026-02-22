@@ -4,6 +4,7 @@ import { getRoom, updateRoom, deleteRoom as apiDeleteRoom } from '@/services/roo
 import {
   getUsersFromRoom,
   addUser as apiAddUser,
+  deleteUsers as apiDeleteUsers,
   setPin as apiSetPin,
   removePin as apiRemovePin,
   updateUser as apiUpdateUser,
@@ -17,6 +18,7 @@ export interface RoomUser {
   id: string
   name: string
   role: string
+  isCreator?: boolean
   hasPin: boolean
   pinSkipped: boolean
   weeklyAvailability: WeeklyAvailability
@@ -66,6 +68,7 @@ export const useRoomStore = defineStore('room', () => {
 
   const currentUser = computed(() => users.value.find((u) => u.id === currentUserId.value))
   const isAdmin = computed(() => currentUser.value?.role === 'admin')
+  const isCreator = computed(() => currentUser.value?.isCreator ?? false)
   const timeRange = computed(() => getTimeRange(room.defaultAvailability))
   const localTimeWindow = computed(() =>
     convertRoomWindowToLocal(
@@ -127,6 +130,23 @@ export const useRoomStore = defineStore('room', () => {
     await apiRemovePin(room.id, userId)
     const user = users.value.find((u) => u.id === userId)
     if (user) user.hasPin = false
+  }
+
+  async function renameUser(userId: string, name: string) {
+    await apiUpdateUser(room.id, userId, { name })
+    const user = users.value.find((u) => u.id === userId)
+    if (user) user.name = name
+  }
+
+  async function removeUser(userId: string) {
+    await apiDeleteUsers(room.id, { userIds: [userId] })
+    users.value = users.value.filter((u) => u.id !== userId)
+  }
+
+  async function changeUserRole(userId: string, role: 'admin' | 'user') {
+    await apiUpdateUser(room.id, userId, { role })
+    const user = users.value.find((u) => u.id === userId)
+    if (user) user.role = role
   }
 
   async function logoutUser() {
@@ -215,6 +235,7 @@ export const useRoomStore = defineStore('room', () => {
     currentUserId,
     currentUser,
     isAdmin,
+    isCreator,
     timeRange,
     browserTimezone,
     localTimeWindow,
@@ -225,6 +246,9 @@ export const useRoomStore = defineStore('room', () => {
     selectUser,
     setPin,
     removePin,
+    renameUser,
+    removeUser,
+    changeUserRole,
     logoutUser,
     saveDuration,
     saveWeeklyAvailability,

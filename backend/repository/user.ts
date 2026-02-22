@@ -5,6 +5,7 @@ export interface User {
   roomId: string;
   name: string;
   role: UserRole;
+  isCreator?: boolean;
   pin?: string;
   pinSkipped?: boolean;
   weeklyAvailability: WeeklyAvailability;
