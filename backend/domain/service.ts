@@ -1,5 +1,12 @@
 import crypto from "crypto";
 import Repository from "../repository/repository";
+import {
+  roomsCreatedTotal,
+  roomLoginsTotal,
+  roomsDeletedTotal,
+  usersCreatedTotal,
+  usersDeletedTotal,
+} from "../metrics";
 import type { Room } from "../repository/room";
 import type { User } from "../repository/user";
 import type { PartialWithId, WithoutId } from "../utils/utils.types";
@@ -11,7 +18,7 @@ import {
 } from "../server/errors.types";
 import type { CreateRoomRequest } from "../server/requests.types";
 
-const STALE_ROOM_MS = 30 * 24 * 60 * 60 * 1000;
+export const STALE_ROOM_MS = 30 * 24 * 60 * 60 * 1000;
 const CLEANUP_INTERVAL_MS = 7.3 * 60 * 60 * 1000;
 
 async function assertAdmin(roomId: string, userId: string) {
@@ -43,6 +50,7 @@ export async function createRoom(request: CreateRoomRequest) {
   };
 
   const createdRoom = await Repository.insertRoom(room);
+  roomsCreatedTotal.inc();
   return { id: createdRoom, magicToken };
 }
 
@@ -64,6 +72,7 @@ export async function loginRoom(
   }
 
   await Repository.updateRoom({ id: roomId, updatedAt: new Date() });
+  roomLoginsTotal.inc();
 
   const { password: _, ...roomWithoutPassword } = room;
   const users = await Repository.getUsersFromRoom(roomId);
@@ -114,6 +123,7 @@ export async function addUserToRoom(roomId: string, user: WithoutId<User>, authU
 
   const fullUser: User = { ...user, roomId, id: `${roomId}:${user.name}` };
   const created = await Repository.createUser(fullUser);
+  usersCreatedTotal.inc();
   return stripPin(created);
 }
 
@@ -229,6 +239,7 @@ export async function deleteRoom(roomId: string, authUserId: string) {
 
   await assertAdmin(roomId, authUserId);
   await Repository.deleteRoom(roomId);
+  roomsDeletedTotal.inc({ reason: "manual" });
 }
 
 export async function removeUsersFromRoom(
@@ -251,7 +262,31 @@ export async function removeUsersFromRoom(
     throw new NotFoundError("No matching users found");
 
   const deletedCount = await Repository.deleteUsers(usersToDelete, roomId);
+  usersDeletedTotal.inc(deletedCount);
   return deletedCount;
+}
+
+export async function getAllRoomsAdmin() {
+  const rooms = await Repository.findAllRooms();
+  const userCounts = await Repository.countUsersPerRoom();
+  const now = Date.now();
+  return rooms.map(({ password, magicToken, ...room }) => ({
+    ...room,
+    userCount: userCounts[room.id] ?? 0,
+    daysUntilExpiry: Math.max(
+      0,
+      Math.ceil(
+        (room.updatedAt!.getTime() + STALE_ROOM_MS - now) / (1000 * 60 * 60 * 24),
+      ),
+    ),
+  }));
+}
+
+export async function deleteRoomAdmin(roomId: string) {
+  const room = await Repository.findRoom(roomId);
+  if (!room) throw new NotFoundError("Room not found");
+  await Repository.deleteRoom(roomId);
+  roomsDeletedTotal.inc({ reason: "admin" });
 }
 
 async function cleanupStaleRooms() {
@@ -261,8 +296,10 @@ async function cleanupStaleRooms() {
     await Repository.deleteRoom(room.id);
     console.log(`Deleted stale room: ${room.id}`);
   }
-  if (staleRooms.length > 0)
+  if (staleRooms.length > 0) {
+    roomsDeletedTotal.inc({ reason: "cleanup" }, staleRooms.length);
     console.log(`Cleanup: removed ${staleRooms.length} stale room(s)`);
+  }
 }
 
 export function startCleanupScheduler() {

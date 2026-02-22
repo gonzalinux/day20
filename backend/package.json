@@ -14,6 +14,7 @@
     "@elysiajs/jwt": "^1.4.0",
     "@elysiajs/openapi": "^1.4.14",
     "elysia": "^1.4.22",
-    "mongodb": "^7.1.0"
+    "mongodb": "^7.1.0",
+    "prom-client": "^15.1.3"
   }
 }

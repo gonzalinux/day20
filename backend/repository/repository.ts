@@ -102,6 +102,22 @@ async function deleteUsers(deleteUsers: User[], roomId?: string) {
   return result.deletedCount;
 }
 
+async function findAllRooms(): Promise<Room[]> {
+  const rooms = getRoomsCollection();
+  const result = await rooms.find({}).sort({ updatedAt: -1 }).toArray();
+  return result.map((doc) => fromMongo<Room>(doc));
+}
+
+async function countUsersPerRoom(): Promise<Record<string, number>> {
+  const users = getUsersCollection();
+  const result = await users
+    .aggregate<{ _id: string; count: number }>([
+      { $group: { _id: "$roomId", count: { $sum: 1 } } },
+    ])
+    .toArray();
+  return Object.fromEntries(result.map((r) => [r._id, r.count]));
+}
+
 async function findStaleRooms(before: Date): Promise<Room[]> {
   const rooms = getRoomsCollection();
   const result = await rooms.find({ updatedAt: { $lt: before } }).toArray();
@@ -119,6 +135,8 @@ async function deleteRoom(roomId: string) {
 export default {
   insertRoom,
   findRoom,
+  findAllRooms,
+  countUsersPerRoom,
   findStaleRooms,
   updateRoom,
   deleteRoom,

@@ -5,8 +5,12 @@ import { routes } from "./server/routes";
 import { connectToDatabase, disconnectFromDatabase } from "./repository/db";
 import { logger } from "./server/logger";
 import { startCleanupScheduler } from "./domain/service";
+import { startAdminServer } from "./admin";
+import { prometheus } from "./server/prometheus";
+import "./metrics";
 
 const server = new Elysia()
+  .use(prometheus)
   .use(logger)
   .use(cors({
     origin: ["http://localhost:3500", "https://day-20.com"],
@@ -24,6 +28,7 @@ async function startServer() {
   await connectToDatabase();
 
   server.listen(3000);
+  startAdminServer();
   startCleanupScheduler();
 
   console.log("Server started port 3000");
