@@ -85,11 +85,16 @@ async function executeConfirm() {
 const confirmMessage = computed(() => {
   const name = editingUser.value?.name ?? ''
   switch (confirmingAction.value) {
-    case 'removePin': return t('room.removePinConfirm', { name })
-    case 'removeUser': return t('room.removeUserConfirm', { name })
-    case 'makeAdmin': return t('room.makeAdminConfirm', { name })
-    case 'removeAdmin': return t('room.removeAdminConfirm', { name })
-    default: return ''
+    case 'removePin':
+      return t('room.removePinConfirm', { name })
+    case 'removeUser':
+      return t('room.removeUserConfirm', { name })
+    case 'makeAdmin':
+      return t('room.makeAdminConfirm', { name })
+    case 'removeAdmin':
+      return t('room.removeAdminConfirm', { name })
+    default:
+      return ''
   }
 })
 
@@ -98,7 +103,10 @@ const modalActions = computed(() => {
     return [
       {
         label: t('room.durationCancel'),
-        handler: () => { confirmingAction.value = ''; actionError.value = '' },
+        handler: () => {
+          confirmingAction.value = ''
+          actionError.value = ''
+        },
         variant: 'secondary' as const,
       },
       { label: t('room.confirm'), handler: executeConfirm, variant: 'danger' as const },
@@ -169,16 +177,21 @@ async function handleLogout() {
           @touchend="tooltipUserId = ''"
           @touchcancel="tooltipUserId = ''"
         >
-          <span class="text-primary font-body text-xl pt-3 pb-1 truncate block">{{ user.name }}</span>
+          <span class="text-primary font-body text-xl pt-3 pb-1 truncate block">{{
+            user.name
+          }}</span>
           <span
             class="absolute bottom-full left-0 mb-1 px-2 py-1 bg-bg border border-primary/20 text-primary text-sm font-heading rounded shadow whitespace-nowrap pointer-events-none z-10 invisible group-hover/name:visible"
-            :class="{ '!visible': tooltipUserId === user.id }"
-          >{{ user.name }}</span>
+            :class="{ 'visible!': tooltipUserId === user.id }"
+            >{{ user.name }}</span
+          >
         </span>
         <div class="flex items-center gap-1.5 shrink-0">
           <VIcon v-if="user.hasPin" name="gi-padlock" class="text-secondary" scale="1" />
           <button
-            v-if="user.id === room.currentUserId || (room.isAdmin && user.id !== room.currentUserId)"
+            v-if="
+              user.id === room.currentUserId || (room.isAdmin && user.id !== room.currentUserId)
+            "
             class="text-xs font-heading font-bold text-accent bg-accent/15 px-2 py-1 rounded hover:bg-accent/25 transition-colors cursor-pointer"
             @click="openEdit(user.id)"
           >
