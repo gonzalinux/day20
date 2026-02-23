@@ -19,6 +19,8 @@ const addingPlayer = ref(false)
 const error = ref('')
 const loggingOut = ref(false)
 
+const tooltipUserId = ref('')
+
 const editingUserId = ref('')
 const editName = ref('')
 const savingName = ref(false)
@@ -161,7 +163,18 @@ async function handleLogout() {
         class="flex items-center justify-between gap-2 px-4 rounded-lg"
         :class="user.id === room.currentUserId ? 'bg-accent/10 ring-1 ring-accent/30' : 'bg-bg/50'"
       >
-        <span class="text-primary font-body text-xl pt-3 pb-1 truncate min-w-0">{{ user.name }}</span>
+        <span
+          class="relative min-w-0 group/name cursor-default"
+          @touchstart.prevent="tooltipUserId = user.id"
+          @touchend="tooltipUserId = ''"
+          @touchcancel="tooltipUserId = ''"
+        >
+          <span class="text-primary font-body text-xl pt-3 pb-1 truncate block">{{ user.name }}</span>
+          <span
+            class="absolute bottom-full left-0 mb-1 px-2 py-1 bg-bg border border-primary/20 text-primary text-sm font-heading rounded shadow whitespace-nowrap pointer-events-none z-10 invisible group-hover/name:visible"
+            :class="{ '!visible': tooltipUserId === user.id }"
+          >{{ user.name }}</span>
+        </span>
         <div class="flex items-center gap-1.5 shrink-0">
           <VIcon v-if="user.hasPin" name="gi-padlock" class="text-secondary" scale="1" />
           <button
