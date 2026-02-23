@@ -60,7 +60,7 @@ onMounted(async () => {
     <!-- Content -->
     <main
       class="flex flex-col flex-1 min-h-0 w-full"
-      :class="fullLayout ? '' : 'items-center justify-center px-2 lg:px-6'"
+      :class="fullLayout ? '' : 'items-center justify-center px-2 lg:px-3'"
     >
       <RouterView v-slot="{ Component }">
         <Transition name="fade" mode="out-in" @after-leave="onAfterLeave">

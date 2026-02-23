@@ -158,11 +158,11 @@ async function handleLogout() {
       <li
         v-for="user in room.users"
         :key="user.id"
-        class="flex items-center justify-between px-4 rounded-lg"
+        class="flex items-center justify-between gap-2 px-4 rounded-lg"
         :class="user.id === room.currentUserId ? 'bg-accent/10 ring-1 ring-accent/30' : 'bg-bg/50'"
       >
-        <span class="text-primary font-body text-xl pt-3 pb-1">{{ user.name }}</span>
-        <div class="flex items-center gap-1.5">
+        <span class="text-primary font-body text-xl pt-3 pb-1 truncate min-w-0">{{ user.name }}</span>
+        <div class="flex items-center gap-1.5 shrink-0">
           <VIcon v-if="user.hasPin" name="gi-padlock" class="text-secondary" scale="1" />
           <button
             v-if="user.id === room.currentUserId || (room.isAdmin && user.id !== room.currentUserId)"

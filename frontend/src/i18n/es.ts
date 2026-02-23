@@ -69,9 +69,11 @@ export default {
     loadError: 'No se pudo cargar la sala',
     clipboardError: 'No se pudo copiar al portapapeles',
     weeklySubtitle: 'Selecciona tus horarios disponibles',
-    weeklyInfo: 'Arrastra sobre la cuadricula para pintar las horas en que estas libre. Puedes arrastrar sobre varios dias a la vez.',
+    weeklyInfo:
+      'Arrastra sobre la cuadricula para pintar las horas en que estas libre. Puedes arrastrar sobre varios dias a la vez.',
     overridesSubtitle: 'Modificar fechas especificas',
-    overridesInfo: 'Elige una fecha del calendario para bloquear o desbloquear horarios solo para ese dia, anulando tu disponibilidad semanal.',
+    overridesInfo:
+      'Elige una fecha del calendario para bloquear o desbloquear horarios solo para ese dia, anulando tu disponibilidad semanal.',
     navUsers: 'Grupo',
     navCalendar: 'Calendario',
     navSettings: 'Ajustes',
@@ -103,7 +105,8 @@ export default {
     adminPinRequired: 'Como admin, debes establecer un PIN',
     skipPin: 'Omitir',
     skipPinTitle: 'Omitir PIN',
-    skipPinMessage: 'Sin un PIN, cualquier persona en la sala podrá seleccionar tu avatar y modificar tu disponibilidad. ¿Estás seguro?',
+    skipPinMessage:
+      'Sin un PIN, cualquier persona en la sala podrá seleccionar tu avatar y modificar tu disponibilidad. ¿Estás seguro?',
     skipPinConfirm: 'Omitir',
     pinSkippedWarning: 'Tu avatar no tiene PIN — cualquiera puede usarlo',
     logout: 'Cambiar usuario',
@@ -113,16 +116,18 @@ export default {
     editTimeWindow: 'Horario de sesiones',
     editTimeWindowHint: 'Define que horas estan disponibles para sesiones cada dia',
     resetConfirmTitle: 'Reiniciar disponibilidad',
-    resetConfirmMessage: 'Esto borrará todos tus horarios pintados y excepciones. Esta acción no se puede deshacer.',
+    resetConfirmMessage:
+      'Esto borrará todos tus horarios pintados y excepciones. Esta acción no se puede deshacer.',
     resetConfirmButton: 'Reiniciar',
     combinedCalendar: 'Calendario Combinado',
     tabCombined: 'Combinado',
     combinedSubtitle: 'Disponibilidad del grupo',
-    combinedInfo: 'Muestra cuándo todos están libres en la semana seleccionada. Los bloques resaltados son horarios viables donde todos los jugadores están disponibles por la duración mínima de sesión.',
+    combinedInfo:
+      'Muestra cuándo todos están libres en la semana seleccionada. Los bloques resaltados son horarios viables donde todos los jugadores están disponibles por la duración mínima de sesión.',
     viable: 'Sesión viable',
-    all_free: 'Todos libres',
-    some_free: 'Algunos libres',
-    none: 'Ninguno',
+    all_free: 'Todos',
+    some_free: 'Algunos',
+    none: 'Nadie',
     timezone: 'Zona horaria',
     changeTimezone: 'Cambiar zona horaria',
     noSessionHours: 'Sin horas de sesión',
@@ -132,7 +137,8 @@ export default {
     deleteRoom: 'Eliminar sala',
     deleteRoomHint: 'Eliminar permanentemente esta sala y todos sus datos',
     deleteRoomConfirmTitle: 'Eliminar sala',
-    deleteRoomConfirmMessage: 'Esto eliminará permanentemente la sala, todos los jugadores y todos los datos de disponibilidad. Esta acción no se puede deshacer.',
+    deleteRoomConfirmMessage:
+      'Esto eliminará permanentemente la sala, todos los jugadores y todos los datos de disponibilidad. Esta acción no se puede deshacer.',
     deleteRoomConfirmButton: 'Eliminar',
     confirm: 'Confirmar',
     edit: 'Editar',
@@ -167,10 +173,13 @@ export default {
     faq2q: '¿Necesito una cuenta?',
     faq2a: 'Para nada. Crea una sala con nombre y contraseña, comparte el enlace y listo.',
     faq3q: '¿Y si el grupo está en zonas horarias distintas?',
-    faq3a: 'Cubierto. Cada jugador pone su zona horaria y todos ven la disponibilidad en su hora local.',
+    faq3a:
+      'Cubierto. Cada jugador pone su zona horaria y todos ven la disponibilidad en su hora local.',
     faq4q: '¿Solo para D&D?',
-    faq4a: 'Para nada. Cualquier grupo que necesite encontrar un hueco: rol, clubs de lectura, noches de juegos, quedadas online, reuniones de trabajo. Lo que sea.',
+    faq4a:
+      'Para nada. Cualquier grupo que necesite encontrar un hueco: rol, clubs de lectura, noches de juegos, quedadas online, reuniones de trabajo. Lo que sea.',
     faq5q: '¿Las salas se guardan para siempre?',
-    faq5a: 'No. Las salas se eliminan tras 30 días sin actividad, así que no acumules campañas abandonadas.',
+    faq5a:
+      'No. Las salas se eliminan tras 30 días sin actividad, así que no acumules campañas abandonadas.',
   },
 }

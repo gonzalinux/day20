@@ -66,35 +66,35 @@ function isDefaultSlot(dayIdx: number, slotIdx: number) {
   return defaultGrids.value[day][slotIdx]
 }
 
-// For each day×slot, count how many users are available (after applying their overrides)
-const combinedGrid = computed(() => {
+// Per-user, per-day grids (memoised) — reused by combinedGrid and tooltip
+const userGrids = computed(() => {
   const viewerTz = room.browserTimezone
-  const grid: number[][] = []
-  for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
-    const date = weekDates.value[dayIdx]!
-    const dateStr = formatDateKey(date)
-    const dayKey = dateToDayKey(date)
-    const slots = new Array(slotCount.value).fill(0)
-
-    for (const user of room.users) {
-      const userTz = user.timezone
-      const userGrid = convertUserDayToLocalGrid(
+  return room.users.map((user) => {
+    return weekDates.value.map((date) => {
+      const dateStr = formatDateKey(date)
+      const dayKey = dateToDayKey(date)
+      const base = convertUserDayToLocalGrid(
         user.weeklyAvailability,
-        userTz,
+        user.timezone,
         viewerTz,
         date,
         dayKey,
         localWindow.value,
       )
-      const effective = applyOverridesToGrid(
-        userGrid,
-        user.overrides,
-        dateStr,
-        startHour.value,
-        endHour.value,
-      )
+      return applyOverridesToGrid(base, user.overrides, dateStr, startHour.value, endHour.value)
+    })
+  })
+})
+
+// For each day×slot, count how many users are available (after applying their overrides)
+const combinedGrid = computed(() => {
+  const grid: number[][] = []
+  for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+    const slots = new Array(slotCount.value).fill(0)
+    for (let ui = 0; ui < room.users.length; ui++) {
+      const userDay = userGrids.value[ui]![dayIdx]!
       for (let s = 0; s < slotCount.value; s++) {
-        if (effective[s]) slots[s]++
+        if (userDay[s]) slots[s]++
       }
     }
     grid.push(slots)
@@ -151,6 +151,64 @@ function slotClass(dayIdx: number, slotIdx: number) {
   return 'bg-accent/15'
 }
 
+// Tooltip state
+const tooltipCell = ref<{ dayIdx: number; slotIdx: number } | null>(null)
+const tooltipAnchorRect = ref<DOMRect | null>(null)
+
+const tooltipData = computed(() => {
+  if (!tooltipCell.value) return null
+  const { dayIdx, slotIdx } = tooltipCell.value
+  const available = room.users.filter((_, i) => userGrids.value[i]?.[dayIdx]?.[slotIdx])
+  const unavailable = room.users.filter((_, i) => !userGrids.value[i]?.[dayIdx]?.[slotIdx])
+  const timeLabel = formatLocalSlotTime(slotIdx, localWindow.value)
+  const timeEnd = formatLocalSlotTime(slotIdx + 1, localWindow.value)
+  return { available, unavailable, timeLabel, timeEnd }
+})
+
+const tooltipStyle = computed(() => {
+  if (!tooltipAnchorRect.value) return {}
+  const r = tooltipAnchorRect.value
+  const W = 176
+  const pad = 8
+  let left = r.left + r.width / 2 - W / 2
+  left = Math.max(pad, Math.min(window.innerWidth - W - pad, left))
+  if (r.top > 130) {
+    return { bottom: `${window.innerHeight - r.top + pad}px`, left: `${left}px` }
+  }
+  return { top: `${r.bottom + pad}px`, left: `${left}px` }
+})
+
+function showTooltip(event: MouseEvent | TouchEvent, dayIdx: number, slotIdx: number) {
+  if (!isDefaultSlot(dayIdx, slotIdx)) return
+  tooltipAnchorRect.value = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  tooltipCell.value = { dayIdx, slotIdx }
+}
+
+function hideTooltip() {
+  tooltipCell.value = null
+}
+
+function onTouchMove(event: TouchEvent) {
+  const touch = event.touches[0]
+  if (!touch) return
+  const el = document.elementFromPoint(touch.clientX, touch.clientY) as HTMLElement | null
+  if (!el) return
+  const day = el.dataset.day
+  const slot = el.dataset.slot
+  if (day === undefined || slot === undefined) {
+    hideTooltip()
+    return
+  }
+  const dayIdx = parseInt(day)
+  const slotIdx = parseInt(slot)
+  if (!isDefaultSlot(dayIdx, slotIdx)) {
+    hideTooltip()
+    return
+  }
+  tooltipAnchorRect.value = el.getBoundingClientRect()
+  tooltipCell.value = { dayIdx, slotIdx }
+}
+
 function onDateSelected(date: Date) {
   selectedWeekStart.value = getMondayOfWeek(date)
   calendarExpanded.value = false
@@ -202,7 +260,7 @@ const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
 
     <!-- Legend -->
     <div
-      class="sticky bottom-0 z-40 flex flex-wrap justify-center gap-x-3 gap-y-1 px-3 py-2 mb-15 lg:mb-0 bg-bg/90 backdrop-blur-sm text-xs font-heading text-secondary"
+      class="sticky bottom-0 z-40 flex flex-wrap justify-center gap-x-2 gap-y-1 px-1 py-2 mb-3 lg:mb-0 bg-bg/90 backdrop-blur-sm text-xs font-heading text-secondary"
     >
       <span class="flex items-center gap-1">
         <span class="inline-block w-3 h-3 rounded-sm bg-green-400/60 ring-1 ring-green-400/50" />
@@ -283,12 +341,63 @@ const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
           <div
             v-for="dayIdx in 7"
             :key="dayIdx - 1"
-            class="rounded-sm transition-colors duration-75 min-h-6"
+            class="rounded-sm transition-colors duration-75 min-h-6 touch-none"
             :class="slotClass(dayIdx - 1, i - 1)"
+            :data-day="dayIdx - 1"
+            :data-slot="i - 1"
+            @mouseenter="showTooltip($event, dayIdx - 1, i - 1)"
+            @mouseleave="hideTooltip"
+            @touchstart.prevent="showTooltip($event, dayIdx - 1, i - 1)"
+            @touchmove.prevent="onTouchMove"
+            @touchend="hideTooltip"
+            @touchcancel="hideTooltip"
           />
           <div class="pointer-events-none" />
         </template>
       </div>
     </div>
   </div>
+
+  <Teleport to="body">
+    <Transition name="tooltip">
+      <div
+        v-if="tooltipData"
+        class="fixed z-50 pointer-events-none w-44 bg-bg border border-secondary/20 rounded-lg shadow-xl px-3 py-2"
+        :style="tooltipStyle"
+      >
+        <p class="text-xs font-heading font-bold text-primary mb-2">
+          {{ tooltipData.timeLabel }} – {{ tooltipData.timeEnd }}
+        </p>
+        <div class="space-y-0.5">
+          <div
+            v-for="user in tooltipData.available"
+            :key="user.id"
+            class="flex items-center gap-1.5 text-xs text-secondary"
+          >
+            <span class="w-2 h-2 rounded-full bg-green-400 shrink-0" />
+            {{ user.name }}
+          </div>
+          <div
+            v-for="user in tooltipData.unavailable"
+            :key="user.id"
+            class="flex items-center gap-1.5 text-xs text-secondary/40"
+          >
+            <span class="w-2 h-2 rounded-full bg-secondary/25 shrink-0" />
+            {{ user.name }}
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
+
+<style scoped>
+.tooltip-enter-active,
+.tooltip-leave-active {
+  transition: opacity 0.1s ease;
+}
+.tooltip-enter-from,
+.tooltip-leave-to {
+  opacity: 0;
+}
+</style>
