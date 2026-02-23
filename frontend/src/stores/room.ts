@@ -160,6 +160,8 @@ export const useRoomStore = defineStore('room', () => {
 
   let weeklyTimer: ReturnType<typeof setTimeout> | null = null
   let overrideTimer: ReturnType<typeof setTimeout> | null = null
+  let weeklyGen = 0
+  let overrideGen = 0
   const saveError = ref(false)
 
   async function saveWeeklyAvailability(availability: WeeklyAvailability) {
@@ -167,12 +169,14 @@ export const useRoomStore = defineStore('room', () => {
     if (!user) return
     const prev = user.weeklyAvailability
     user.weeklyAvailability = availability
+    weeklyGen++
+    const myGen = weeklyGen
     if (weeklyTimer) clearTimeout(weeklyTimer)
     weeklyTimer = setTimeout(async () => {
       try {
         await apiUpdateUser(room.id, user.id, { weeklyAvailability: availability })
       } catch {
-        user.weeklyAvailability = prev
+        if (weeklyGen === myGen) user.weeklyAvailability = prev
         saveError.value = true
       }
     }, 600)
@@ -183,12 +187,14 @@ export const useRoomStore = defineStore('room', () => {
     if (!user) return
     const prev = user.overrides
     user.overrides = overrides
+    overrideGen++
+    const myGen = overrideGen
     if (overrideTimer) clearTimeout(overrideTimer)
     overrideTimer = setTimeout(async () => {
       try {
         await apiUpdateUser(room.id, user.id, { overrides })
       } catch {
-        user.overrides = prev
+        if (overrideGen === myGen) user.overrides = prev
         saveError.value = true
       }
     }, 600)
