@@ -281,17 +281,17 @@ export function convertLocalGridToUserTz(
       return [{ dayKey, selections: gridToAvailability(grid, window.startHour) }]
     }
 
-    const topGrid = grid.slice(0, window.topSlots)
-    const bottomGrid = grid.slice(window.topSlots)
+    const earlyMorningGrid = grid.slice(0, window.topSlots)
+    const lateNightGrid = grid.slice(window.topSlots)
 
     const prevDayKey = dayIndexToDayKey(dayKeyToDayIndex(dayKey) - 1)
     const result: { dayKey: DayKey; selections: TimeSelection[] }[] = []
 
-    const topSel = gridToAvailability(topGrid, 0)
-    if (topSel.length > 0) result.push({ dayKey: prevDayKey, selections: topSel })
+    const earlyMorningSel = gridToAvailability(earlyMorningGrid, 0)
+    if (earlyMorningSel.length > 0) result.push({ dayKey, selections: earlyMorningSel })
 
-    const bottomSel = gridToAvailability(bottomGrid, window.startHour)
-    if (bottomSel.length > 0) result.push({ dayKey, selections: bottomSel })
+    const lateNightSel = gridToAvailability(lateNightGrid, window.startHour)
+    if (lateNightSel.length > 0) result.push({ dayKey: prevDayKey, selections: lateNightSel })
 
     return result
   }

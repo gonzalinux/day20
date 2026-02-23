@@ -271,7 +271,21 @@ function commitWeeklyPaint() {
       userTz,
     )
     for (const { dayKey, selections } of converted) {
-      updated[dayKey] = selections
+      if (localWindow.value.wraps) {
+        // A wrapped window splits one display column across two stored day-keys.
+        // Only overwrite the slot range that belongs to this column; preserve the rest.
+        const isCurrentDay = dayKey === day
+        const slotStart = isCurrentDay ? 0 : 48 - localWindow.value.bottomSlots
+        const slotEnd = isCurrentDay ? localWindow.value.topSlots : 48
+        const fullGrid = availabilityToGrid(updated[dayKey] ?? [], 0, 24)
+        const newGrid = availabilityToGrid(selections, 0, 24)
+        for (let i = slotStart; i < slotEnd; i++) {
+          fullGrid[i] = newGrid[i]!
+        }
+        updated[dayKey] = gridToAvailability(fullGrid, 0)
+      } else {
+        updated[dayKey] = selections
+      }
     }
   }
   room.saveWeeklyAvailability(updated)
