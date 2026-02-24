@@ -181,5 +181,6 @@ export default {
     faq5q: '¿Las salas se guardan para siempre?',
     faq5a:
       'No. Las salas se eliminan tras 30 días sin actividad, así que no acumules campañas abandonadas.',
+    demoRestart: 'Intentar de nuevo',
   },
 }

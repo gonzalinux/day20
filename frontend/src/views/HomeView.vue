@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { localePath } from '@/i18n'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import LangToggle from '@/components/LangToggle.vue'
+import HomeDemo from '@/components/home/HomeDemo.vue'
 
 const { t, locale } = useI18n()
 
@@ -101,46 +102,8 @@ onUnmounted(() => {
     </main>
 
     <section class="bg-secondary w-full py-16 px-6">
-      <div class="max-w-4xl mx-auto flex flex-col md:flex-row md:items-center md:gap-16">
-        <div class="space-y-8 text-center md:text-left">
-          <h2
-            class="text-2xl md:text-4xl font-bold text-primary dark:text-bg uppercase tracking-wide font-heading"
-          >
-            {{ t('home.howItWorks') }}
-          </h2>
-          <ol class="space-y-6 text-lg md:text-xl text-bg dark:text-bg max-w-md mx-auto md:mx-0">
-            <li class="flex items-center gap-3">
-              <span
-                ><VIcon
-                  name="gi-doorway"
-                  class="text-primary dark:text-bg shrink-0"
-                  scale="1.5"
-                />{{ t('home.step1') }}</span
-              >
-            </li>
-            <li class="flex items-center gap-3">
-              <span
-                ><VIcon
-                  name="gi-paint-brush"
-                  class="text-primary dark:text-bg shrink-0"
-                  scale="1.5"
-                />{{ t('home.step2') }}</span
-              >
-            </li>
-            <li class="flex items-center gap-3">
-              <span
-                ><VIcon
-                  name="gi-sands-of-time"
-                  class="text-primary dark:text-bg shrink-0"
-                  scale="1.5"
-                />
-                {{ t('home.step3') }}
-              </span>
-            </li>
-          </ol>
-        </div>
-        <!-- Image placeholder (right side on desktop, below on mobile) -->
-        <div class="mt-8 md:mt-0 shrink-0"></div>
+      <div class="max-w-4xl mx-auto">
+        <HomeDemo />
       </div>
     </section>
 

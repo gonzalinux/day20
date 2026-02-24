@@ -34,6 +34,21 @@ services:
     container_name: day20-vue
     ports:
       - "3500:3500"
+    expose:
+      - "3251"
+    networks:
+      - day20-network
+
+  day20-nginx-exporter:
+    restart: unless-stopped
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: day20-nginx-exporter
+    command:
+      - --nginx.scrape-uri=http://day20-vue:3251/stub_status
+    ports:
+      - "3251:9113"
+    depends_on:
+      - day20-ui
     networks:
       - day20-network
 
