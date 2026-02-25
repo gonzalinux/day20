@@ -231,6 +231,67 @@ function nextWeek() {
 }
 
 const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
+
+const dateAvailability = computed(() => {
+  const result: Record<string, 'viable' | 'all' | 'some' | 'none'> = {}
+  const viewerTz = room.browserTimezone
+  const minSlots = room.room.duration.min * 2
+  const total = room.users.length
+
+  const start = new Date()
+  start.setMonth(start.getMonth() - 3)
+  start.setDate(1)
+  const end = new Date()
+  end.setMonth(end.getMonth() + 4)
+  end.setDate(0)
+
+  const cursor = new Date(start)
+  while (cursor <= end) {
+    const dateStr = formatDateKey(cursor)
+    const dayKey = dateToDayKey(cursor)
+
+    const slots = new Array(slotCount.value).fill(0) as number[]
+    for (const user of room.users) {
+      const base = convertUserDayToLocalGrid(
+        user.weeklyAvailability,
+        user.timezone,
+        viewerTz,
+        new Date(cursor),
+        dayKey,
+        localWindow.value,
+      )
+      const grid = applyOverridesToGrid(base, user.overrides, dateStr, startHour.value, endHour.value)
+      for (let s = 0; s < slotCount.value; s++) {
+        if (grid[s]) slots[s]++
+      }
+    }
+
+    let level: 'viable' | 'all' | 'some' | 'none' = 'none'
+    if (total > 0) {
+      const peak = Math.max(...slots)
+      if (peak === total) {
+        let streak = 0
+        let hasViable = false
+        for (let s = 0; s < slotCount.value; s++) {
+          if (slots[s] === total) {
+            streak++
+            if (streak >= minSlots) { hasViable = true; break }
+          } else {
+            streak = 0
+          }
+        }
+        level = hasViable ? 'viable' : 'all'
+      } else if (peak > 0) {
+        level = 'some'
+      }
+    }
+
+    result[dateStr] = level
+    cursor.setDate(cursor.getDate() + 1)
+  }
+
+  return result
+})
 </script>
 
 <template>
@@ -254,6 +315,7 @@ const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
         :model-value="selectedDateForCalendar"
         :override-dates="[]"
         :highlight-week="selectedWeekStart"
+        :day-availability="dateAvailability"
         @update:model-value="onDateSelected"
       />
     </div>

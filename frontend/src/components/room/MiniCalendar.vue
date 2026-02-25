@@ -9,6 +9,7 @@ const props = defineProps<{
   overrideDates: string[]
   modelValue: Date | null
   highlightWeek?: Date | null
+  dayAvailability?: Record<string, 'viable' | 'all' | 'some' | 'none'>
 }>()
 
 const emit = defineEmits<{
@@ -73,6 +74,15 @@ function highlightWeekPosition(day: number): 'start' | 'end' | 'mid' | null {
   return 'mid'
 }
 
+function dayAvailabilityClass(day: number) {
+  if (isSelected(day) || isToday(day)) return ''
+  const level = props.dayAvailability?.[dateKey(day)]
+  if (!level || level === 'none') return ''
+  if (level === 'viable') return 'bg-green-400/20'
+  if (level === 'all') return 'bg-accent/25'
+  return 'bg-accent/15'
+}
+
 function selectDay(day: number) {
   emit('update:modelValue', new Date(year.value, month.value, day))
 }
@@ -122,6 +132,7 @@ function nextMonth() {
               : isToday(day)
                 ? 'bg-primary/20 text-primary font-bold rounded-lg'
                 : 'text-secondary hover:bg-secondary/15 rounded-lg',
+            dayAvailabilityClass(day),
             isInHighlightWeek(day) && !isSelected(day) ? 'ring-1 ring-accent/40' : '',
             highlightWeekPosition(day) === 'start' ? 'rounded-r-none' : '',
             highlightWeekPosition(day) === 'end' ? 'rounded-l-none' : '',
