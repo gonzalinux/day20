@@ -233,9 +233,8 @@ function nextWeek() {
 const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
 
 const dateAvailability = computed(() => {
-  const result: Record<string, 'viable' | 'all' | 'some' | 'none'> = {}
+  const result: Record<string, 'all' | 'almost' | 'half' | 'few' | 'none'> = {}
   const viewerTz = room.browserTimezone
-  const minSlots = room.room.duration.min * 2
   const total = room.users.length
 
   const start = new Date()
@@ -266,24 +265,13 @@ const dateAvailability = computed(() => {
       }
     }
 
-    let level: 'viable' | 'all' | 'some' | 'none' = 'none'
+    let level: 'all' | 'almost' | 'half' | 'few' | 'none' = 'none'
     if (total > 0) {
       const peak = Math.max(...slots)
-      if (peak === total) {
-        let streak = 0
-        let hasViable = false
-        for (let s = 0; s < slotCount.value; s++) {
-          if (slots[s] === total) {
-            streak++
-            if (streak >= minSlots) { hasViable = true; break }
-          } else {
-            streak = 0
-          }
-        }
-        level = hasViable ? 'viable' : 'all'
-      } else if (peak > 0) {
-        level = 'some'
-      }
+      if (peak === total) level = 'all'
+      else if (peak >= total - 1) level = 'almost'
+      else if (peak >= total / 2) level = 'half'
+      else if (peak > 0) level = 'few'
     }
 
     result[dateStr] = level

@@ -121,6 +121,71 @@ describe('localSlotToDayKey', () => {
   })
 })
 
+describe('convertUserDayToLocalGrid cross-timezone wrapping', () => {
+  // Room: Europe/Madrid (UTC+1), window 10:00-22:00
+  // Viewer: Asia/Seoul (UTC+9) → local window wraps: 18:00-06:00 next day
+  // Top section (00:00-06:00 Seoul) maps to the PREVIOUS calendar day in Madrid
+  // Bottom section (18:00-24:00 Seoul) maps to the SAME calendar day in Madrid
+  test('top section maps to correct source day (not double-shifted)', () => {
+    const date = new Date('2025-01-14T00:00:00Z') // Tuesday UTC (= Tuesday in Seoul)
+    const madridTz = 'Europe/Madrid'
+    const seoulTz = 'Asia/Seoul'
+    const w = convertRoomWindowToLocal(10, 22, madridTz, seoulTz, date)
+    expect(w.wraps).toBe(true)
+
+    // User (Madrid) is available Monday 16:00-22:00
+    // → should appear in Tuesday's top section (00:00-06:00 Seoul)
+    const weekly = {
+      monday: [{ start: { hour: 16, minute: 0 }, end: { hour: 22, minute: 0 } }],
+      tuesday: [],
+      wednesday: [],
+      thursday: [],
+      friday: [],
+      saturday: [],
+      sunday: [],
+    }
+
+    const grid = convertUserDayToLocalGrid(weekly, madridTz, seoulTz, date, 'tuesday', w)
+
+    // 16:00 Madrid Mon = 00:00 Seoul Tue → slot 0 of top section
+    // 22:00 Madrid Mon = 06:00 Seoul Tue → slot 11 (last of top section)
+    for (let s = 0; s < w.topSlots; s++) {
+      expect(grid[s]).toBe(true)
+    }
+    for (let s = w.topSlots; s < w.totalSlots; s++) {
+      expect(grid[s]).toBe(false)
+    }
+  })
+
+  test('bottom section maps to correct source day', () => {
+    const date = new Date('2025-01-14T00:00:00Z') // Tuesday UTC
+    const madridTz = 'Europe/Madrid'
+    const seoulTz = 'Asia/Seoul'
+    const w = convertRoomWindowToLocal(10, 22, madridTz, seoulTz, date)
+
+    // User (Madrid) is available Tuesday 10:00-22:00
+    // → should appear in Tuesday's bottom section (18:00-24:00 Seoul)
+    const weekly = {
+      monday: [],
+      tuesday: [{ start: { hour: 10, minute: 0 }, end: { hour: 22, minute: 0 } }],
+      wednesday: [],
+      thursday: [],
+      friday: [],
+      saturday: [],
+      sunday: [],
+    }
+
+    const grid = convertUserDayToLocalGrid(weekly, madridTz, seoulTz, date, 'tuesday', w)
+
+    for (let s = 0; s < w.topSlots; s++) {
+      expect(grid[s]).toBe(false)
+    }
+    for (let s = w.topSlots; s < w.totalSlots; s++) {
+      expect(grid[s]).toBe(true)
+    }
+  })
+})
+
 describe('round-trip convertUserDayToLocalGrid + convertLocalGridToUserTz', () => {
   test('same timezone round-trips', () => {
     const weekly = {

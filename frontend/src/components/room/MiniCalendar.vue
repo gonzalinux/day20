@@ -9,7 +9,7 @@ const props = defineProps<{
   overrideDates: string[]
   modelValue: Date | null
   highlightWeek?: Date | null
-  dayAvailability?: Record<string, 'viable' | 'all' | 'some' | 'none'>
+  dayAvailability?: Record<string, 'all' | 'almost' | 'half' | 'few' | 'none'>
 }>()
 
 const emit = defineEmits<{
@@ -78,9 +78,10 @@ function dayAvailabilityClass(day: number) {
   if (isSelected(day) || isToday(day)) return ''
   const level = props.dayAvailability?.[dateKey(day)]
   if (!level || level === 'none') return ''
-  if (level === 'viable') return 'bg-green-400/20'
-  if (level === 'all') return 'bg-accent/25'
-  return 'bg-accent/15'
+  if (level === 'all') return 'bg-green-400/35'
+  if (level === 'almost') return 'bg-accent/40'
+  if (level === 'half') return 'bg-accent/20'
+  return 'bg-accent/8'
 }
 
 function selectDay(day: number) {

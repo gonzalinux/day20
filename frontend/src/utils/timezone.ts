@@ -239,19 +239,8 @@ export function convertUserDayToLocalGrid(
 
   for (let s = 0; s < window.totalSlots; s++) {
     const { hour: localHour, minute: localMinute } = localSlotToTime(s, window)
-    const isTopSection = window.wraps && s < window.topSlots
-
-    const tempDate = new Date(refDate)
-
-    const conv = convertTimeOfDay(localHour, localMinute, tempDate, viewerTz, userTz)
-
-    let sourceDayKey: DayKey
-    if (isTopSection) {
-      const prevDayKey = dayIndexToDayKey(dayKeyToDayIndex(dayKey) - 1)
-      sourceDayKey = dayIndexToDayKey(dayKeyToDayIndex(prevDayKey) + conv.dayOffset)
-    } else {
-      sourceDayKey = dayIndexToDayKey(dayKeyToDayIndex(dayKey) + conv.dayOffset)
-    }
+    const conv = convertTimeOfDay(localHour, localMinute, new Date(refDate), viewerTz, userTz)
+    const sourceDayKey = dayIndexToDayKey(dayKeyToDayIndex(dayKey) + conv.dayOffset)
 
     const selections = userWeekly[sourceDayKey] ?? []
     for (const sel of selections) {
@@ -301,18 +290,8 @@ export function convertLocalGridToUserTz(
 
   for (let s = 0; s < window.totalSlots; s++) {
     const { hour: localHour, minute: localMinute } = localSlotToTime(s, window)
-    const isTopSection = window.wraps && s < window.topSlots
-
-    const tempDate = new Date(refDate)
-    const conv = convertTimeOfDay(localHour, localMinute, tempDate, viewerTz, userTz)
-
-    let sourceDayKey: DayKey
-    if (isTopSection) {
-      const prevDayKey = dayIndexToDayKey(dayKeyToDayIndex(dayKey) - 1)
-      sourceDayKey = dayIndexToDayKey(dayKeyToDayIndex(prevDayKey) + conv.dayOffset)
-    } else {
-      sourceDayKey = dayIndexToDayKey(dayKeyToDayIndex(dayKey) + conv.dayOffset)
-    }
+    const conv = convertTimeOfDay(localHour, localMinute, new Date(refDate), viewerTz, userTz)
+    const sourceDayKey = dayIndexToDayKey(dayKeyToDayIndex(dayKey) + conv.dayOffset)
 
     if (!buckets[sourceDayKey]) {
       buckets[sourceDayKey] = new Array(48).fill(false)
