@@ -14,5 +14,7 @@ const show = ref(false)
   >
     <VIcon class="size-7 p-0 m-0" name="gi-chat-bubble" scale="1.5" />
   </button>
-  <FeedbackModal v-if="show" @close="show = false" />
+  <ClientOnly>
+    <FeedbackModal v-if="show" @close="show = false" />
+  </ClientOnly>
 </template>
