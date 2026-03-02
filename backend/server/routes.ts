@@ -11,6 +11,7 @@ import {
   LoginRoomRequest,
   SelectUserRequest,
   SetPinRequest,
+  FeedbackRequest,
 } from "./requests.types";
 import { jwtAuth, protectedRoutes } from "./auth.ts";
 import { UnauthorizedError } from "./errors.types";
@@ -62,6 +63,14 @@ export const routes = new Elysia()
       return { exists };
     },
     { params: RoomIdParam },
+  )
+  .post(
+    "/feedback",
+    async ({ body }) => {
+      await Service.submitFeedback(body.message, body.name, body.email);
+      return { ok: true };
+    },
+    { body: FeedbackRequest },
   )
   .use(protectedRoutes)
   .get(

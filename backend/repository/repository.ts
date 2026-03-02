@@ -2,6 +2,7 @@ import type { Collection } from "mongodb";
 import { DB } from "./db";
 import type { Room } from "./room";
 import type { User } from "./user";
+import type { Feedback } from "./feedback";
 import type { PartialWithId } from "../utils/utils.types";
 
 type MongoDoc<T extends { id: string }> = Omit<T, "id"> & { _id: string };
@@ -12,6 +13,10 @@ function getRoomsCollection(): Collection<MongoDoc<Room>> {
 
 function getUsersCollection(): Collection<MongoDoc<User>> {
   return DB().collection("users");
+}
+
+function getFeedbackCollection(): Collection<MongoDoc<Feedback>> {
+  return DB().collection("feedback");
 }
 
 function toMongo<T extends { id: string }>(obj: T): MongoDoc<T> {
@@ -124,6 +129,33 @@ async function findStaleRooms(before: Date): Promise<Room[]> {
   return result.map((doc) => fromMongo<Room>(doc));
 }
 
+async function insertFeedback(feedback: Feedback) {
+  const col = getFeedbackCollection();
+  await col.insertOne(toMongo(feedback));
+  return feedback.id;
+}
+
+async function getAllFeedback(): Promise<Feedback[]> {
+  const col = getFeedbackCollection();
+  const result = await col.find({}).sort({ createdAt: -1 }).toArray();
+  return result.map((doc) => fromMongo<Feedback>(doc));
+}
+
+async function markFeedbackRead(id: string) {
+  const col = getFeedbackCollection();
+  await col.updateOne({ _id: id }, { $set: { read: true } });
+}
+
+async function deleteFeedback(id: string) {
+  const col = getFeedbackCollection();
+  await col.deleteOne({ _id: id });
+}
+
+async function countUnreadFeedback(): Promise<number> {
+  const col = getFeedbackCollection();
+  return col.countDocuments({ read: false });
+}
+
 async function deleteRoom(roomId: string) {
   const rooms = getRoomsCollection();
   const usersOfRoom = await getUsersFromRoom(roomId);
@@ -147,4 +179,9 @@ export default {
   skipUserPin,
   removeUserPin,
   deleteUsers,
+  insertFeedback,
+  getAllFeedback,
+  markFeedbackRead,
+  deleteFeedback,
+  countUnreadFeedback,
 };

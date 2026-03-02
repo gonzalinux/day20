@@ -117,3 +117,9 @@ export const RoomUserIdParam = t.Object({
   room_id: t.String(),
   user_id: t.String(),
 });
+
+export const FeedbackRequest = t.Object({
+  message: t.String({ minLength: 10 }),
+  name: t.Optional(t.String()),
+  email: t.Optional(t.String()),
+});

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { localePath } from '@/i18n'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import LangToggle from '@/components/LangToggle.vue'
+import FeedbackToggle from '@/components/FeedbackToggle.vue'
 import HomeDemo from '@/components/home/HomeDemo.vue'
 
 const { t, locale } = useI18n()
@@ -44,6 +45,7 @@ onUnmounted(() => {
         </RouterLink>
         <ThemeToggle />
         <LangToggle />
+        <FeedbackToggle />
       </div>
 
       <!-- Right: action buttons -->
@@ -127,16 +129,28 @@ onUnmounted(() => {
     </section>
 
     <!-- Footer -->
-    <footer class="bg-primary py-6 px-6 text-center text-sm text-bg">
-      Created by
-      <a
-        href="https://github.com/gonzalinux"
-        target="_blank"
-        rel="noopener"
-        class="text-bg hover:underline font-bold"
-        >@gonzalinux</a
-      >
-      with love and care for his friends
+    <footer class="bg-primary py-6 px-6 text-center text-sm text-bg space-y-1">
+      <p>
+        Created by
+        <a
+          href="https://github.com/gonzalinux"
+          target="_blank"
+          rel="noopener"
+          class="text-bg hover:underline font-bold"
+          >@gonzalinux</a
+        >
+        with love and care for his friends
+      </p>
+      <p>
+        This web is open source! Check it out
+        <a
+          href="https://github.com/gonzalinux"
+          target="_blank"
+          rel="noopener"
+          class="text-bg hover:underline font-bold"
+          >here</a
+        >
+      </p>
     </footer>
   </div>
 </template>

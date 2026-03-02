@@ -1,33 +1,36 @@
-import './main.css'
-import { ViteSSG } from 'vite-ssg'
-import { createPinia } from 'pinia'
 import { OhVueIcon, addIcons } from 'oh-vue-icons'
 import {
-  GiDiceTwentyFacesTwenty,
-  GiDoorway,
-  GiScrollUnfurled,
-  GiPaintBrush,
-  GiSandsOfTime,
-  GiSunrise,
-  GiMoonBats,
-  GiDungeonGate,
-  GiReturnArrow,
-  GiTabletopPlayers,
-  GiCalendarHalfYear,
-  GiCog,
-  GiLinkedRings,
-  GiCheckMark,
-  GiPadlock,
-  GiBrokenSkull,
-  GiWorld,
+  FaChevronDown,
   FaChevronLeft,
   FaChevronRight,
-  FaChevronDown,
+  FaComment,
+  FaTimes,
+  GiBrokenSkull,
+  GiCalendarHalfYear,
+  GiChatBubble,
+  GiCheckMark,
+  GiCog,
+  GiDiceTwentyFacesTwenty,
+  GiDoorway,
+  GiDungeonGate,
+  GiLinkedRings,
+  GiMoonBats,
+  GiPadlock,
+  GiPaintBrush,
+  GiReturnArrow,
+  GiSandsOfTime,
+  GiScrollUnfurled,
+  GiSunrise,
+  GiTabletopPlayers,
+  GiWorld,
 } from 'oh-vue-icons/icons'
+import { createPinia } from 'pinia'
+import { ViteSSG } from 'vite-ssg'
+import './main.css'
 
 import App from './App.vue'
-import { routes, setupRouterGuards } from './router'
 import { createI18nInstance } from './i18n'
+import { routes, setupRouterGuards } from './router'
 
 addIcons(
   GiDiceTwentyFacesTwenty,
@@ -50,6 +53,9 @@ addIcons(
   FaChevronLeft,
   FaChevronRight,
   FaChevronDown,
+  FaComment,
+  FaTimes,
+  GiChatBubble,
 )
 
 export const createApp = ViteSSG(

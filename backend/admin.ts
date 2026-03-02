@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { getAllRoomsAdmin, deleteRoomAdmin, getUsersFromRoom, STALE_ROOM_MS } from "./domain/service";
+import { getAllRoomsAdmin, deleteRoomAdmin, getUsersFromRoom, STALE_ROOM_MS, getAllFeedbackAdmin, markFeedbackReadAdmin, deleteFeedbackAdmin, countUnreadFeedback } from "./domain/service";
 import { NotFoundError } from "./server/errors.types";
 import { register } from "./server/prometheus";
 
@@ -171,6 +171,7 @@ const HTML = `<!DOCTYPE html>
     <div class="card"><div class="card-label">Total Users</div><div class="card-value" id="stat-users">—</div></div>
     <div class="card"><div class="card-label">Expiring Soon</div><div class="card-value warn" id="stat-expiring">—</div></div>
     <div class="card"><div class="card-label">Expired / Stale</div><div class="card-value danger" id="stat-stale">—</div></div>
+    <div class="card"><div class="card-label">Unread Feedback</div><div class="card-value" id="stat-feedback">—</div></div>
   </div>
 
   <div class="layout">
@@ -196,6 +197,25 @@ const HTML = `<!DOCTYPE html>
         </tbody>
       </table>
     </div>
+  </div>
+
+  <div class="table-box" style="margin-bottom:2rem">
+    <h2>Feedback</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Name</th>
+          <th>Message</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="feedback-tbody">
+        <tr><td colspan="6" class="muted" style="padding:1.5rem">Loading...</td></tr>
+      </tbody>
+    </table>
   </div>
 
   <div class="modal-backdrop" id="users-modal" onclick="closeModal(event)">
@@ -271,10 +291,14 @@ const HTML = `<!DOCTYPE html>
       document.getElementById('stat-users').textContent = stats.totalUsers;
       document.getElementById('stat-expiring').textContent = stats.expiringCount;
       document.getElementById('stat-stale').textContent = stats.staleCount;
+      const feedbackEl = document.getElementById('stat-feedback');
+      feedbackEl.textContent = stats.unreadFeedback;
+      feedbackEl.className = 'card-value' + (stats.unreadFeedback > 0 ? ' warn' : '');
       document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
 
       renderChart(stats.freshCount, stats.expiringCount, stats.staleCount);
       renderTable(rooms);
+      loadFeedback();
     }
 
     function renderChart(fresh, expiring, stale) {
@@ -357,6 +381,43 @@ const HTML = `<!DOCTYPE html>
 
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeUsersModal(); });
 
+    async function loadFeedback() {
+      const res = await fetch('/api/feedback');
+      if (!res.ok) return;
+      const items = await res.json();
+      const tbody = document.getElementById('feedback-tbody');
+      if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="muted" style="padding:1.5rem">No feedback yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = items.map(f => \`
+        <tr style="\${f.read ? 'opacity:0.5' : 'background:rgba(245,158,11,0.05)'}">
+          <td class="muted">\${formatDate(f.createdAt)}</td>
+          <td>\${f.name || '<span class="muted">Anonymous</span>'}</td>
+          <td style="max-width:320px;word-break:break-word">\${f.message}</td>
+          <td class="muted">\${f.email || '—'}</td>
+          <td>\${f.read ? '<span class="badge badge-green">Read</span>' : '<span class="badge badge-yellow">Unread</span>'}</td>
+          <td style="display:flex;gap:0.5rem">
+            \${f.read ? '' : \`<button class="btn-delete" style="border-color:#1e3a5f;color:#7dd3fc" onclick="markFeedbackRead('\${f.id}')">Mark Read</button>\`}
+            <button class="btn-delete" onclick="deleteFeedback('\${f.id}')">Delete</button>
+          </td>
+        </tr>
+      \`).join('');
+    }
+
+    async function markFeedbackRead(id) {
+      const res = await fetch(\`/api/feedback/\${encodeURIComponent(id)}/read\`, { method: 'PATCH' });
+      if (res.ok) loadAll();
+      else showError('Failed to mark as read');
+    }
+
+    async function deleteFeedback(id) {
+      if (!confirm('Delete this feedback? This cannot be undone.')) return;
+      const res = await fetch(\`/api/feedback/\${encodeURIComponent(id)}\`, { method: 'DELETE' });
+      if (res.ok) loadAll();
+      else showError('Failed to delete feedback');
+    }
+
     loadAll();
   </script>
 </body>
@@ -365,7 +426,7 @@ const HTML = `<!DOCTYPE html>
 export const adminServer = new Elysia()
   .get("/", () => new Response(HTML, { headers: { "Content-Type": "text/html; charset=utf-8" } }))
   .get("/api/stats", async () => {
-    const rooms = await getAllRoomsAdmin();
+    const [rooms, unreadFeedback] = await Promise.all([getAllRoomsAdmin(), countUnreadFeedback()]);
     const freshCount = rooms.filter((r) => r.daysUntilExpiry > WARNING_THRESHOLD_DAYS).length;
     const expiringCount = rooms.filter(
       (r) => r.daysUntilExpiry > 0 && r.daysUntilExpiry <= WARNING_THRESHOLD_DAYS,
@@ -378,6 +439,7 @@ export const adminServer = new Elysia()
       freshCount,
       expiringCount,
       staleCount,
+      unreadFeedback,
     };
   })
   .get("/api/rooms", async () => {
@@ -404,6 +466,17 @@ export const adminServer = new Elysia()
       if (e instanceof NotFoundError) return status(404, { message: e.message });
       throw e;
     }
+  })
+  .get("/api/feedback", async () => {
+    return getAllFeedbackAdmin();
+  })
+  .patch("/api/feedback/:id/read", async ({ params }) => {
+    await markFeedbackReadAdmin(params.id);
+    return { ok: true };
+  })
+  .delete("/api/feedback/:id", async ({ params }) => {
+    await deleteFeedbackAdmin(params.id);
+    return { ok: true };
   });
 
 export function startAdminServer() {

@@ -5,6 +5,7 @@ import { localePath } from '@/i18n'
 import { useRoute } from 'vue-router'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import LangToggle from '@/components/LangToggle.vue'
+import FeedbackToggle from '@/components/FeedbackToggle.vue'
 import { useRoomStore } from '@/stores/room'
 import { getMe } from '@/services/auth'
 
@@ -54,6 +55,7 @@ onMounted(async () => {
       <div class="flex items-center gap-2 shrink-0">
         <ThemeToggle />
         <LangToggle />
+        <FeedbackToggle />
       </div>
     </nav>
 

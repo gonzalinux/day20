@@ -9,6 +9,7 @@ import {
 } from "../metrics";
 import type { Room } from "../repository/room";
 import type { User } from "../repository/user";
+import type { Feedback } from "../repository/feedback";
 import type { PartialWithId, WithoutId } from "../utils/utils.types";
 import {
   AlreadyExistsError,
@@ -280,6 +281,34 @@ export async function getAllRoomsAdmin() {
       ),
     ),
   }));
+}
+
+export async function submitFeedback(message: string, name?: string, email?: string) {
+  const feedback: Feedback = {
+    id: crypto.randomUUID(),
+    message,
+    name,
+    email,
+    createdAt: new Date(),
+    read: false,
+  };
+  return Repository.insertFeedback(feedback);
+}
+
+export async function getAllFeedbackAdmin(): Promise<Feedback[]> {
+  return Repository.getAllFeedback();
+}
+
+export async function markFeedbackReadAdmin(id: string) {
+  return Repository.markFeedbackRead(id);
+}
+
+export async function deleteFeedbackAdmin(id: string) {
+  return Repository.deleteFeedback(id);
+}
+
+export async function countUnreadFeedback(): Promise<number> {
+  return Repository.countUnreadFeedback();
 }
 
 export async function deleteRoomAdmin(roomId: string) {

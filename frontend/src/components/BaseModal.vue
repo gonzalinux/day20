@@ -24,9 +24,17 @@ const variantClass: Record<string, string> = {
     <div class="fixed inset-0 z-50 flex items-center justify-center" @click.self="emit('close')">
       <div class="absolute inset-0 bg-black/50" />
       <div class="relative rounded-2xl bg-bg shadow-xl p-6 w-full max-w-sm mx-4 max-h-[85vh] flex flex-col">
-        <h3 class="text-xl font-heading font-bold text-accent mb-3">
-          {{ title }}
-        </h3>
+        <div class="flex items-start justify-between mb-3">
+          <h3 class="text-xl font-heading font-bold text-accent">
+            {{ title }}
+          </h3>
+          <button
+            class="text-secondary hover:text-primary transition-colors cursor-pointer ml-3 mt-0.5"
+            @click="emit('close')"
+          >
+            <VIcon name="fa-times" scale="0.9" />
+          </button>
+        </div>
         <div class="flex-1 min-h-0">
           <slot />
         </div>

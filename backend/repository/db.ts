@@ -16,6 +16,7 @@ export async function connectToDatabase(): Promise<Db> {
     db = client.db(DB_NAME);
     await db.collection("users").createIndex({ roomId: 1 });
     await db.collection("rooms").createIndex({ updatedAt: 1 });
+    await db.collection("feedback").createIndex({ createdAt: -1 });
     return db;
   } catch (error) {
     console.error("Failed to connect to database:", error);
