@@ -1,11 +1,11 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vitest/config'
-import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
+import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
+import vueDevTools from 'vite-plugin-vue-devtools'
 import type {} from 'vite-ssg'
+import { defineConfig } from 'vitest/config'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -52,6 +52,7 @@ export default defineConfig({
     noExternal: ['oh-vue-icons'],
   },
   ssgOptions: {
+    formatting: 'prettify',
     script: 'async',
     //formatting: 'minify', // this makes the html minified
     dirStyle: 'nested',
