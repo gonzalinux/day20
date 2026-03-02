@@ -161,7 +161,7 @@ export default {
     name: 'Name (optional)',
     namePlaceholder: 'Anonymous',
     email: 'Email (optional)',
-    emailPlaceholder: 'your@@email.com',
+    emailPlaceholder: "your{'@'}email.com",
     submit: 'Send',
     submitting: 'Sending...',
     success: 'Thank you for your feedback!',

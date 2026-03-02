@@ -43,6 +43,9 @@ export default defineConfig({
       },
     }),
   ],
+  //  build: {
+  // minify: false,
+  // },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -52,7 +55,7 @@ export default defineConfig({
     noExternal: ['oh-vue-icons'],
   },
   ssgOptions: {
-    formatting: 'prettify',
+    // formatting: 'prettify',
     script: 'async',
     //formatting: 'minify', // this makes the html minified
     dirStyle: 'nested',
