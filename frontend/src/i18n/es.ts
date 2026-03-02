@@ -162,7 +162,7 @@ export default {
     name: 'Nombre (opcional)',
     namePlaceholder: 'Anónimo',
     email: 'Email (opcional)',
-    emailPlaceholder: 'tu@email.com',
+    emailPlaceholder: 'tu@@email.com',
     submit: 'Enviar',
     submitting: 'Enviando...',
     success: '¡Gracias por tus comentarios!',

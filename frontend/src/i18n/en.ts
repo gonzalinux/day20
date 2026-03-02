@@ -68,9 +68,11 @@ export default {
     loadError: 'Could not load room',
     clipboardError: 'Could not copy to clipboard',
     weeklySubtitle: 'Select your available times',
-    weeklyInfo: 'Drag on the grid to paint the times you\'re free. You can drag across multiple days at once.',
+    weeklyInfo:
+      "Drag on the grid to paint the times you're free. You can drag across multiple days at once.",
     overridesSubtitle: 'Override specific dates',
-    overridesInfo: 'Pick a date from the calendar to block or unblock time slots for that day only, overriding your weekly schedule.',
+    overridesInfo:
+      'Pick a date from the calendar to block or unblock time slots for that day only, overriding your weekly schedule.',
     navUsers: 'Party',
     navCalendar: 'Calendar',
     navSettings: 'Settings',
@@ -102,7 +104,8 @@ export default {
     adminPinRequired: 'As the admin, you must set a PIN',
     skipPin: 'Skip',
     skipPinTitle: 'Skip PIN setup',
-    skipPinMessage: 'Without a PIN, anyone in the room can select your avatar and modify your availability. Are you sure?',
+    skipPinMessage:
+      'Without a PIN, anyone in the room can select your avatar and modify your availability. Are you sure?',
     skipPinConfirm: 'Skip',
     pinSkippedWarning: 'Your avatar has no PIN — anyone can use it',
     logout: 'Switch user',
@@ -112,12 +115,14 @@ export default {
     editTimeWindow: 'Session time window',
     editTimeWindowHint: 'Set which hours are available for sessions each day',
     resetConfirmTitle: 'Reset availability',
-    resetConfirmMessage: 'This will clear all your painted times and overrides. This action cannot be undone.',
+    resetConfirmMessage:
+      'This will clear all your painted times and overrides. This action cannot be undone.',
     resetConfirmButton: 'Reset',
     combinedCalendar: 'Combined Calendar',
     tabCombined: 'Combined',
     combinedSubtitle: 'Party availability overview',
-    combinedInfo: 'Shows when everyone is free for the selected week. Highlighted blocks are viable session times where all players are available for the minimum session duration.',
+    combinedInfo:
+      'Shows when everyone is free for the selected week. Highlighted blocks are viable session times where all players are available for the minimum session duration.',
     viable: 'Viable session',
     all_free: 'All free',
     some_free: 'Some free',
@@ -131,7 +136,8 @@ export default {
     deleteRoom: 'Delete room',
     deleteRoomHint: 'Permanently delete this room and all its data',
     deleteRoomConfirmTitle: 'Delete room',
-    deleteRoomConfirmMessage: 'This will permanently delete the room, all players, and all availability data. This action cannot be undone.',
+    deleteRoomConfirmMessage:
+      'This will permanently delete the room, all players, and all availability data. This action cannot be undone.',
     deleteRoomConfirmButton: 'Delete',
     confirm: 'Confirm',
     edit: 'Edit',
@@ -155,7 +161,7 @@ export default {
     name: 'Name (optional)',
     namePlaceholder: 'Anonymous',
     email: 'Email (optional)',
-    emailPlaceholder: 'your@email.com',
+    emailPlaceholder: 'your@@email.com',
     submit: 'Send',
     submitting: 'Sending...',
     success: 'Thank you for your feedback!',
@@ -181,9 +187,11 @@ export default {
     faq2q: 'Do I need an account?',
     faq2a: 'Nope. Create a room with a name and password, share the link, done.',
     faq3q: 'What about different timezones?',
-    faq3a: 'Covered. Each player sets their own timezone and everyone sees availability in their local time.',
+    faq3a:
+      'Covered. Each player sets their own timezone and everyone sees availability in their local time.',
     faq4q: 'Only for D&D?',
-    faq4a: 'Not at all. Any group that needs to find a common time: tabletop RPGs, book clubs, game nights, online meetups, even work meetings. You name it.',
+    faq4a:
+      'Not at all. Any group that needs to find a common time: tabletop RPGs, book clubs, game nights, online meetups, even work meetings. You name it.',
     faq5q: 'Are rooms kept forever?',
     faq5a: 'Nope. Rooms are deleted after 30 days of no activity, so no hoarding old campaigns.',
     demoRestart: 'Try again',

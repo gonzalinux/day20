@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { submitFeedback } from '@/services/feedback'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseModal from './BaseModal.vue'
-import { submitFeedback } from '@/services/feedback'
 
 const { t } = useI18n()
 const emit = defineEmits<{ close: [] }>()
@@ -79,7 +79,11 @@ async function submit() {
       <button
         :disabled="!canSubmit"
         class="w-full py-2 rounded-lg font-heading font-bold transition-all mt-1"
-        :class="canSubmit ? 'bg-accent text-bg hover:opacity-90 cursor-pointer' : 'bg-secondary/20 text-secondary/40 cursor-not-allowed'"
+        :class="
+          canSubmit
+            ? 'bg-accent text-bg hover:opacity-90 cursor-pointer'
+            : 'bg-secondary/20 text-secondary/40 cursor-not-allowed'
+        "
         @click="submit"
       >
         {{ submitting ? t('feedback.submitting') : t('feedback.submit') }}
