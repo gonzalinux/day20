@@ -8,7 +8,7 @@ defineEmits<{ click: [] }>()
     @click="$emit('click')"
   >
     <div class="flex flex-col items-start">
-      <span class="text-xl text-primary font-body pt-1"><slot name="label" /></span>
+      <span class="text-xl text-primary font-body pt-1 text-left"><slot name="label" /></span>
       <span v-if="$slots.subtitle" class="text-md text-secondary text-left"
         ><slot name="subtitle"
       /></span>

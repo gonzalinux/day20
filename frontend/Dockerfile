@@ -1,5 +1,5 @@
 # Build stage
-FROM oven/bun:canary-slim AS builder
+FROM oven/bun:1.3.8-slim AS builder
 
 WORKDIR /app
 
