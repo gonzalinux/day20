@@ -35,9 +35,9 @@ const weekMonthLabel = computed(() => {
   const start = weekDates.value[0]!
   const end = weekDates.value[6]!
   if (start.getMonth() === end.getMonth()) {
-    return start.toLocaleString(undefined, { month: 'long' })
+    return start.toLocaleString(undefined, { month: 'long', year: 'numeric' })
   }
-  return `${start.toLocaleString(undefined, { month: 'long' })} / ${end.toLocaleString(undefined, { month: 'long' })}`
+  return `${start.toLocaleString(undefined, { month: 'long' })} / ${end.toLocaleString(undefined, { month: 'long', year: 'numeric' })}`
 })
 
 // Room time window converted to the viewer's local timezone

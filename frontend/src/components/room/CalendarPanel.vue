@@ -166,6 +166,20 @@ function onDateSelected(date: Date) {
   calendarExpanded.value = false
 }
 
+function prevWeek() {
+  if (!selectedDate.value) return
+  const d = new Date(selectedDate.value)
+  d.setDate(d.getDate() - 7)
+  selectedDate.value = d
+}
+
+function nextWeek() {
+  if (!selectedDate.value) return
+  const d = new Date(selectedDate.value)
+  d.setDate(d.getDate() + 7)
+  selectedDate.value = d
+}
+
 function toggleCalendar() {
   calendarExpanded.value = !calendarExpanded.value
 }
@@ -519,12 +533,11 @@ watch(activeTab, () => {
           class="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-secondary/10 hover:bg-secondary/15 transition-colors cursor-pointer"
           @click="toggleCalendar"
         >
-          <span class="text-sm font-heading font-bold text-primary">
+          <span class="text-sm font-heading font-bold text-primary capitalize">
             {{
               selectedDate.toLocaleDateString(undefined, {
-                weekday: 'long',
-                month: 'short',
-                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
               })
             }}
           </span>
@@ -543,8 +556,8 @@ watch(activeTab, () => {
 
       <!-- Override grid (7-day week) -->
       <template v-if="selectedDate && overrideWeekGrids">
-        <div class="select-none mr-5 lg:mr-0">
-          <div class="grid gap-x-0.5 gap-y-px" style="grid-template-columns: 2.5rem repeat(7, 1fr)">
+        <div class="select-none mr-1 lg:mr-0">
+          <div class="grid gap-x-0.5 gap-y-px" style="grid-template-columns: 2.5rem repeat(7, 1fr) 1.25rem">
             <!-- Day headers -->
             <div />
             <div
@@ -554,24 +567,35 @@ watch(activeTab, () => {
             >
               {{ t(DAY_I18N_KEYS[day]) }}
             </div>
+            <div class="pointer-events-none" />
 
-            <!-- Date numbers -->
-            <div />
+            <!-- Date numbers with prev/next arrows -->
+            <button
+              class="flex items-center justify-center cursor-pointer text-secondary/60 hover:text-primary transition-colors"
+              aria-label="Previous week"
+              @click="prevWeek"
+            >
+              <VIcon name="fa-chevron-left" scale="0.8" />
+            </button>
             <div
               v-for="(date, idx) in overrideWeekDates"
               :key="'od' + idx"
-              class="text-center text-xs font-heading font-bold pb-1 rounded"
-              :class="[
+              class="flex items-center justify-center text-xs font-heading font-bold pb-1 rounded"
+              :class="
                 formatDateKey(date) === formatDateKey(new Date())
                   ? 'bg-primary/20 text-primary'
-                  : 'text-secondary/60',
-                selectedDate && formatDateKey(date) === formatDateKey(selectedDate)
-                  ? 'ring-1 ring-accent/50'
-                  : '',
-              ]"
+                  : 'text-secondary/60'
+              "
             >
               {{ date.getDate() }}
             </div>
+            <button
+              class="flex items-center justify-end cursor-pointer text-secondary/60 hover:text-primary transition-colors"
+              aria-label="Next week"
+              @click="nextWeek"
+            >
+              <VIcon name="fa-chevron-right" scale="0.8" />
+            </button>
 
             <!-- Time slot rows -->
             <template v-for="i in slotCount" :key="i - 1">
@@ -599,6 +623,7 @@ watch(activeTab, () => {
                 @pointerup="onPointerUp"
                 @pointercancel="onPointerUp"
               />
+              <div class="pointer-events-none" />
             </template>
           </div>
         </div>

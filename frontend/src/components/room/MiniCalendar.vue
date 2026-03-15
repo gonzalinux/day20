@@ -43,11 +43,6 @@ function dateKey(day: number) {
   return formatDateKey(new Date(year.value, month.value, day))
 }
 
-function isSelected(day: number) {
-  if (!props.modelValue) return false
-  return dateKey(day) === formatDateKey(props.modelValue)
-}
-
 function hasOverride(day: number) {
   return props.overrideDates.includes(dateKey(day))
 }
@@ -75,7 +70,7 @@ function highlightWeekPosition(day: number): 'start' | 'end' | 'mid' | null {
 }
 
 function dayAvailabilityClass(day: number) {
-  if (isSelected(day) || isToday(day)) return ''
+  if (isToday(day)) return ''
   const level = props.dayAvailability?.[dateKey(day)]
   if (!level || level === 'none') return ''
   if (level === 'all') return 'bg-green-400/35'
@@ -128,13 +123,11 @@ function nextMonth() {
           @click="selectDay(day)"
           class="w-full cursor-pointer transition-colors"
           :class="[
-            isSelected(day)
-              ? 'bg-accent text-bg font-bold rounded-lg'
-              : isToday(day)
-                ? 'bg-primary/20 text-primary font-bold rounded-lg'
-                : 'text-secondary hover:bg-secondary/15 rounded-lg',
+            isToday(day)
+              ? 'bg-primary/20 text-primary font-bold rounded-lg'
+              : 'text-secondary hover:bg-secondary/15 rounded-lg',
             dayAvailabilityClass(day),
-            isInHighlightWeek(day) && !isSelected(day) ? 'ring-1 ring-accent/40' : '',
+            isInHighlightWeek(day) ? 'bg-accent/20 text-primary font-semibold' : '',
             highlightWeekPosition(day) === 'start' ? 'rounded-r-none' : '',
             highlightWeekPosition(day) === 'end' ? 'rounded-l-none' : '',
             highlightWeekPosition(day) === 'mid' ? 'rounded-none' : '',
@@ -147,8 +140,7 @@ function nextMonth() {
             {{ day }}
             <span
               v-if="hasOverride(day)"
-              class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-              :class="isSelected(day) ? 'bg-bg' : 'bg-accent'"
+              class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent"
             />
           </span>
         </button>
