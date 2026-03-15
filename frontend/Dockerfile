@@ -14,7 +14,7 @@ RUN bun install
 RUN bun run build-only
 
 # Production stage
-FROM nginx:alpine
+FROM nginx:1.27-alpine
 
 # Copy built assets from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
