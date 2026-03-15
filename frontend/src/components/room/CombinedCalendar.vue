@@ -1,44 +1,32 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { useWeekPicker } from '@/composables/useWeekPicker'
 import { useRoomStore } from '@/stores/room'
-import MiniCalendar from './MiniCalendar.vue'
-import {
-  DAY_KEYS,
-  DAY_I18N_KEYS,
-  applyOverridesToGrid,
-  getMondayOfWeek,
-  formatDateKey,
-  dateToDayKey,
-} from '@/utils/availability'
 import type { DayKey } from '@/utils/availability'
+import {
+  DAY_I18N_KEYS,
+  DAY_KEYS,
+  applyOverridesToGrid,
+  dateToDayKey,
+  formatDateKey,
+} from '@/utils/availability'
 import { convertUserDayToLocalGrid, formatLocalSlotTime } from '@/utils/timezone'
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import MiniCalendar from './MiniCalendar.vue'
 
 const { t } = useI18n()
 const room = useRoomStore()
 
-const selectedWeekStart = ref(getMondayOfWeek(new Date()))
-const calendarExpanded = ref(true)
-
-// The 7 dates (Mon-Sun) of the currently viewed week
-const weekDates = computed(() => {
-  const dates: Date[] = []
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(selectedWeekStart.value)
-    d.setDate(d.getDate() + i)
-    dates.push(d)
-  }
-  return dates
-})
-
-const weekMonthLabel = computed(() => {
-  const start = weekDates.value[0]!
-  const end = weekDates.value[6]!
-  if (start.getMonth() === end.getMonth()) {
-    return start.toLocaleString(undefined, { month: 'long', year: 'numeric' })
-  }
-  return `${start.toLocaleString(undefined, { month: 'long' })} / ${end.toLocaleString(undefined, { month: 'long', year: 'numeric' })}`
-})
+const {
+  selectedWeekStart,
+  calendarExpanded,
+  weekDates,
+  weekMonthLabel,
+  onDateSelected,
+  toggleCalendar,
+  prevWeek,
+  nextWeek,
+} = useWeekPicker()
 
 // Room time window converted to the viewer's local timezone
 const localWindow = computed(() => room.localTimeWindow)
@@ -209,29 +197,6 @@ function onTouchMove(event: TouchEvent) {
   tooltipCell.value = { dayIdx, slotIdx }
 }
 
-function onDateSelected(date: Date) {
-  selectedWeekStart.value = getMondayOfWeek(date)
-  calendarExpanded.value = false
-}
-
-function toggleCalendar() {
-  calendarExpanded.value = !calendarExpanded.value
-}
-
-function prevWeek() {
-  const d = new Date(selectedWeekStart.value)
-  d.setDate(d.getDate() - 7)
-  selectedWeekStart.value = d
-}
-
-function nextWeek() {
-  const d = new Date(selectedWeekStart.value)
-  d.setDate(d.getDate() + 7)
-  selectedWeekStart.value = d
-}
-
-const selectedDateForCalendar = computed(() => weekDates.value[0] ?? null)
-
 const dateAvailability = computed(() => {
   const result: Record<string, 'all' | 'almost' | 'half' | 'few' | 'none'> = {}
   const viewerTz = room.browserTimezone
@@ -259,7 +224,13 @@ const dateAvailability = computed(() => {
         dayKey,
         localWindow.value,
       )
-      const grid = applyOverridesToGrid(base, user.overrides, dateStr, startHour.value, endHour.value)
+      const grid = applyOverridesToGrid(
+        base,
+        user.overrides,
+        dateStr,
+        startHour.value,
+        endHour.value,
+      )
       for (let s = 0; s < slotCount.value; s++) {
         if (grid[s]) slots[s]++
       }
@@ -300,7 +271,7 @@ const dateAvailability = computed(() => {
     <!-- Week picker: expanded calendar -->
     <div v-if="calendarExpanded" class="mb-2">
       <MiniCalendar
-        :model-value="selectedDateForCalendar"
+        :model-value="selectedWeekStart"
         :override-dates="[]"
         :highlight-week="selectedWeekStart"
         :day-availability="dateAvailability"

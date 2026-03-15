@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoomStore } from '@/stores/room'
 import { useToast } from '@/composables/useToast'
+import { useWeekPicker } from '@/composables/useWeekPicker'
 import MiniCalendar from './MiniCalendar.vue'
 import CombinedCalendar from './CombinedCalendar.vue'
 import {
@@ -14,7 +15,6 @@ import {
   gridToAvailability,
   dateToDayKey,
   formatDateKey,
-  getMondayOfWeek,
 } from '@/utils/availability'
 import {
   convertUserDayToLocalGrid,
@@ -91,12 +91,16 @@ const weeklyGrids = computed(() => {
 })
 
 // === Override mode ===
-const selectedDate = ref<Date | null>(new Date())
-const calendarExpanded = ref(true)
-// Monday of the week containing the selected date — used to highlight a full week row
-const overrideHighlightWeek = computed(() =>
-  selectedDate.value ? getMondayOfWeek(selectedDate.value) : null,
-)
+const {
+  selectedWeekStart,
+  calendarExpanded,
+  weekDates: overrideWeekDates,
+  weekMonthLabel: overrideMonthLabel,
+  onDateSelected,
+  toggleCalendar,
+  prevWeek,
+  nextWeek,
+} = useWeekPicker()
 
 // Date strings (YYYY-MM-DD) of days that have overrides — shown as dots in the mini calendar
 const overrideDates = computed(() => {
@@ -105,24 +109,12 @@ const overrideDates = computed(() => {
   return user.overrides.map((o) => formatDateKey(o.date))
 })
 
-// The 7 dates (Mon-Sun) of the selected week
-const overrideWeekDates = computed(() => {
-  if (!overrideHighlightWeek.value) return []
-  const dates: Date[] = []
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(overrideHighlightWeek.value)
-    d.setDate(d.getDate() + i)
-    dates.push(d)
-  }
-  return dates
-})
-
 // Each cell tracks: base (weekly), effective (after overrides), overridden (differs from base)
 type OverrideCell = { base: boolean; effective: boolean; overridden: boolean }
 
 // Merges user's weekly grid with any block/unblock overrides for each day of the selected week
 const overrideWeekGrids = computed(() => {
-  if (!selectedDate.value || !room.currentUser) return null
+  if (!room.currentUser) return null
   const grids: Record<number, OverrideCell[]> = {}
   for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
     const date = overrideWeekDates.value[dayIdx]!
@@ -160,29 +152,6 @@ const overrideWeekGrids = computed(() => {
   }
   return grids
 })
-
-function onDateSelected(date: Date) {
-  selectedDate.value = date
-  calendarExpanded.value = false
-}
-
-function prevWeek() {
-  if (!selectedDate.value) return
-  const d = new Date(selectedDate.value)
-  d.setDate(d.getDate() - 7)
-  selectedDate.value = d
-}
-
-function nextWeek() {
-  if (!selectedDate.value) return
-  const d = new Date(selectedDate.value)
-  d.setDate(d.getDate() + 7)
-  selectedDate.value = d
-}
-
-function toggleCalendar() {
-  calendarExpanded.value = !calendarExpanded.value
-}
 
 // === Paint logic (click-and-drag to toggle slots) ===
 type PaintMode = 'paint' | 'erase' | null
@@ -528,18 +497,13 @@ watch(activeTab, () => {
     <!-- Override mode -->
     <template v-else-if="activeTab === 'overrides'">
       <!-- Collapsible calendar -->
-      <div v-if="selectedDate && !calendarExpanded" class="mb-2">
+      <div v-if="!calendarExpanded" class="mb-2">
         <button
           class="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-secondary/10 hover:bg-secondary/15 transition-colors cursor-pointer"
           @click="toggleCalendar"
         >
           <span class="text-sm font-heading font-bold text-primary capitalize">
-            {{
-              selectedDate.toLocaleDateString(undefined, {
-                month: 'long',
-                year: 'numeric',
-              })
-            }}
+            {{ overrideMonthLabel }}
           </span>
           <VIcon name="fa-chevron-down" scale="0.7" class="text-secondary" />
         </button>
@@ -547,15 +511,15 @@ watch(activeTab, () => {
 
       <div v-if="calendarExpanded" class="mb-2">
         <MiniCalendar
-          :model-value="selectedDate"
+          :model-value="selectedWeekStart"
           :override-dates="overrideDates"
-          :highlight-week="overrideHighlightWeek"
+          :highlight-week="selectedWeekStart"
           @update:model-value="onDateSelected"
         />
       </div>
 
       <!-- Override grid (7-day week) -->
-      <template v-if="selectedDate && overrideWeekGrids">
+      <template v-if="overrideWeekGrids">
         <div class="select-none mr-1 lg:mr-0">
           <div class="grid gap-x-0.5 gap-y-px" style="grid-template-columns: 2.5rem repeat(7, 1fr) 1.25rem">
             <!-- Day headers -->
@@ -629,9 +593,6 @@ watch(activeTab, () => {
         </div>
       </template>
 
-      <div v-else-if="!selectedDate" class="flex-1 flex items-center justify-center">
-        <p class="text-secondary/60 font-heading text-sm">{{ t('room.noDateSelected') }}</p>
-      </div>
     </template>
 
     <!-- Combined mode -->

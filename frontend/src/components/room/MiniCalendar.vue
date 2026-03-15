@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { DAY_KEYS, DAY_I18N_KEYS, formatDateKey } from '@/utils/availability'
+import { DAY_KEYS, DAY_I18N_KEYS, formatDateKey, getMondayOfWeek } from '@/utils/availability'
 
 const { t } = useI18n()
 
@@ -79,6 +79,34 @@ function dayAvailabilityClass(day: number) {
   return 'bg-accent/8'
 }
 
+const hoveredWeekStart = ref<Date | null>(null)
+
+function isInHoveredWeek(day: number) {
+  if (!hoveredWeekStart.value) return false
+  const d = new Date(year.value, month.value, day)
+  const mon = hoveredWeekStart.value.getTime()
+  const sun = mon + 6 * 86400000
+  const t = d.getTime()
+  return t >= mon && t <= sun
+}
+
+function hoveredWeekPosition(day: number): 'start' | 'end' | 'mid' | null {
+  if (!isInHoveredWeek(day)) return null
+  const d = new Date(year.value, month.value, day)
+  const dow = (d.getDay() + 6) % 7
+  if (dow === 0) return 'start'
+  if (dow === 6) return 'end'
+  return 'mid'
+}
+
+function onDayMouseEnter(day: number) {
+  hoveredWeekStart.value = getMondayOfWeek(new Date(year.value, month.value, day))
+}
+
+function onDayMouseLeave() {
+  hoveredWeekStart.value = null
+}
+
 function selectDay(day: number) {
   emit('update:modelValue', new Date(year.value, month.value, day))
 }
@@ -121,16 +149,22 @@ function nextMonth() {
         <button
           v-else
           @click="selectDay(day)"
+          @mouseenter="onDayMouseEnter(day)"
+          @mouseleave="onDayMouseLeave"
           class="w-full cursor-pointer transition-colors"
           :class="[
             isToday(day)
               ? 'bg-primary/20 text-primary font-bold rounded-lg'
-              : 'text-secondary hover:bg-secondary/15 rounded-lg',
+              : 'text-secondary rounded-lg',
             dayAvailabilityClass(day),
             isInHighlightWeek(day) ? 'bg-accent/20 text-primary font-semibold' : '',
             highlightWeekPosition(day) === 'start' ? 'rounded-r-none' : '',
             highlightWeekPosition(day) === 'end' ? 'rounded-l-none' : '',
             highlightWeekPosition(day) === 'mid' ? 'rounded-none' : '',
+            isInHoveredWeek(day) && !isInHighlightWeek(day) ? 'border-t border-b border-secondary/40' : '',
+            hoveredWeekPosition(day) === 'start' ? 'rounded-r-none border-l border-secondary/40' : '',
+            hoveredWeekPosition(day) === 'end' ? 'rounded-l-none border-r border-secondary/40' : '',
+            hoveredWeekPosition(day) === 'mid' ? 'rounded-none' : '',
           ]"
         >
           <span
