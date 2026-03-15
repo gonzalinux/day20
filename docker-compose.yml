@@ -1,7 +1,7 @@
 services:
   day20-db:
     restart: unless-stopped
-    image: mongo:latest
+    image: mongo:8
     container_name: day20-mongo
     ports:
       - "${MONGO_PORT:-}:27017"
@@ -41,7 +41,7 @@ services:
 
   day20-nginx-exporter:
     restart: unless-stopped
-    image: nginx/nginx-prometheus-exporter:latest
+    image: nginx/nginx-prometheus-exporter:1.4
     container_name: day20-nginx-exporter
     command:
       - --nginx.scrape-uri=http://day20-vue:3251/stub_status

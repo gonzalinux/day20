@@ -8,7 +8,7 @@ RUN bun install
 
 RUN bun build --compile --minify --sourcemap --bytecode ./index.ts --outfile day20backend
 
-FROM gcr.io/distroless/cc-debian12
+FROM gcr.io/distroless/cc-debian12:nonroot
 
 WORKDIR /app
 
