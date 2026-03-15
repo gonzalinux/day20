@@ -16,7 +16,7 @@ const emit = defineEmits<{
   'update:modelValue': [date: Date]
 }>()
 
-const viewDate = ref(new Date())
+const viewDate = ref(props.modelValue ? new Date(props.modelValue) : new Date())
 
 const year = computed(() => viewDate.value.getFullYear())
 const month = computed(() => viewDate.value.getMonth())
