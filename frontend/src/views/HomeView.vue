@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { localePath } from '@/i18n'
-import ThemeToggle from '@/components/ThemeToggle.vue'
-import LangToggle from '@/components/LangToggle.vue'
 import FeedbackToggle from '@/components/FeedbackToggle.vue'
 import HomeDemo from '@/components/home/HomeDemo.vue'
+import LangToggle from '@/components/LangToggle.vue'
+import ThemeToggle from '@/components/ThemeToggle.vue'
+import { localePath } from '@/i18n'
+import { onMounted, onUnmounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const { t, locale } = useI18n()
 
@@ -144,7 +144,7 @@ onUnmounted(() => {
       <p>
         This web is open source! Check it out
         <a
-          href="https://github.com/gonzalinux"
+          href="https://github.com/gonzalinux/day20"
           target="_blank"
           rel="noopener"
           class="text-bg hover:underline font-bold"
