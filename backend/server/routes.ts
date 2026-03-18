@@ -133,6 +133,16 @@ export const routes = new Elysia()
     },
     { params: RoomIdParam },
   )
+  .post(
+    "/rooms/:room_id/extend",
+    async ({ params, auth }) => {
+      const roomId = params.room_id;
+      const authUserId = auth.rooms[roomId];
+      await Service.extendRoom(roomId, authUserId);
+      return { ok: true };
+    },
+    { params: RoomIdParam },
+  )
   .delete(
     "/rooms/:room_id",
     async ({ params, auth }) => {

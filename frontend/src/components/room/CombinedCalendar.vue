@@ -232,7 +232,7 @@ const dateAvailability = computed(() => {
         endHour.value,
       )
       for (let s = 0; s < slotCount.value; s++) {
-        if (grid[s]) slots[s]++
+        if (grid[s]) (slots[s] as number)++
       }
     }
 

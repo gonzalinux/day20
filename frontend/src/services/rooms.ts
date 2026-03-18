@@ -24,6 +24,12 @@ export async function deleteRoom(id: string) {
   return data
 }
 
+export async function extendRoom(id: string) {
+  const { data, error } = await api.rooms({ room_id: id }).extend.post()
+  if (error) throwError(error)
+  return data
+}
+
 export async function updateRoom(
   id: string,
   ...args: Parameters<ReturnType<typeof api.rooms>['patch']>
