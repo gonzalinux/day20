@@ -311,13 +311,9 @@ export async function countUnreadFeedback(): Promise<number> {
   return Repository.countUnreadFeedback();
 }
 
-export async function extendRoom(roomId: string, authUserId?: string) {
-  const existing = await Repository.findRoom(roomId);
-  if (!existing) throw new NotFoundError("Room not found");
-
-  if (!authUserId) throw new UnauthorizedError("Must select a user first");
-  await assertAdmin(roomId, authUserId);
-
+export async function extendRoomAdmin(roomId: string) {
+  const room = await Repository.findRoom(roomId);
+  if (!room) throw new NotFoundError("Room not found");
   await Repository.updateRoom({ id: roomId, updatedAt: new Date() });
 }
 

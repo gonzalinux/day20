@@ -28,7 +28,6 @@ const showTimezoneModal = ref(false)
 const pinSuccess = ref('')
 const resetSuccess = ref('')
 const tzSuccess = ref('')
-const extendSuccess = ref('')
 
 async function saveDuration(min: number, max: number) {
   showDurationModal.value = false
@@ -59,12 +58,6 @@ async function saveTimezone(tz: string) {
 async function handleSaveDefaultAvailability(availability: WeeklyAvailability) {
   showTimeWindowModal.value = false
   await room.saveDefaultAvailability(availability)
-}
-
-async function extendRoom() {
-  await room.extendRoom()
-  extendSuccess.value = t('room.extendRoomDone')
-  setTimeout(() => (extendSuccess.value = ''), 3000)
 }
 
 async function confirmDeleteRoom() {
@@ -132,12 +125,6 @@ async function copyShareLink() {
           <template #label>{{ t('room.editTimeWindow') }}</template>
           <template #subtitle>{{ t('room.editTimeWindowHint') }}</template>
           <VIcon name="gi-calendar-half-year" class="text-secondary/50" scale="1.2" />
-        </SettingsRow>
-
-        <SettingsRow v-if="room.isAdmin" @click="extendRoom">
-          <template #label>{{ t('room.extendRoom') }}</template>
-          <template #subtitle>{{ extendSuccess || t('room.extendRoomHint') }}</template>
-          <VIcon name="gi-time-synchronization" class="text-secondary/50" scale="1.2" />
         </SettingsRow>
 
         <SettingsRow v-if="room.isAdmin" @click="showDeleteConfirm = true">

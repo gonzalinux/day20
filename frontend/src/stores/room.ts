@@ -1,6 +1,6 @@
 import { ref, reactive, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { getRoom, updateRoom, deleteRoom as apiDeleteRoom, extendRoom as apiExtendRoom } from '@/services/rooms'
+import { getRoom, updateRoom, deleteRoom as apiDeleteRoom } from '@/services/rooms'
 import {
   getUsersFromRoom,
   addUser as apiAddUser,
@@ -224,10 +224,6 @@ export const useRoomStore = defineStore('room', () => {
     await updateRoom(room.id, { id: room.id, defaultAvailability: availability })
   }
 
-  async function extendRoom() {
-    await apiExtendRoom(room.id)
-  }
-
   async function deleteRoom() {
     await apiDeleteRoom(room.id)
   }
@@ -266,7 +262,6 @@ export const useRoomStore = defineStore('room', () => {
     resetAvailability,
     saveDefaultAvailability,
     saveUserTimezone,
-    extendRoom,
     deleteRoom,
     $reset,
   }

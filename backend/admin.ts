@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { getAllRoomsAdmin, deleteRoomAdmin, getUsersFromRoom, STALE_ROOM_MS, getAllFeedbackAdmin, markFeedbackReadAdmin, deleteFeedbackAdmin, countUnreadFeedback } from "./domain/service";
+import { getAllRoomsAdmin, deleteRoomAdmin, extendRoomAdmin, getUsersFromRoom, STALE_ROOM_MS, getAllFeedbackAdmin, markFeedbackReadAdmin, deleteFeedbackAdmin, countUnreadFeedback } from "./domain/service";
 import { NotFoundError } from "./server/errors.types";
 import { register } from "./server/prometheus";
 
@@ -103,6 +103,17 @@ const HTML = `<!DOCTYPE html>
       transition: background 0.15s;
     }
     .btn-delete:hover { background: #3f1515; }
+    .btn-extend {
+      background: transparent;
+      border: 1px solid #1e3a5f;
+      color: #7dd3fc;
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-extend:hover { background: #1e3a5f; }
     .muted { color: #64748b; font-size: 0.8rem; }
     .refresh-bar {
       display: flex;
@@ -190,6 +201,7 @@ const HTML = `<!DOCTYPE html>
             <th>Last Active</th>
             <th>Expires</th>
             <th></th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="rooms-tbody">
@@ -255,6 +267,15 @@ const HTML = `<!DOCTYPE html>
       if (days <= 0) return '<span class="badge badge-red">Stale</span>';
       if (days <= WARNING_DAYS) return \`<span class="badge badge-yellow">\${days}d</span>\`;
       return \`<span class="badge badge-green">\${days}d</span>\`;
+    }
+
+    async function extendRoom(id) {
+      const res = await fetch(\`/api/rooms/\${encodeURIComponent(id)}/extend\`, { method: 'POST' });
+      if (res.ok) loadAll();
+      else {
+        const body = await res.json().catch(() => ({}));
+        showError(body.message || 'Extend failed');
+      }
     }
 
     async function deleteRoom(id) {
@@ -341,6 +362,7 @@ const HTML = `<!DOCTYPE html>
           <td>\${r.userCount}</td>
           <td class="muted">\${formatDate(r.updatedAt)}</td>
           <td>\${expiryBadge(r.daysUntilExpiry)}</td>
+          <td><button class="btn-extend" onclick="extendRoom('\${r.id.replace(/'/g, "\\\\'")}')">Extend</button></td>
           <td><button class="btn-delete" onclick="deleteRoom('\${r.id.replace(/'/g, "\\\\'")}')">Delete</button></td>
         </tr>
       \`).join('');
@@ -458,6 +480,15 @@ export const adminServer = new Elysia()
       headers: { "Content-Type": register.contentType },
     }),
   )
+  .post("/api/rooms/:id/extend", async ({ params, status }) => {
+    try {
+      await extendRoomAdmin(params.id);
+      return { ok: true };
+    } catch (e) {
+      if (e instanceof NotFoundError) return status(404, { message: e.message });
+      throw e;
+    }
+  })
   .delete("/api/rooms/:id", async ({ params, status }) => {
     try {
       await deleteRoomAdmin(params.id);
