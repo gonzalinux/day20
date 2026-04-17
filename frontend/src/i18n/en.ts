@@ -109,6 +109,8 @@ export default {
     skipPinConfirm: 'Skip',
     pinSkippedWarning: 'Your avatar has no PIN — anyone can use it',
     logout: 'Switch user',
+    logoutRoom: 'Leave room',
+    logoutRoomHint: 'Sign out and return to the login screen',
     resetAvailability: 'Reset my availability',
     resetAvailabilityHint: 'Clear all your painted times and overrides',
     resetAvailabilityDone: 'Availability reset!',

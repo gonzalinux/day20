@@ -110,6 +110,8 @@ export default {
     skipPinConfirm: 'Omitir',
     pinSkippedWarning: 'Tu avatar no tiene PIN — cualquiera puede usarlo',
     logout: 'Cambiar usuario',
+    logoutRoom: 'Salir de la sala',
+    logoutRoomHint: 'Cerrar sesión y volver a la pantalla de inicio',
     resetAvailability: 'Reiniciar mi disponibilidad',
     resetAvailabilityHint: 'Borrar todos tus horarios pintados y excepciones',
     resetAvailabilityDone: 'Disponibilidad reiniciada!',

@@ -67,6 +67,11 @@ async function confirmDeleteRoom() {
   router.push(localePath('/', locale.value))
 }
 
+async function handleLogoutRoom() {
+  await room.logoutUser()
+  router.push(localePath('/room-login', locale.value))
+}
+
 async function copyShareLink() {
   const path = localePath(`/rooms/${room.room.id}`, locale.value)
   const url = new URL(path, window.location.origin)
@@ -119,6 +124,12 @@ async function copyShareLink() {
           <template #label>{{ t('room.resetAvailability') }}</template>
           <template #subtitle>{{ resetSuccess || t('room.resetAvailabilityHint') }}</template>
           <VIcon name="gi-return-arrow" class="text-secondary/50" scale="1.2" />
+        </SettingsRow>
+
+        <SettingsRow @click="handleLogoutRoom">
+          <template #label>{{ t('room.logoutRoom') }}</template>
+          <template #subtitle>{{ t('room.logoutRoomHint') }}</template>
+          <VIcon name="gi-exit-door" class="text-secondary/50" scale="1.2" />
         </SettingsRow>
 
         <SettingsRow v-if="room.isAdmin" @click="showTimeWindowModal = true">
