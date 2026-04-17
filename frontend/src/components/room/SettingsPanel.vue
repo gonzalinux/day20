@@ -129,7 +129,7 @@ async function copyShareLink() {
         <SettingsRow @click="handleLogoutRoom">
           <template #label>{{ t('room.logoutRoom') }}</template>
           <template #subtitle>{{ t('room.logoutRoomHint') }}</template>
-          <VIcon name="gi-exit-door" class="text-secondary/50" scale="1.2" />
+          <VIcon name="gi-doorway" class="text-secondary/50" scale="1.2" />
         </SettingsRow>
 
         <SettingsRow v-if="room.isAdmin" @click="showTimeWindowModal = true">
