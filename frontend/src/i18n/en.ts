@@ -195,7 +195,7 @@ export default {
     faq4a:
       'Not at all. Any group that needs to find a common time: tabletop RPGs, book clubs, game nights, online meetups, even work meetings. You name it.',
     faq5q: 'Are rooms kept forever?',
-    faq5a: 'Nope. Rooms are deleted after 30 days of no activity, so no hoarding old campaigns.',
+    faq5a: 'Nope. Rooms are deleted after 60 days of no activity, so no hoarding old campaigns.',
     demoRestart: 'Try again',
   },
 }

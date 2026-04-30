@@ -19,7 +19,7 @@ import {
 } from "../server/errors.types";
 import type { CreateRoomRequest } from "../server/requests.types";
 
-export const STALE_ROOM_MS = 30 * 24 * 60 * 60 * 1000;
+export const STALE_ROOM_MS = 60 * 24 * 60 * 60 * 1000;
 const CLEANUP_INTERVAL_MS = 7.3 * 60 * 60 * 1000;
 
 async function assertAdmin(roomId: string, userId: string) {

@@ -197,7 +197,7 @@ export default {
       'Para nada. Cualquier grupo que necesite encontrar un hueco: rol, clubs de lectura, noches de juegos, quedadas online, reuniones de trabajo. Lo que sea.',
     faq5q: '¿Las salas se guardan para siempre?',
     faq5a:
-      'No. Las salas se eliminan tras 30 días sin actividad, así que no acumules campañas abandonadas.',
+      'No. Las salas se eliminan tras 60 días sin actividad, así que no acumules campañas abandonadas.',
     demoRestart: 'Intentar de nuevo',
   },
 }
