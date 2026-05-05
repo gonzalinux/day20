@@ -1,0 +1,15 @@
+services:
+  day20-db:
+    restart: unless-stopped
+    image: mongo:8
+    container_name: day20-mongo
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - ./data/mongo:/data/db
+    networks:
+      - day20-network
+
+networks:
+  day20-network:
+    driver: bridge

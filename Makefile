@@ -1,4 +1,4 @@
-.PHONY: dev dev-db dev-api dev-ui prod prod-down
+.PHONY: dev dev-db dev-api dev-ui prod prod-db prod-down prod-db-down
 
 dev: dev-db dev-api dev-ui
 
@@ -15,5 +15,11 @@ prod:
 	git pull
 	docker compose up --build -d
 
+prod-db:
+	docker compose -f docker-compose.db.yml up -d
+
 prod-down:
 	docker compose down
+
+prod-db-down:
+	docker compose -f docker-compose.db.yml down
