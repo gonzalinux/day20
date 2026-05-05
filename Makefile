@@ -23,7 +23,7 @@ prod-down:
 	docker compose down
 
 prod-db-down:
-	docker compose -f docker-compose.db.yml down
+	docker compose -f docker-compose.yml -f docker-compose.db.yml down
 
 logs:
 	docker compose logs -f
