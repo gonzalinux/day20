@@ -1,4 +1,4 @@
-.PHONY: dev dev-db dev-api dev-ui prod prod-db prod-down prod-db-down
+.PHONY: dev dev-db dev-api dev-ui prod prod-db prod-down prod-db-down logs
 
 dev: dev-db dev-api dev-ui
 
@@ -23,3 +23,6 @@ prod-down:
 
 prod-db-down:
 	docker compose -f docker-compose.db.yml down
+
+logs:
+	docker compose logs -f
