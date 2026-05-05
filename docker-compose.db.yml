@@ -10,6 +10,12 @@ services:
     networks:
       - day20-network
 
+  day20-api:
+    environment:
+      - MONGO_URI=mongodb://day20-db:27017/day20
+    depends_on:
+      - day20-db
+
 networks:
   day20-network:
     driver: bridge

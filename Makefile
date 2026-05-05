@@ -16,7 +16,8 @@ prod:
 	docker compose up --build -d
 
 prod-db:
-	docker compose -f docker-compose.db.yml up -d
+	git pull
+	docker compose -f docker-compose.yml -f docker-compose.db.yml up --build -d
 
 prod-down:
 	docker compose down
