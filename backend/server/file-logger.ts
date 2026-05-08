@@ -1,6 +1,7 @@
 import pino from "pino";
 import roll from "pino-roll";
 import { mkdirSync } from "fs";
+import { requestContext } from "./request-context";
 
 const LOG_FILE = Bun.env.JSON_LOG_PATH ?? "";
 
@@ -30,15 +31,20 @@ function toArgs(args: LogArgs): { fields: Record<string, unknown>; msg: string }
     : { fields: args[0], msg: args[1] };
 }
 
+function withContext(fields: Record<string, unknown>): Record<string, unknown> {
+  const reqId = requestContext.getStore()?.reqId;
+  return reqId ? { reqId, ...fields } : fields;
+}
+
 export const log = {
   info(...args: LogArgs) {
     const { fields, msg } = toArgs(args);
     console.log(msg);
-    _logger?.info(fields, msg);
+    _logger?.info(withContext(fields), msg);
   },
   error(...args: LogArgs) {
     const { fields, msg } = toArgs(args);
     console.error(msg);
-    _logger?.error(fields, msg);
+    _logger?.error(withContext(fields), msg);
   },
 };
