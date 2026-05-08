@@ -1,0 +1,67 @@
+// Grafana Alloy config — tails JSON logs from day20 backend and forwards to VictoriaLogs
+
+local.file_match "day20" {
+  path_targets = [{"__path__" = "/app/logs/app.json.log"}]
+}
+
+loki.source.file "day20" {
+  targets    = local.file_match.day20.targets
+  forward_to = [loki.process.day20.receiver]
+}
+
+loki.process "day20" {
+  // Extract fields from the pino JSON line
+  stage.json {
+    expressions = {
+      level  = "level",
+      method = "method",
+      path   = "path",
+      status = "status",
+      time   = "time",
+      msg    = "msg",
+    }
+  }
+
+  // Promote level as an indexed stream label
+  stage.labels {
+    values = {
+      level = null,
+    }
+  }
+
+  // Static labels applied to all log lines
+  stage.static_labels {
+    values = {
+      app    = "day20",
+      deploy = coalesce(env("DEPLOY_ENV"), "local"),
+    }
+  }
+
+  // High-cardinality fields as structured metadata (queryable, not indexed)
+  stage.structured_metadata {
+    values = {
+      method = "",
+      path   = "",
+      status = "",
+    }
+  }
+
+  // Use the log's own timestamp instead of ingestion time
+  stage.timestamp {
+    source = "time"
+    format = "RFC3339Nano"
+  }
+
+  // Use msg as the log line
+  stage.output {
+    source = "msg"
+  }
+
+  forward_to = [loki.write.aggregator.receiver]
+}
+
+loki.write "aggregator" {
+  endpoint {
+    url = coalesce(env("LOG_AGGREGATOR_URL"), "")
+  }
+}
