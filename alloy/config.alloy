@@ -1,7 +1,7 @@
 // Grafana Alloy config — tails JSON logs from day20 backend and forwards to VictoriaLogs
 
 local.file_match "day20" {
-  path_targets = [{"__path__" = "/app/logs/app.json.log"}]
+  path_targets = [{"__path__" = "/app/logs/app.json.*.log"}]
 }
 
 loki.source.file "day20" {
