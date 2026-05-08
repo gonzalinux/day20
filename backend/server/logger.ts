@@ -1,5 +1,5 @@
 import Elysia from "elysia";
-import { fileLogger } from "./file-logger";
+import { getFileLogger } from "./file-logger";
 
 const erroredRequests = new WeakSet<Request>();
 
@@ -18,7 +18,7 @@ export const logger = new Elysia({ name: "logger" })
     const path = new URL(url).pathname;
     const status = set.status as number;
     console.log(`${method} ${path} ${status} ${JSON.stringify(responseValue)}`);
-    fileLogger?.info({ method, path, status }, `${method} ${path} ${status}`);
+    getFileLogger()?.info({ method, path, status }, `${method} ${path} ${status}`);
   })
   .onError(({ request, error }) => {
     const { method, url } = request;
@@ -26,6 +26,6 @@ export const logger = new Elysia({ name: "logger" })
     const message = (error as Error)?.message ?? "Unknown error";
     console.error(`${method} ${path} ${message}`);
     erroredRequests.add(request);
-    fileLogger?.error({ method, path }, message);
+    getFileLogger()?.error({ method, path }, message);
   })
   .as("global");

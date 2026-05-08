@@ -7,6 +7,7 @@ import { logger } from "./server/logger";
 import { startCleanupScheduler } from "./domain/service";
 import { startAdminServer } from "./admin";
 import { prometheus } from "./server/prometheus";
+import { initFileLogger } from "./server/file-logger";
 import "./metrics";
 
 const server = new Elysia()
@@ -26,6 +27,7 @@ export type App = typeof server;
 
 async function startServer() {
   await connectToDatabase();
+  await initFileLogger();
 
   server.listen(3000);
   startAdminServer();
