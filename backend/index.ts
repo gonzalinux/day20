@@ -7,7 +7,7 @@ import { logger } from "./server/logger";
 import { startCleanupScheduler } from "./domain/service";
 import { startAdminServer } from "./admin";
 import { prometheus } from "./server/prometheus";
-import { initFileLogger } from "./server/file-logger";
+import { initFileLogger, log } from "./server/file-logger";
 import "./metrics";
 
 const server = new Elysia()
@@ -33,11 +33,11 @@ async function startServer() {
   startAdminServer();
   startCleanupScheduler();
 
-  console.log("Server started port 3000");
+  log.info("Server started port 3000");
 }
 
 async function shutdown() {
-  console.log("Shutting down...");
+  log.info("Shutting down...");
   await disconnectFromDatabase();
   server.stop();
   process.exit(0);

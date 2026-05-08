@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import { log } from "./server/file-logger";
 import { getAllRoomsAdmin, deleteRoomAdmin, extendRoomAdmin, getUsersFromRoom, STALE_ROOM_MS, getAllFeedbackAdmin, markFeedbackReadAdmin, deleteFeedbackAdmin, countUnreadFeedback } from "./domain/service";
 import { NotFoundError } from "./server/errors.types";
 import { register } from "./server/prometheus";
@@ -512,5 +513,5 @@ export const adminServer = new Elysia()
 
 export function startAdminServer() {
   adminServer.listen(3250);
-  console.log("Admin server started port 3250");
+  log.info("Admin server started port 3250");
 }

@@ -22,4 +22,23 @@ export async function initFileLogger(): Promise<void> {
   );
 }
 
-export const getFileLogger = (): pino.Logger | null => _logger;
+type LogArgs = [msg: string] | [fields: Record<string, unknown>, msg: string];
+
+function toArgs(args: LogArgs): { fields: Record<string, unknown>; msg: string } {
+  return args.length === 1
+    ? { fields: {}, msg: args[0] }
+    : { fields: args[0], msg: args[1] };
+}
+
+export const log = {
+  info(...args: LogArgs) {
+    const { fields, msg } = toArgs(args);
+    console.log(msg);
+    _logger?.info(fields, msg);
+  },
+  error(...args: LogArgs) {
+    const { fields, msg } = toArgs(args);
+    console.error(msg);
+    _logger?.error(fields, msg);
+  },
+};

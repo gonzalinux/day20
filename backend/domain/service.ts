@@ -18,6 +18,7 @@ import {
   UnauthorizedError,
 } from "../server/errors.types";
 import type { CreateRoomRequest } from "../server/requests.types";
+import { log } from "../server/file-logger";
 
 export const STALE_ROOM_MS = 90 * 24 * 60 * 60 * 1000;
 const CLEANUP_INTERVAL_MS = 7.3 * 60 * 60 * 1000;
@@ -329,11 +330,11 @@ async function cleanupStaleRooms() {
   const staleRooms = await Repository.findStaleRooms(cutoff);
   for (const room of staleRooms) {
     await Repository.deleteRoom(room.id);
-    console.log(`Deleted stale room: ${room.id}`);
+    log.info({ roomId: room.id }, `Deleted stale room: ${room.id}`);
   }
   if (staleRooms.length > 0) {
     roomsDeletedTotal.inc({ reason: "cleanup" }, staleRooms.length);
-    console.log(`Cleanup: removed ${staleRooms.length} stale room(s)`);
+    log.info({ count: staleRooms.length }, `Cleanup: removed ${staleRooms.length} stale room(s)`);
   }
 }
 

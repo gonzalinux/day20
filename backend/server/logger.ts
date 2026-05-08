@@ -1,5 +1,5 @@
 import Elysia from "elysia";
-import { getFileLogger } from "./file-logger";
+import { log } from "./file-logger";
 
 const erroredRequests = new WeakSet<Request>();
 
@@ -7,9 +7,9 @@ export const logger = new Elysia({ name: "logger" })
   .onRequest(({ request }) => {
     const { method, url } = request;
     const path = new URL(url).pathname;
-    console.log(`${method} ${path}`);
+    console.log(`Received ${method} ${path}`);
   })
-  .onAfterResponse(({ request, set, responseValue }) => {
+  .onAfterResponse(({ request, set }) => {
     if (erroredRequests.has(request)) {
       erroredRequests.delete(request);
       return;
@@ -17,15 +17,13 @@ export const logger = new Elysia({ name: "logger" })
     const { method, url } = request;
     const path = new URL(url).pathname;
     const status = set.status as number;
-    console.log(`${method} ${path} ${status} ${JSON.stringify(responseValue)}`);
-    getFileLogger()?.info({ method, path, status }, `${method} ${path} ${status}`);
+    log.info({ method, path, status }, `Responded ${method} ${path} ${status}`);
   })
   .onError(({ request, error }) => {
     const { method, url } = request;
     const path = new URL(url).pathname;
     const message = (error as Error)?.message ?? "Unknown error";
-    console.error(`${method} ${path} ${message}`);
     erroredRequests.add(request);
-    getFileLogger()?.error({ method, path }, message);
+    log.error({ method, path }, `Responded ${method} ${path} ${message}`);
   })
   .as("global");
