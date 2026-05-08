@@ -1,5 +1,5 @@
 import pino from "pino";
-import { roll } from "pino-roll";
+import roll from "pino-roll";
 import { mkdirSync } from "fs";
 
 const LOG_FILE = Bun.env.JSON_LOG_PATH ?? "";
@@ -10,7 +10,7 @@ export async function initFileLogger(): Promise<void> {
   if (!LOG_FILE) return;
   const dir = LOG_FILE.lastIndexOf("/") > 0 ? LOG_FILE.substring(0, LOG_FILE.lastIndexOf("/")) : "";
   if (dir) mkdirSync(dir, { recursive: true });
-  const dest = await roll(LOG_FILE, { size: "50m", limit: { count: 5 } });
+  const dest = await roll({ file: LOG_FILE, size: "50m", limit: { count: 5 } });
   _logger = pino(
     {
       level: "info",
