@@ -13,12 +13,13 @@ loki.process "day20" {
   // Extract fields from the pino JSON line
   stage.json {
     expressions = {
-      level  = "level",
-      method = "method",
-      path   = "path",
-      status = "status",
-      time   = "time",
-      msg    = "msg",
+      level      = "level",
+      method     = "method",
+      path       = "path",
+      status     = "status",
+      time       = "time",
+      msg        = "msg",
+      request_id = "reqId",
     }
   }
 
@@ -40,9 +41,10 @@ loki.process "day20" {
   // High-cardinality fields as structured metadata (queryable, not indexed)
   stage.structured_metadata {
     values = {
-      method = "",
-      path   = "",
-      status = "",
+      method     = "",
+      path       = "",
+      status     = "",
+      request_id = "",
     }
   }
 
