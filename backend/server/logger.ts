@@ -14,7 +14,7 @@ export const logger = new Elysia({ name: "logger" })
     requestContext.enterWith({ reqId });
     const { method, url } = request;
     const path = new URL(url).pathname;
-    console.log(`Received ${method} ${path}${reqId ? ` [${reqId}]` : ""}`);
+    log.info({ method, path, reqId }, `Received ${method} ${path}${reqId ? ` [${reqId}]` : ""}`);
   })
   .onAfterResponse(({ request, set }) => {
     if (erroredRequests.has(request)) {

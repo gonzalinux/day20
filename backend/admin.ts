@@ -12,6 +12,7 @@ const HTML = `<!DOCTYPE html>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Day20 Admin</title>
+  <link rel="icon" href="/favicon.ico" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -448,6 +449,7 @@ const HTML = `<!DOCTYPE html>
 
 export const adminServer = new Elysia()
   .get("/", () => new Response(HTML, { headers: { "Content-Type": "text/html; charset=utf-8" } }))
+  .get("/favicon.ico", () => Bun.file(new URL("../frontend/public/favicon.ico", import.meta.url)))
   .get("/api/stats", async () => {
     const [rooms, unreadFeedback] = await Promise.all([getAllRoomsAdmin(), countUnreadFeedback()]);
     const freshCount = rooms.filter((r) => r.daysUntilExpiry > WARNING_THRESHOLD_DAYS).length;

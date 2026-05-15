@@ -26,4 +26,4 @@ prod-db-down:
 	docker compose -f docker-compose.yml -f docker-compose.db.yml down
 
 logs:
-	docker compose logs `docker compose config --services | grep -v day20-ui`
+	docker compose logs -f `docker compose config --services | grep -v day20-ui`
