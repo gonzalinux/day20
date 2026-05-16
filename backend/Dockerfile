@@ -15,6 +15,7 @@ FROM gcr.io/distroless/cc-debian12:nonroot
 WORKDIR /app
 
 COPY --from=builder /app/day20backend ./day20backend
+COPY --from=builder /app/favicon.ico ./favicon.ico
 COPY --from=builder --chown=65532:65532 /tmp/logs /app/logs
 
 USER nonroot:nonroot
