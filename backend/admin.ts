@@ -449,7 +449,7 @@ const HTML = `<!DOCTYPE html>
 
 export const adminServer = new Elysia()
   .get("/", () => new Response(HTML, { headers: { "Content-Type": "text/html; charset=utf-8" } }))
-  .get("/favicon.ico", () => Bun.file(new URL("../frontend/public/favicon.ico", import.meta.url)))
+  .get("/favicon.ico", () => Bun.file(new URL("./favicon.ico", import.meta.url)))
   .get("/api/stats", async () => {
     const [rooms, unreadFeedback] = await Promise.all([getAllRoomsAdmin(), countUnreadFeedback()]);
     const freshCount = rooms.filter((r) => r.daysUntilExpiry > WARNING_THRESHOLD_DAYS).length;
