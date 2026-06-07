@@ -38,8 +38,10 @@ export const routes: RouteRecordRaw[] = [
   { path: '/:pathMatch(.*)*', component: NotFound },
 ]
 
+const ROOM_SUB_PATHS = new Set(['calendar', 'pick-user', 'name', 'pin', 'add-players'])
+
 export function setupRouterGuards(router: Router, i18n: I18n): void {
-  router.beforeEach((to) => {
+  router.beforeEach((to, from) => {
     const isSpanish = to.path === '/es' || to.path.startsWith('/es/')
     const locale = isSpanish ? 'es' : 'en'
 
@@ -49,6 +51,14 @@ export function setupRouterGuards(router: Router, i18n: I18n): void {
     }
     if (!import.meta.env.SSR) {
       document.documentElement.lang = locale
+    }
+
+    const toRoomId = to.params.id as string | undefined
+    const fromRoomId = from.params.id as string | undefined
+    const lastSegment = to.path.split('/').at(-1) ?? ''
+    if (toRoomId && ROOM_SUB_PATHS.has(lastSegment) && fromRoomId !== toRoomId) {
+      const prefix = isSpanish ? '/es' : ''
+      return `${prefix}/rooms/${toRoomId}`
     }
   })
 }
