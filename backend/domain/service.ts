@@ -52,7 +52,7 @@ export async function createRoom(request: CreateRoomRequest) {
   };
 
   const createdRoom = await Repository.insertRoom(room);
-  roomsCreatedTotal.inc();
+  if (!request.name.startsWith("flowtest")) roomsCreatedTotal.inc();
   return { id: createdRoom, magicToken };
 }
 
