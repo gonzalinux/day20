@@ -332,6 +332,68 @@ function commitOverridePaint() {
   room.saveOverrides(newOverrides)
 }
 
+// Whether every allowed slot in a day is available/unavailable/mixed, for the day-header click cycle
+function overrideDayState(dayIdx: number): 'available' | 'unavailable' | 'mixed' {
+  if (!overrideWeekGrids.value) return 'mixed'
+  const cells = overrideWeekGrids.value[dayIdx]!
+  const relevant = cells.filter((_, i) => isDefaultSlot(dayIdx, i))
+  if (relevant.length === 0) return 'mixed'
+  if (relevant.every((c) => c.effective)) return 'available'
+  if (relevant.every((c) => !c.effective)) return 'unavailable'
+  return 'mixed'
+}
+
+// Sets or clears the override for every allowed slot of a single day (used by the day-header click cycle)
+function commitWholeDayOverride(dayIdx: number, target: 'available' | 'unavailable' | 'clear') {
+  const user = room.currentUser
+  if (!user) return
+  const date = overrideWeekDates.value[dayIdx]!
+  const dateStr = formatDateKey(date)
+  const newOverrides = user.overrides.filter((o) => formatDateKey(o.date) !== dateStr)
+
+  if (target !== 'clear') {
+    const dayKey = dateToDayKey(date)
+    const baseGrid = availabilityToGrid(
+      user.weeklyAvailability[dayKey] ?? [],
+      startHour.value,
+      endHour.value,
+    )
+    const effectiveGrid = baseGrid.map((_, i) => (target === 'available' ? isDefaultSlot(dayIdx, i) : false))
+
+    const blocked: boolean[] = []
+    const unblocked: boolean[] = []
+    for (let i = 0; i < effectiveGrid.length; i++) {
+      blocked.push(!!baseGrid[i] && !effectiveGrid[i] && isDefaultSlot(dayIdx, i))
+      unblocked.push(!baseGrid[i] && !!effectiveGrid[i] && isDefaultSlot(dayIdx, i))
+    }
+
+    if (blocked.some(Boolean)) {
+      newOverrides.push({
+        date,
+        type: 'block',
+        availability: gridToAvailability(blocked, startHour.value),
+      })
+    }
+    if (unblocked.some(Boolean)) {
+      newOverrides.push({
+        date,
+        type: 'unblock',
+        availability: gridToAvailability(unblocked, startHour.value),
+      })
+    }
+  }
+
+  room.saveOverrides(newOverrides)
+  toast.show(t('room.saved'), 'success')
+}
+
+// Cycles a whole day through: all-available -> all-unavailable -> cleared (back to base weekly availability)
+function onOverrideDayHeaderClick(dayIdx: number) {
+  const state = overrideDayState(dayIdx)
+  const next = state === 'available' ? 'unavailable' : state === 'unavailable' ? 'clear' : 'available'
+  commitWholeDayOverride(dayIdx, next)
+}
+
 // Check if a cell is inside the current drag rectangle
 function isInWeeklyDragRange(dayIdx: number, slotIdx: number) {
   if (painting.value === null || dragStartDay.value < 0) return false
@@ -541,18 +603,19 @@ watch(activeTab, () => {
             >
               <VIcon name="fa-chevron-left" scale="0.8" />
             </button>
-            <div
+            <button
               v-for="(date, idx) in overrideWeekDates"
               :key="'od' + idx"
-              class="flex items-center justify-center text-xs font-heading font-bold pb-1 rounded"
+              class="flex items-center justify-center text-xs font-heading font-bold pb-1 rounded cursor-pointer hover:bg-secondary/15 transition-colors"
               :class="
                 formatDateKey(date) === formatDateKey(new Date())
                   ? 'bg-primary/20 text-primary'
                   : 'text-secondary/60'
               "
+              @click="onOverrideDayHeaderClick(idx)"
             >
               {{ date.getDate() }}
-            </div>
+            </button>
             <button
               class="flex items-center justify-end cursor-pointer text-secondary/60 hover:text-primary transition-colors"
               aria-label="Next week"
