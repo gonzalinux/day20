@@ -3,7 +3,7 @@
 dev: dev-db dev-api dev-ui
 
 dev-db:
-	MONGO_PORT=27017 docker compose up day20-db -d
+	MONGO_PORT=27017 docker compose -f docker-compose.yml -f docker-compose.db.yml up day20-db -d
 
 dev-api:
 	cd backend && bun --watch run index.ts

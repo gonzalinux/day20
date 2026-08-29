@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 import PinPad from '@/components/PinPad.vue'
 import { useRoomStore } from '@/stores/room'
 import { useToast } from '@/composables/useToast'
+import { setStoredRoomUser } from '@/utils/storedRooms'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -35,6 +36,7 @@ async function pickUserAndContinue(userId: string, pin?: string) {
   error.value = ''
   try {
     await room.selectUser(userId, pin)
+    setStoredRoomUser(roomId, userId)
     const user = room.users.find((u) => u.id === userId)
     if (user?.hasPin || user?.pinSkipped) {
       if (user?.pinSkipped) {

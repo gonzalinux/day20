@@ -5,6 +5,7 @@ import { localePath } from '@/i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { getMe, loginRoom } from '@/services/auth'
 import { useRoomStore } from '@/stores/room'
+import { getStoredRooms, rememberRoom } from '@/utils/storedRooms'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -18,6 +19,31 @@ function roomPath(sub: string) {
   return localePath(`/rooms/${roomId}/${sub}`, locale.value)
 }
 
+function persist(userId?: string) {
+  rememberRoom({
+    id: roomId,
+    name: room.room.name || roomId,
+    token: (route.query.token as string | undefined) || room.room.magicToken,
+    userId,
+  })
+}
+
+async function pickUserOrResume() {
+  const remembered = getStoredRooms().find((r) => r.id === roomId)?.userId
+  const user = remembered ? room.users.find((u) => u.id === remembered) : undefined
+  if (user && !user.hasPin) {
+    try {
+      await room.selectUser(user.id)
+      persist(user.id)
+      router.replace(user.pinSkipped ? roomPath('calendar') : roomPath('pin?next=calendar'))
+      return
+    } catch {
+      // fall through to manual pick
+    }
+  }
+  router.replace(roomPath('pick-user'))
+}
+
 onMounted(async () => {
   try {
     const me = await getMe(roomId).catch(() => null)
@@ -26,6 +52,7 @@ onMounted(async () => {
         room.currentUserId = me.userId
         await Promise.all([room.fetchRoom(), room.fetchUsers()])
         if (route.query.token) router.replace({ query: {} })
+        persist(me.userId)
         router.replace(roomPath('calendar'))
         return
       }
@@ -33,7 +60,8 @@ onMounted(async () => {
       if (route.query.token) router.replace({ query: {} })
 
       if (room.users.length !== 0) {
-        router.replace(roomPath('pick-user'))
+        persist()
+        await pickUserOrResume()
         return
       }
     }
@@ -53,9 +81,11 @@ onMounted(async () => {
     await room.fetchUsers()
 
     if (room.users.length === 0) {
+      persist()
       router.replace(roomPath('name'))
     } else {
-      router.replace(roomPath('pick-user'))
+      persist()
+      await pickUserOrResume()
     }
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : String(e)

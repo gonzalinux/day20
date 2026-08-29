@@ -22,6 +22,8 @@ export default {
     minDuration: 'Min hours',
     maxDuration: 'Max hours',
     joinHint: "Tip: it's easier if you just click the link your friend shared!",
+    yourRooms: 'Your rooms',
+    forgetRoom: 'Forget this room',
     availableTimesTitle: 'Session time window',
     availableTimesHint: 'What hours can sessions be scheduled?',
     availableFrom: 'From',

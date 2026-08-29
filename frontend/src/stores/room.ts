@@ -13,6 +13,7 @@ import { selectUser as apiSelectUser, logoutUser as apiLogoutUser } from '@/serv
 import type { WeeklyAvailability, Override } from '@/utils/availability'
 import { getTimeRange, formatDateKey } from '@/utils/availability'
 import { detectTimezone, convertRoomWindowToLocal } from '@/utils/timezone'
+import { clearStoredRoomUser, forgetRoom } from '@/utils/storedRooms'
 
 export interface RoomUser {
   id: string
@@ -150,6 +151,7 @@ export const useRoomStore = defineStore('room', () => {
 
   async function logoutUser() {
     await apiLogoutUser(room.id)
+    clearStoredRoomUser(room.id)
     currentUserId.value = ''
   }
 
@@ -226,6 +228,7 @@ export const useRoomStore = defineStore('room', () => {
 
   async function deleteRoom() {
     await apiDeleteRoom(room.id)
+    forgetRoom(room.id)
   }
 
   function $reset() {

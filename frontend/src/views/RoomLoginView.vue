@@ -6,6 +6,7 @@ import { localePath } from '@/i18n'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import LangToggle from '@/components/LangToggle.vue'
 import AppInput from '@/components/AppInput.vue'
+import SavedRoomsList from '@/components/SavedRoomsList.vue'
 import { createRoom, roomExists } from '@/services/rooms'
 import { loginRoom } from '@/services/auth'
 import { detectTimezone } from '@/utils/timezone'
@@ -221,39 +222,44 @@ async function submitJoinRoom() {
         <div
           v-if="activePanel === null"
           key="buttons"
-          class="flex flex-col md:flex-row gap-6 w-full max-w-2xl"
+          class="flex flex-col gap-6 w-full max-w-2xl"
         >
-          <!-- Create Room -->
-          <button
-            @click="setPanel('create')"
-            class="flex-1 flex flex-col items-center gap-4 p-8 rounded-2xl bg-secondary/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer group"
-          >
-            <VIcon
-              name="gi-doorway"
-              class="text-accent group-hover:scale-110 transition-transform"
-              scale="3"
-            />
-            <span class="text-2xl font-heading font-bold text-accent">{{
-              t('roomLogin.createRoom')
-            }}</span>
-            <span class="text-sm text-secondary">{{ t('roomLogin.createDesc') }}</span>
-          </button>
+          <div class="flex flex-col md:flex-row gap-6">
+            <!-- Create Room -->
+            <button
+              @click="setPanel('create')"
+              class="flex-1 flex flex-col items-center gap-4 p-8 rounded-2xl bg-secondary/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer group"
+            >
+              <VIcon
+                name="gi-doorway"
+                class="text-accent group-hover:scale-110 transition-transform"
+                scale="3"
+              />
+              <span class="text-2xl font-heading font-bold text-accent">{{
+                t('roomLogin.createRoom')
+              }}</span>
+              <span class="text-sm text-secondary">{{ t('roomLogin.createDesc') }}</span>
+            </button>
 
-          <!-- Join Room -->
-          <button
-            @click="setPanel('join')"
-            class="flex-1 flex flex-col items-center gap-4 p-8 rounded-2xl bg-secondary/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer group"
-          >
-            <VIcon
-              name="gi-dungeon-gate"
-              class="text-primary group-hover:scale-110 transition-transform"
-              scale="3"
-            />
-            <span class="text-2xl font-heading font-bold text-primary">{{
-              t('roomLogin.joinRoom')
-            }}</span>
-            <span class="text-sm text-secondary">{{ t('roomLogin.joinDesc') }}</span>
-          </button>
+            <!-- Join Room -->
+            <button
+              @click="setPanel('join')"
+              class="flex-1 flex flex-col items-center gap-4 p-8 rounded-2xl bg-secondary/20 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer group"
+            >
+              <VIcon
+                name="gi-dungeon-gate"
+                class="text-primary group-hover:scale-110 transition-transform"
+                scale="3"
+              />
+              <span class="text-2xl font-heading font-bold text-primary">{{
+                t('roomLogin.joinRoom')
+              }}</span>
+              <span class="text-sm text-secondary">{{ t('roomLogin.joinDesc') }}</span>
+            </button>
+          </div>
+
+          <!-- Saved rooms: one-tap re-entry, no password -->
+          <SavedRoomsList />
         </div>
 
         <!-- Create Room Panel -->
@@ -474,6 +480,8 @@ async function submitJoinRoom() {
               </button>
             </form>
           </div>
+
+          <SavedRoomsList class="mt-6" />
         </div>
       </Transition>
     </main>

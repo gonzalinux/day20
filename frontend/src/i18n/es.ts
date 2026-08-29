@@ -23,6 +23,8 @@ export default {
     maxDuration: 'Horas máx.',
     joinHint:
       'Consejo: es más fácil si simplemente haces clic en el enlace que tu amigo compartió.',
+    yourRooms: 'Tus salas',
+    forgetRoom: 'Olvidar esta sala',
     availableTimesTitle: 'Horario de sesiones',
     availableTimesHint: '¿En qué horas se pueden programar sesiones?',
     availableFrom: 'Desde',
