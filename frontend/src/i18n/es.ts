@@ -177,6 +177,9 @@ export default {
     home: 'Volver al inicio',
   },
   home: {
+    createdBy: 'Creado por {author} con amor y cariño para sus amigos',
+    openSource: '¡Esta web es de código abierto! Échale un vistazo {link}',
+    openSourceLink: 'aquí',
     q1: '¿Organizar horarios es difícil?',
     q2: '¿Tus amigos no se ponen de acuerdo?',
     q3: '¿Las zonas horarias son un caos?',

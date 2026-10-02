@@ -176,6 +176,9 @@ export default {
     home: 'Back to home',
   },
   home: {
+    createdBy: 'Created by {author} with love and care for his friends',
+    openSource: 'This web is open source! Check it out {link}',
+    openSourceLink: 'here',
     q1: 'Scheduling is hard?',
     q2: "Your friends can't communicate?",
     q3: 'Different timezones are a mess?',

@@ -130,27 +130,28 @@ onUnmounted(() => {
 
     <!-- Footer -->
     <footer class="bg-primary py-6 px-6 text-center text-sm text-bg space-y-1">
-      <p>
-        Created by
-        <a
-          href="https://github.com/gonzalinux"
-          target="_blank"
+      <i18n-t keypath="home.createdBy" tag="p">
+        <template #author>
+          <a
+            href="https://github.com/gonzalinux"
+            target="_blank"
           rel="noopener"
           class="text-bg hover:underline font-bold"
-          >@gonzalinux</a
-        >
-        with love and care for his friends
-      </p>
-      <p>
-        This web is open source! Check it out
-        <a
-          href="https://github.com/gonzalinux/day20"
-          target="_blank"
+            >@gonzalinux</a
+          >
+        </template>
+      </i18n-t>
+      <i18n-t keypath="home.openSource" tag="p">
+        <template #link>
+          <a
+            href="https://github.com/gonzalinux/day20"
+            target="_blank"
           rel="noopener"
           class="text-bg hover:underline font-bold"
-          >here</a
-        >
-      </p>
+            >{{ t('home.openSourceLink') }}</a
+          >
+        </template>
+      </i18n-t>
     </footer>
   </div>
 </template>
